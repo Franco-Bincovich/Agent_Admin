@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(Get-ChildItem -Recurse \"C:\\\\Users\\\\Franco Bincovich\\\\Desktop\\\\Visual Code\\\\Agent-Admin\\\\backend\" | Where-Object { !$_.PSIsContainer } | Select-Object -ExpandProperty FullName | ForEach-Object { $_.Replace\\(\"C:\\\\Users\\\\Franco Bincovich\\\\Desktop\\\\Visual Code\\\\Agent-Admin\\\\\", \"\"\\) })"
+      "PowerShell(Get-ChildItem -Recurse \"C:\\\\Users\\\\Franco Bincovich\\\\Desktop\\\\Visual Code\\\\Agent-Admin\\\\backend\" | Where-Object { !$_.PSIsContainer } | Select-Object -ExpandProperty FullName | ForEach-Object { $_.Replace\\(\"C:\\\\Users\\\\Franco Bincovich\\\\Desktop\\\\Visual Code\\\\Agent-Admin\\\\\", \"\"\\) })",
+      "Bash(mkdir -p /Users/franbincovich/Desktop/VSCode/MoltbotKariaV1/Agent-Admin/frontend)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --app --no-src-dir --eslint --import-alias \"@/*\" --use-npm)",
+      "Bash(npx shadcn@latest *)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)"
     ]
   }
 }
