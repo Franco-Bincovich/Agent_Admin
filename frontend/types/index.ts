@@ -57,3 +57,29 @@ export interface ApiError {
   message: string;
   code: string;
 }
+
+export type DocumentoEstado = 'procesando' | 'listo' | 'error';
+
+export type DocumentoSeccion =
+  | 'Resumen ejecutivo'
+  | 'Introducción'
+  | 'Contexto'
+  | 'Objetivos'
+  | 'Desarrollo'
+  | 'Conclusiones'
+  | 'Recomendaciones';
+
+export interface DocumentoOpciones {
+  homogeneizar: boolean;
+  deduplicar: boolean;
+  usar_imagenes: boolean;
+}
+
+export interface Documento {
+  id: string;
+  usuario_id: string;
+  titulo: string;
+  estado: DocumentoEstado;
+  docx_url?: string;
+  creado_en: string;
+}

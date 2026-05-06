@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from integrations.gamma_client import publish_to_gamma
 from integrations.supabase_client import get_supabase
 from repositories import generation_repo

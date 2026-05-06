@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from integrations.supabase_client import get_supabase
 from utils.errors import AppError, ErrorCode
 
-_TABLE = "users"
+_TABLE = "usuarios"
 
 
 def find_by_email(email: str) -> dict | None:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import httpx
 from config.settings import get_settings
 

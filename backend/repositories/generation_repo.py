@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from integrations.supabase_client import get_supabase
 
 _TABLE = "generaciones"

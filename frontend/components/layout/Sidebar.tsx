@@ -6,6 +6,7 @@ import {
   Zap,
   LayoutDashboard,
   Sparkles,
+  FileText,
   History,
   Users,
   LogOut,
@@ -22,7 +23,8 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Generador', href: '/generator', icon: Sparkles },
+  { label: 'Presentaciones', href: '/generator', icon: Sparkles },
+  { label: 'Documentos', href: '/documentos', icon: FileText },
   { label: 'Historial', href: '/history', icon: History },
   { label: 'Usuarios', href: '/users', icon: Users, roles: ['administrador'] },
 ];

@@ -10,6 +10,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
+        extra="ignore",  # ignorar vars como NEXT_PUBLIC_API_URL que son del frontend
     )
 
     # ── Entorno ───────────────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import io
+import zipfile
 from pathlib import Path
 
 import fitz
@@ -50,6 +51,62 @@ _EXTRACTORS = {
     ".txt": _extract_from_txt,
     ".xlsx": _extract_from_xlsx,
 }
+
+
+def extract_images_from_file(filename: str, file_bytes: bytes) -> list[bytes]:
+    """
+    Extrae las imágenes embebidas de un archivo, detectando el tipo por extensión.
+
+    Soporta los siguientes formatos:
+    - .pdf  → PyMuPDF: extrae imágenes página por página usando get_images().
+    - .docx → python-docx: recorre el zip interno y extrae archivos de word/media/.
+    - .xlsx → no soporta imágenes; retorna [] sin error.
+
+    Las imágenes son opcionales dentro del pipeline de generación de documentos.
+    Si ocurre cualquier fallo durante la extracción, la función retorna [] en lugar
+    de lanzar una excepción, para no bloquear el pipeline principal.
+
+    Args:
+        filename: Nombre del archivo con su extensión (ej. 'informe.pdf').
+        file_bytes: Contenido binario del archivo.
+
+    Returns:
+        Lista de bytes, uno por imagen encontrada. Puede ser vacía si no hay
+        imágenes, si el formato no las soporta, o si ocurre un error interno.
+    """
+    ext = Path(filename).suffix.lower()
+    try:
+        if ext == ".pdf":
+            return _extract_images_from_pdf(file_bytes)
+        if ext == ".docx":
+            return _extract_images_from_docx(file_bytes)
+        # .xlsx y formatos no reconocidos no contienen imágenes accesibles.
+        return []
+    except Exception:
+        return []
+
+
+def _extract_images_from_pdf(file_bytes: bytes) -> list[bytes]:
+    """Extrae imágenes de cada página de un PDF usando PyMuPDF."""
+    images: list[bytes] = []
+    doc = fitz.open(stream=file_bytes, filetype="pdf")
+    for page in doc:
+        for img_index in page.get_images():
+            xref = img_index[0]
+            base_image = doc.extract_image(xref)
+            images.append(base_image["image"])
+    doc.close()
+    return images
+
+
+def _extract_images_from_docx(file_bytes: bytes) -> list[bytes]:
+    """Extrae imágenes del directorio word/media/ dentro del ZIP de un DOCX."""
+    images: list[bytes] = []
+    with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+        for name in zf.namelist():
+            if name.startswith("word/media/"):
+                images.append(zf.read(name))
+    return images
 
 
 def extract_text_from_file(filename: str, file_bytes: bytes) -> str:
