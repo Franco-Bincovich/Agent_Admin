@@ -61,6 +61,12 @@ def create(email: str, nombre: str, password_hash: str, rol: str) -> dict:
     return response.data[0]
 
 
+def find_all() -> list[dict]:
+    """Retorna todos los usuarios del sistema ordenados por creado_en DESC."""
+    response = get_supabase().table(_TABLE).select("*").order("creado_en", desc=True).execute()
+    return response.data
+
+
 def update_active(user_id: str, activo: bool) -> dict:
     """
     Activa o desactiva un usuario por su ID.

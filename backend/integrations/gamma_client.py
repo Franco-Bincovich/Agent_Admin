@@ -13,3 +13,20 @@ def get_gamma_client() -> httpx.AsyncClient:
         headers={"Authorization": f"Bearer {settings.gamma_api_key}"},
         timeout=30.0,
     )
+
+
+def publish_to_gamma(outline: dict) -> str | None:
+    """
+    Stub de publicación a Gamma. Pendiente de implementación real.
+
+    Cuando la integración esté activa, enviará el outline a la Gamma API
+    y retornará la URL pública del documento generado. Por ahora retorna
+    None sin realizar ninguna llamada externa.
+
+    Args:
+        outline: Outline JSON con la estructura completa de la presentación.
+
+    Returns:
+        None — la integración real retornará la URL del documento Gamma.
+    """
+    return None

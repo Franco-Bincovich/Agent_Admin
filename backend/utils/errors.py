@@ -42,6 +42,7 @@ class ErrorCode:
     # Integraciones externas
     AI_SERVICE_ERROR = "AI_SERVICE_ERROR"
     PPTX_BUILD_ERROR = "PPTX_BUILD_ERROR"
+    TEMPLATE_NOT_FOUND = "TEMPLATE_NOT_FOUND"
     GAMMA_PUBLISH_ERROR = "GAMMA_PUBLISH_ERROR"
 
     # Genérico

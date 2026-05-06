@@ -1,7 +1,73 @@
-from pptx.util import Pt
-from pptx.dml.color import RGBColor
+from pptx.util import Inches
 
-# Template "Profesional Claro"
-# Fondo: Blanco #FFFFFF | Acento: Azul #1E40AF
-# Layouts: portada, contenido (max 5 bullets), destacado, cierre
-# Uso típico: documentación interna, reportes
+TEMPLATE = {
+    "background_color": "FFFFFF",
+    "text_color": "111827",
+    "accent_color": "1E40AF",
+    "secondary_text": "6B7280",
+    "font_title": "Calibri",
+    "font_body": "Calibri",
+    "font_size_title_portada": 36,
+    "font_size_title_slide": 28,
+    "font_size_body": 18,
+    "font_size_label": 13,
+}
+
+LAYOUTS = {
+    "portada": {
+        "title": {
+            "left": Inches(1),
+            "top": Inches(2),
+            "width": Inches(8),
+            "height": Inches(2),
+        },
+        "subtitle": {
+            "left": Inches(1),
+            "top": Inches(4.3),
+            "width": Inches(8),
+            "height": Inches(1),
+        },
+    },
+    "contenido": {
+        "title": {
+            "left": Inches(0.5),
+            "top": Inches(0.3),
+            "width": Inches(9),
+            "height": Inches(0.9),
+        },
+        "body": {
+            "left": Inches(0.5),
+            "top": Inches(1.4),
+            "width": Inches(9),
+            "height": Inches(5.8),
+        },
+    },
+    "destacado": {
+        "title": {
+            "left": Inches(0.5),
+            "top": Inches(0.3),
+            "width": Inches(9),
+            "height": Inches(0.9),
+        },
+        "box": {
+            "left": Inches(1),
+            "top": Inches(1.8),
+            "width": Inches(8),
+            "height": Inches(3.5),
+        },
+    },
+    "cierre": {
+        "text": {
+            "left": Inches(1),
+            "top": Inches(2.3),
+            "width": Inches(8),
+            "height": Inches(2),
+        },
+        "line": {
+            "left": Inches(1),
+            "top": Inches(5),
+            "width": Inches(8),
+            "height": Inches(0.05),
+        },
+    },
+}
