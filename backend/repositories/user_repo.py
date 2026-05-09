@@ -20,6 +20,20 @@ def find_by_email(email: str) -> dict | None:
     return response.data[0] if response.data else None
 
 
+def find_by_username(username: str) -> dict | None:
+    """
+    Busca un usuario por username.
+
+    Args:
+        username: Nombre de usuario a buscar.
+
+    Returns:
+        Dict con los datos del usuario o None si no existe.
+    """
+    response = get_supabase().table(_TABLE).select("*").eq("username", username).execute()
+    return response.data[0] if response.data else None
+
+
 def find_by_id(user_id: str) -> dict | None:
     """
     Busca un usuario por su ID (UUID).
@@ -60,6 +74,53 @@ def create(email: str, nombre: str, password_hash: str, rol: str) -> dict:
     response = get_supabase().table(_TABLE).insert(data).execute()
     if not response.data:
         raise AppError("No se pudo crear el usuario.", ErrorCode.INTERNAL_ERROR, 500)
+    return response.data[0]
+
+
+def create_full(email: str, nombre: str, username: str, password_hash: str, rol: str) -> dict:
+    """
+    Inserta un usuario con username. Usar en lugar de create() cuando se provee username.
+
+    Raises:
+        AppError: INTERNAL_ERROR 500 si la inserción falla.
+    """
+    data = {
+        "email": email,
+        "nombre": nombre,
+        "username": username,
+        "password_hash": password_hash,
+        "rol": rol,
+        "activo": True,
+    }
+    response = get_supabase().table(_TABLE).insert(data).execute()
+    if not response.data:
+        raise AppError("No se pudo crear el usuario.", ErrorCode.INTERNAL_ERROR, 500)
+    return response.data[0]
+
+
+def update_profile(user_id: str, fields: dict) -> dict:
+    """
+    Actualiza campos arbitrarios de un usuario por su ID.
+
+    Args:
+        user_id: UUID del usuario como string.
+        fields: Dict con los campos a actualizar (nunca incluir password en texto plano).
+
+    Returns:
+        Dict con los datos actualizados del usuario.
+
+    Raises:
+        AppError: code 'NOT_FOUND', status 404 si el usuario no existe.
+    """
+    response = (
+        get_supabase()
+        .table(_TABLE)
+        .update(fields)
+        .eq("id", user_id)
+        .execute()
+    )
+    if not response.data:
+        raise AppError("Usuario no encontrado.", ErrorCode.NOT_FOUND, 404)
     return response.data[0]
 
 

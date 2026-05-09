@@ -29,6 +29,10 @@ export default function EstructuraSection({
         <span style={{ color: 'var(--color-text-disabled)' }}>(opcional)</span>
       </h2>
 
+      <p className="text-xs" style={{ color: 'var(--color-text-disabled)' }}>
+        Si no seleccionás ninguna sección, el documento se generará con: Introducción, Antecedentes y Contexto, Desarrollo, Conclusiones y Próximos Pasos.
+      </p>
+
       <div className="flex flex-wrap gap-2">
         {SECCIONES.map((s) => {
           const selected = secciones.includes(s);

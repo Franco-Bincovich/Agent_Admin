@@ -1,9 +1,10 @@
 import io
+from typing import Optional
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
-from pptx.util import Pt
+from pptx.util import Cm, Pt
 
 from templates import corporativo_neutro, ejecutivo_oscuro, profesional_claro
 from utils.errors import AppError, ErrorCode
@@ -101,7 +102,15 @@ def _build_cierre(slide, data: dict, tpl) -> None:
     line_shape.line.fill.background()
 
 
-def generate_pptx(outline: dict, template_name: str) -> bytes:
+def _insert_logo_pptx(slide, logo_bytes: bytes) -> None:
+    """Inserta logo pequeño en la esquina superior izquierda del slide. Falla silenciosamente."""
+    try:
+        slide.shapes.add_picture(io.BytesIO(logo_bytes), left=Cm(0.5), top=Cm(0.3), height=Cm(2.1))
+    except Exception:
+        pass
+
+
+def generate_pptx(outline: dict, template_name: str, logo_bytes: Optional[bytes] = None) -> bytes:
     """
     Genera un archivo .pptx a partir de un outline dict y el nombre de un template.
 
@@ -130,11 +139,13 @@ def generate_pptx(outline: dict, template_name: str) -> bytes:
     try:
         prs = Presentation()
         blank_layout = prs.slide_layouts[6]
-        for slide_data in outline["slides"]:
+        for idx, slide_data in enumerate(outline["slides"]):
             slide = prs.slides.add_slide(blank_layout)
             builder = _builders.get(slide_data["tipo"])
             if builder:
                 builder(slide, slide_data, tpl)
+            if idx == 0 and logo_bytes:
+                _insert_logo_pptx(slide, logo_bytes)
         buffer = io.BytesIO()
         prs.save(buffer)
         return buffer.getvalue()

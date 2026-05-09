@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Image, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import FileUploadArea from './FileUploadArea';
@@ -53,9 +54,28 @@ export default function GeneratorForm() {
   const [tono, setTono]             = useState<GenerationTono>('formal');
   const [audiencia, setAudiencia]   = useState<GenerationAudiencia>('directivos');
   const [output, setOutput]         = useState<GenerationOutput>('ambos');
+  const [logo, setLogo]             = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generationId, setGenerationId] = useState<string | null>(null);
   const [generation, setGeneration] = useState<Generation | null>(null);
+  const logoRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!logo) { setLogoPreview(null); return; }
+    const url = URL.createObjectURL(logo);
+    setLogoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [logo]);
+
+  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const ext = f.name.split('.').pop()?.toLowerCase() ?? '';
+    if (!['png', 'jpg', 'jpeg'].includes(ext) || f.size > 2 * 1024 * 1024) return;
+    setLogo(f);
+    e.target.value = '';
+  }
 
   const addFiles   = (incoming: File[]) => setFiles((prev) => [...prev, ...incoming]);
   const removeFile = (i: number)        => setFiles((prev) => prev.filter((_, idx) => idx !== i));
@@ -68,6 +88,7 @@ export default function GeneratorForm() {
     try {
       const fd = new FormData();
       files.forEach((f) => fd.append('files', f));
+      if (logo) fd.append('logo', logo);
       fd.append('objetivo', objetivo.trim());
       if (info.trim()) fd.append('info_adicional', info.trim());
       fd.append('template', template);
@@ -91,6 +112,7 @@ export default function GeneratorForm() {
     setTono('formal');
     setAudiencia('directivos');
     setOutput('ambos');
+    setLogo(null);
     setIsSubmitting(false);
     setGenerationId(null);
     setGeneration(null);
@@ -171,6 +193,31 @@ export default function GeneratorForm() {
             {OUTPUTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+          Logo{' '}
+          <span style={{ color: 'var(--color-text-disabled)' }}>(opcional · PNG, JPG, JPEG · máx 2MB)</span>
+        </label>
+        {logo ? (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--color-background)' }}>
+            {logoPreview ? (
+              <img src={logoPreview} alt="Logo" className="h-8 w-8 object-contain flex-shrink-0 rounded" />
+            ) : (
+              <Image className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-text-secondary)' }} />
+            )}
+            <span className="text-sm flex-1 truncate" style={{ color: 'var(--color-text-primary)' }}>{logo.name}</span>
+            <button type="button" onClick={() => setLogo(null)} className="flex-shrink-0 p-0.5 rounded hover:bg-red-500/10 transition-colors" aria-label="Eliminar logo">
+              <X className="w-3.5 h-3.5" style={{ color: 'var(--color-text-secondary)' }} />
+            </button>
+          </div>
+        ) : (
+          <button type="button" onClick={() => logoRef.current?.click()} className="text-sm px-3 py-2 rounded-lg border transition-colors hover:bg-white/5" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
+            Subir logo
+          </button>
+        )}
+        <input ref={logoRef} type="file" accept=".png,.jpg,.jpeg" className="hidden" onChange={handleLogoChange} />
       </div>
 
       <Button

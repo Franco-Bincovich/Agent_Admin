@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from controllers import user_controller
 from middleware.auth import get_current_user
-from schemas.user import UserResponse
+from schemas.user import CreateUserRequest, UserResponse
 from utils.errors import AppError, ErrorCode
 
 router = APIRouter()
@@ -15,11 +15,21 @@ class ActivePayload(BaseModel):
     activo: bool
 
 
-@router.get("/", response_model=list[UserResponse])
+@router.post("", response_model=UserResponse, status_code=201)
+def create_user(
+    payload: CreateUserRequest,
+    current_user: dict = Depends(get_current_user),
+) -> UserResponse:
+    if current_user.get("role") != "administrador":
+        raise AppError("Acceso denegado", ErrorCode.FORBIDDEN, 403)
+    return user_controller.create_user(payload)
+
+
+@router.get("", response_model=list[UserResponse])
 def list_users(
     current_user: dict = Depends(get_current_user),
 ) -> list[UserResponse]:
-    if current_user.get("rol") != "administrador":
+    if current_user.get("role") != "administrador":
         raise AppError("Acceso denegado", ErrorCode.FORBIDDEN, 403)
     return user_controller.get_all_users()
 
@@ -38,6 +48,6 @@ def update_active(
     payload: ActivePayload,
     current_user: dict = Depends(get_current_user),
 ) -> UserResponse:
-    if current_user.get("rol") != "administrador":
+    if current_user.get("role") != "administrador":
         raise AppError("Acceso denegado", ErrorCode.FORBIDDEN, 403)
     return user_controller.update_user_active(str(user_id), payload.activo, current_user)

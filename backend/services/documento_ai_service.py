@@ -11,6 +11,14 @@ from utils.prompt_sanitizer import sanitize_for_prompt
 
 MAX_TOKENS_DOCUMENTO = 8000
 
+_DEFAULT_SECCIONES = [
+    "Introducción",
+    "Antecedentes y Contexto",
+    "Desarrollo",
+    "Conclusiones",
+    "Próximos Pasos",
+]
+
 # Bloque 1 — identidad/rol: vive en system=, separado del user input (SEGURIDAD 6.1)
 _SYSTEM_PROMPT = (
     "Eres un experto en síntesis y unificación de documentos corporativos.\n"
@@ -61,11 +69,10 @@ def build_documento_prompt(
         bloques_docs.append(f"### {nombre}\n{texto_limpio}")
     docs_block = "\n\n".join(bloques_docs)
 
-    secciones_finales = plantilla_secciones if plantilla_secciones else secciones
-    secciones_block = ""
-    if secciones_finales:
-        lista = "\n".join(f"- {s}" for s in secciones_finales)
-        secciones_block = f"\n\n## SECCIONES REQUERIDAS\n{lista}"
+    secciones_a_usar = secciones if secciones else _DEFAULT_SECCIONES
+    secciones_finales = plantilla_secciones if plantilla_secciones else secciones_a_usar
+    lista = "\n".join(f"- {s}" for s in secciones_finales)
+    secciones_block = f"\n\n## SECCIONES REQUERIDAS\n{lista}"
 
     instrucciones = []
     if opciones.get("homogeneizar"):

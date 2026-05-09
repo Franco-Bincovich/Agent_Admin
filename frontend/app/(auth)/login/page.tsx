@@ -18,10 +18,10 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, isLoading } = useAuth();
   const {
-    email, password,
-    emailError, passwordError,
+    username, password,
+    usernameError, passwordError,
     isFormValid,
-    handleEmailChange, handlePasswordChange, handleBlur,
+    handleUsernameChange, handlePasswordChange, handleBlur,
     validateAll,
   } = useLoginForm();
 
@@ -29,7 +29,7 @@ export default function LoginPage() {
     e.preventDefault();
     if (!validateAll()) return;
     try {
-      await login(email, password);
+      await login(username, password);
       router.push('/dashboard');
     } catch (err) {
       const apiError = err as ApiError;
@@ -58,16 +58,16 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div className="space-y-1.5">
-              <Label htmlFor="email" style={{ color: 'var(--color-text-primary)' }}>
-                Email <span className="text-red-500">*</span>
+              <Label htmlFor="username" style={{ color: 'var(--color-text-primary)' }}>
+                Usuario <span className="text-red-500">*</span>
               </Label>
               <Input
-                id="email" type="email" placeholder="nombre@empresa.com" autoComplete="email"
-                value={email} onChange={(e) => handleEmailChange(e.target.value)}
-                onBlur={() => handleBlur('email')} aria-invalid={!!emailError}
-                aria-describedby={emailError ? 'email-error' : undefined} className={INPUT_CLASS}
+                id="username" type="text" placeholder="tu usuario" autoComplete="username"
+                value={username} onChange={(e) => handleUsernameChange(e.target.value)}
+                onBlur={() => handleBlur('username')} aria-invalid={!!usernameError}
+                aria-describedby={usernameError ? 'username-error' : undefined} className={INPUT_CLASS}
               />
-              {emailError && <p id="email-error" className="text-sm text-red-500">{emailError}</p>}
+              {usernameError && <p id="username-error" className="text-sm text-red-500">{usernameError}</p>}
             </div>
 
             <div className="space-y-1.5">
@@ -87,7 +87,7 @@ export default function LoginPage() {
             <Button
               type="submit" className="w-full min-h-[44px]"
               disabled={isLoading || !isFormValid}
-              title={!isFormValid ? 'Completá el email y la contraseña para continuar' : undefined}
+              title={!isFormValid ? 'Completá el usuario y la contraseña para continuar' : undefined}
             >
               {isLoading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Iniciando sesión...</>

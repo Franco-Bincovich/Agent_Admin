@@ -1,9 +1,19 @@
-export type UserRole = 'administrador' | 'editor' | 'viewer';
+export type UserRole = 'administrador' | 'editor' | 'viewer' | 'usuario';
 
 export interface User {
   id: string;
   nombre: string;
   email: string;
+  rol: UserRole;
+  activo: boolean;
+  creado_en: string;
+}
+
+export interface Profile {
+  id: string;
+  nombre: string;
+  email: string;
+  username: string | null;
   rol: UserRole;
   activo: boolean;
   creado_en: string;

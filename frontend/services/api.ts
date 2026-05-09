@@ -56,6 +56,10 @@ export function patch<T>(endpoint: string, body: unknown, options?: RequestInit)
   return request<T>(endpoint, { ...options, method: 'PATCH', body: JSON.stringify(body) });
 }
 
+export function put<T>(endpoint: string, body: unknown, options?: RequestInit): Promise<T> {
+  return request<T>(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) });
+}
+
 export function del<T>(endpoint: string, options?: RequestInit): Promise<T> {
   return request<T>(endpoint, { ...options, method: 'DELETE' });
 }

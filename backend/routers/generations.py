@@ -21,11 +21,12 @@ async def create_generation(
     tono: ToneEnum = Form(...),
     audiencia: AudienceEnum = Form(...),
     output: OutputEnum = Form(default=OutputEnum.ambos),
+    logo: UploadFile | None = File(default=None),
     current_user: dict = Depends(get_current_user),
 ) -> GenerationResponse:
     return await generation_controller.start_generation(
         background_tasks, archivos, objetivo, informacion_adicional,
-        template, tono, audiencia, output, current_user,
+        template, tono, audiencia, output, logo, current_user,
     )
 
 

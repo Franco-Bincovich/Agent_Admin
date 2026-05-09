@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config.settings import get_settings
 from middleware.auth import register_auth_middleware
 from middleware.error_handler import register_error_handlers
-from routers import auth, documentos, generations, users
+from routers import auth, documentos, generations, profile, users
 
 settings = get_settings()
 
@@ -42,6 +42,7 @@ def create_app() -> FastAPI:
     app.include_router(generations.router, prefix="/api/v1/generations", tags=["generations"])
     app.include_router(documentos.router, prefix="/api/v1/documentos", tags=["documentos"])
     app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
+    app.include_router(profile.router, prefix="/api/v1/profile", tags=["profile"])
 
     @app.get("/health", include_in_schema=False)
     async def health():

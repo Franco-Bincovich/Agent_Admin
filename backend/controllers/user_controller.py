@@ -1,6 +1,29 @@
 from repositories import user_repo
-from schemas.user import UserResponse
+from schemas.user import CreateUserRequest, UserResponse
+from services.auth_service import hash_password
 from utils.errors import AppError, ErrorCode
+
+
+def create_user(payload: CreateUserRequest) -> UserResponse:
+    """
+    Crea un usuario nuevo desde el panel de administración.
+    Verifica unicidad de email y username antes de insertar.
+
+    Raises:
+        AppError: USER_ALREADY_EXISTS 409 si el email o username ya existen.
+    """
+    if user_repo.find_by_email(payload.email):
+        raise AppError("El email ya está en uso.", ErrorCode.USER_ALREADY_EXISTS, 409)
+    if user_repo.find_by_username(payload.username):
+        raise AppError("El nombre de usuario ya está en uso.", ErrorCode.USER_ALREADY_EXISTS, 409)
+    user = user_repo.create_full(
+        email=payload.email,
+        nombre=payload.nombre,
+        username=payload.username,
+        password_hash=hash_password(payload.password),
+        rol=payload.rol,
+    )
+    return UserResponse(**user)
 
 
 def get_all_users() -> list[UserResponse]:

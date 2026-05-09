@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from integrations.supabase_client import get_supabase
 from repositories import documento_repo
-from services.documento_ai_service import build_documento_prompt, generate_documento_outline
+from services.documento_ai_service import _DEFAULT_SECCIONES, build_documento_prompt, generate_documento_outline
 from services.docx_service import generate_docx
 from services.extraction_service import extract_images_from_file, extract_text_from_file
 from utils.errors import AppError
@@ -53,6 +53,7 @@ def run_documento(
     documento_id: str,
     archivos: list[tuple[str, bytes]],
     plantilla: tuple[str, bytes] | None,
+    logo_bytes: bytes | None,
     titulo: str,
     secciones: list[str],
     indicaciones: str | None,
@@ -73,6 +74,7 @@ def run_documento(
         documento_id: UUID del documento ya insertado con estado='procesando'.
         archivos: Lista de (nombre, bytes) de los archivos fuente.
         plantilla: (nombre, bytes) de la plantilla DOCX base, o None.
+        logo_bytes: Bytes del logo a insertar en la primera página, o None.
         titulo: Título del documento final.
         secciones: Secciones requeridas por el usuario.
         indicaciones: Indicaciones adicionales del usuario (puede ser None).
@@ -93,6 +95,8 @@ def run_documento(
             except AppError:
                 pass  # plantilla sin texto útil — se ignoran sus secciones
 
+        secciones = secciones if secciones else _DEFAULT_SECCIONES
+
         imagenes: list[tuple[str, bytes]] = []
         if opciones.get("usar_imagenes"):
             for nombre, file_bytes in archivos:
@@ -105,7 +109,7 @@ def run_documento(
         )
         outline = generate_documento_outline(prompt)
         usar_imagenes = bool(opciones.get("usar_imagenes"))
-        docx_bytes = generate_docx(outline, imagenes, usar_imagenes, plantilla_bytes)
+        docx_bytes = generate_docx(outline, imagenes, usar_imagenes, plantilla_bytes, logo_bytes)
         docx_url = _upload_docx(documento_id, docx_bytes)
         documento_repo.update_resultado(documento_id, docx_url)
         log.info(f"documento.completed | id={documento_id}")

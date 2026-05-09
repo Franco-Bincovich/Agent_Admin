@@ -18,6 +18,7 @@ async def start_generation(
     tono: ToneEnum,
     audiencia: AudienceEnum,
     output: OutputEnum,
+    logo: UploadFile | None,
     current_user: dict,
 ) -> GenerationResponse:
     """
@@ -43,6 +44,11 @@ async def start_generation(
         contenido = await archivo.read()
         textos.append(extract_text_from_file(archivo.filename or "", contenido))
     texto_extraido = "\n\n".join(textos)
+
+    logo_bytes: bytes | None = None
+    if logo:
+        logo_bytes = await logo.read()
+
     parametros = {
         "template": template,
         "tono": tono,
@@ -59,7 +65,7 @@ async def start_generation(
     background_tasks.add_task(
         run_generation,
         gen["id"], texto_extraido, objetivo,
-        informacion_adicional, template, tono, audiencia,
+        informacion_adicional, template, tono, audiencia, logo_bytes,
     )
     return GenerationResponse(**gen)
 

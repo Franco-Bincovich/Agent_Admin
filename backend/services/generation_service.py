@@ -41,6 +41,7 @@ def run_generation(
     template: str,
     tono: str,
     audiencia: str,
+    logo_bytes: bytes | None = None,
 ) -> None:
     """
     Orquesta el pipeline completo de generación de presentaciones.
@@ -63,7 +64,7 @@ def run_generation(
     try:
         prompt = build_prompt(texto_extraido, objetivo, informacion_adicional, template, tono, audiencia)
         outline = generate_outline(prompt)
-        pptx_bytes = generate_pptx(outline, template)
+        pptx_bytes = generate_pptx(outline, template, logo_bytes)
         pptx_url = _upload_pptx(generation_id, pptx_bytes)
         gamma_url = publish_to_gamma(outline)
         generation_repo.update_resultado(

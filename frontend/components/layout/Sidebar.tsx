@@ -9,9 +9,13 @@ import {
   FileText,
   History,
   Users,
+  UserCircle,
   LogOut,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/hooks/useTheme';
 import type { UserRole } from '@/types';
 
 interface NavItem {
@@ -27,11 +31,13 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Documentos', href: '/documentos', icon: FileText },
   { label: 'Historial', href: '/history', icon: History },
   { label: 'Usuarios', href: '/users', icon: Users, roles: ['administrador'] },
+  { label: 'Perfil', href: '/profile', icon: UserCircle },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const visibleItems = NAV_ITEMS.filter(
     (item) => !item.roles || (user?.rol && item.roles.includes(user.rol)),
@@ -65,7 +71,7 @@ export default function Sidebar() {
               key={href}
               href={href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
-                active ? '' : 'hover:bg-white/5'
+                active ? '' : 'hover:bg-[var(--color-nav-hover)]'
               }`}
               style={{
                 color: active ? 'var(--color-primary)' : 'var(--color-text-secondary)',
@@ -96,6 +102,17 @@ export default function Sidebar() {
             </p>
           </div>
         )}
+        <button
+          onClick={toggleTheme}
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] hover:bg-[var(--color-nav-hover)]"
+          style={{ color: 'var(--color-text-secondary)' }}
+          aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+        >
+          {theme === 'dark'
+            ? <Sun  className="w-4 h-4 flex-shrink-0" />
+            : <Moon className="w-4 h-4 flex-shrink-0" />}
+          {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+        </button>
         <button
           onClick={logout}
           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] hover:bg-red-500/10 hover:text-red-400"

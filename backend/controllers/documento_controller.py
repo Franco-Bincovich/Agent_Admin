@@ -17,6 +17,7 @@ async def create_documento(
     opciones_raw: str,
     archivos: list[UploadFile],
     plantilla: UploadFile | None,
+    logo: UploadFile | None,
     background_tasks: BackgroundTasks,
     current_user: dict,
 ) -> DocumentoResponse:
@@ -55,6 +56,10 @@ async def create_documento(
         plantilla_bytes = await plantilla.read()
         plantilla_data = (plantilla.filename or "plantilla.docx", plantilla_bytes)
 
+    logo_bytes: bytes | None = None
+    if logo:
+        logo_bytes = await logo.read()
+
     doc = documento_repo.create(
         current_user["sub"],
         titulo,
@@ -67,7 +72,7 @@ async def create_documento(
 
     background_tasks.add_task(
         run_documento,
-        doc["id"], archivos_data, plantilla_data,
+        doc["id"], archivos_data, plantilla_data, logo_bytes,
         titulo, secciones, indicaciones, opciones,
     )
     return DocumentoResponse(**doc)

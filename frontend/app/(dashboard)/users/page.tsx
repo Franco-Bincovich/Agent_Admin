@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserTable from '@/components/features/users/UserTable';
+import CreateUserModal from '@/components/features/users/CreateUserModal';
 import { getUsers, toggleUserActive } from '@/services/userService';
 import { useAuthStore } from '@/store/authStore';
 import type { User, ApiError } from '@/types';
@@ -15,6 +16,7 @@ export default function UsersPage() {
   const user = useAuthStore((s) => s.user);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -47,6 +49,10 @@ export default function UsersPage() {
     }
   }
 
+  function handleUserCreated(newUser: User) {
+    setUsers((prev) => [newUser, ...prev]);
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -59,12 +65,11 @@ export default function UsersPage() {
           </p>
         </div>
         <Button
-          disabled
-          title="Próximamente"
           className="flex items-center gap-2 min-h-[44px]"
+          onClick={() => setIsModalOpen(true)}
         >
           <UserPlus className="w-4 h-4" />
-          Invitar usuario
+          Agregar usuario
         </Button>
       </div>
 
@@ -73,6 +78,12 @@ export default function UsersPage() {
         isLoading={isLoading}
         currentUserId={user?.id ?? ''}
         onToggleActive={handleToggleActive}
+      />
+
+      <CreateUserModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCreated={handleUserCreated}
       />
     </div>
   );

@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 
-function validateEmail(v: string): string {
-  if (!v) return 'El email es obligatorio';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))
-    return 'Ingresá un email con el formato nombre@empresa.com';
+function validateUsername(v: string): string {
+  if (!v) return 'El usuario es obligatorio';
+  if (v.length < 3) return 'El usuario tiene que tener al menos 3 caracteres';
   return '';
 }
 
@@ -16,29 +15,29 @@ function validatePassword(v: string): string {
 }
 
 interface LoginFormResult {
-  email: string;
+  username: string;
   password: string;
-  emailError: string;
+  usernameError: string;
   passwordError: string;
   isFormValid: boolean;
-  handleEmailChange: (value: string) => void;
+  handleUsernameChange: (value: string) => void;
   handlePasswordChange: (value: string) => void;
-  handleBlur: (field: 'email' | 'password') => void;
+  handleBlur: (field: 'username' | 'password') => void;
   validateAll: () => boolean;
 }
 
 export function useLoginForm(): LoginFormResult {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [emailError, setEmailError] = useState('');
+  const [usernameError, setUsernameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [touched, setTouched] = useState({ email: false, password: false });
+  const [touched, setTouched] = useState({ username: false, password: false });
 
-  const isFormValid = !validateEmail(email) && !validatePassword(password);
+  const isFormValid = !validateUsername(username) && !validatePassword(password);
 
-  function handleEmailChange(value: string) {
-    setEmail(value);
-    if (touched.email) setEmailError(validateEmail(value));
+  function handleUsernameChange(value: string) {
+    setUsername(value);
+    if (touched.username) setUsernameError(validateUsername(value));
   }
 
   function handlePasswordChange(value: string) {
@@ -46,26 +45,26 @@ export function useLoginForm(): LoginFormResult {
     if (touched.password) setPasswordError(validatePassword(value));
   }
 
-  function handleBlur(field: 'email' | 'password') {
+  function handleBlur(field: 'username' | 'password') {
     setTouched((prev) => ({ ...prev, [field]: true }));
-    if (field === 'email') setEmailError(validateEmail(email));
+    if (field === 'username') setUsernameError(validateUsername(username));
     if (field === 'password') setPasswordError(validatePassword(password));
   }
 
   function validateAll(): boolean {
-    const eErr = validateEmail(email);
+    const uErr = validateUsername(username);
     const pErr = validatePassword(password);
-    setEmailError(eErr);
+    setUsernameError(uErr);
     setPasswordError(pErr);
-    setTouched({ email: true, password: true });
-    return !eErr && !pErr;
+    setTouched({ username: true, password: true });
+    return !uErr && !pErr;
   }
 
   return {
-    email, password,
-    emailError, passwordError,
+    username, password,
+    usernameError, passwordError,
     isFormValid,
-    handleEmailChange, handlePasswordChange, handleBlur,
+    handleUsernameChange, handlePasswordChange, handleBlur,
     validateAll,
   };
 }

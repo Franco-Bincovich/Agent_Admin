@@ -80,7 +80,8 @@ def extract_images_from_file(filename: str, file_bytes: bytes) -> list[bytes]:
             return _extract_images_from_pdf(file_bytes)
         if ext == ".docx":
             return _extract_images_from_docx(file_bytes)
-        # .xlsx y formatos no reconocidos no contienen imágenes accesibles.
+        if ext == ".xlsx":
+            return _extract_images_from_xlsx(file_bytes)
         return []
     except Exception:
         return []
@@ -106,6 +107,17 @@ def _extract_images_from_docx(file_bytes: bytes) -> list[bytes]:
         for name in zf.namelist():
             if name.startswith("word/media/"):
                 images.append(zf.read(name))
+    return images
+
+
+def _extract_images_from_xlsx(file_bytes: bytes) -> list[bytes]:
+    """Extrae imágenes del directorio xl/media/ dentro del ZIP de un XLSX."""
+    _IMG_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".bmp"}
+    images: list[bytes] = []
+    with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+        for name in zf.namelist():
+            if name.startswith("xl/media/") and Path(name).suffix.lower() in _IMG_EXTS:
+                images.append((Path(name).name, zf.read(name)))
     return images
 
 

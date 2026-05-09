@@ -82,20 +82,21 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 
-  /* Agent Admin — design tokens */
-  --color-primary: #4FC3F7;
-  --color-primary-hover: #29B6F6;
-  --color-accent: #7C3AED;
-  --color-background: #0F1B2D;
-  --color-surface: #1A2B3F;
-  --color-border: #2A3B4F;
-  --color-text-primary: #FFFFFF;
+  /* Agent Admin — design tokens (dark, default) */
+  --color-primary:        #4FC3F7;
+  --color-primary-hover:  #29B6F6;
+  --color-accent:         #7C3AED;
+  --color-background:     #0F1B2D;
+  --color-surface:        #1A2B3F;
+  --color-border:         #2A3B4F;
+  --color-text-primary:   #FFFFFF;
   --color-text-secondary: #A0B4C8;
-  --color-text-disabled: #4A6080;
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: #3b82f6;
+  --color-text-disabled:  #4A6080;
+  --color-success:        #22c55e;
+  --color-warning:        #f59e0b;
+  --color-error:          #ef4444;
+  --color-info:           #3b82f6;
+  --color-nav-hover:      rgba(255, 255, 255, 0.05);
   --font-sans: 'Inter', sans-serif;
 }
 
@@ -131,6 +132,24 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* Light theme — overrides design tokens when [data-theme="light"] on <html> */
+[data-theme="light"] {
+  --color-primary:        #0277BD;
+  --color-primary-hover:  #01579B;
+  --color-accent:         #7C3AED;
+  --color-background:     #F1F5F9;
+  --color-surface:        #FFFFFF;
+  --color-border:         #CBD5E1;
+  --color-text-primary:   #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-disabled:  #94A3B8;
+  --color-success:        #16a34a;
+  --color-warning:        #d97706;
+  --color-error:          #dc2626;
+  --color-info:           #2563eb;
+  --color-nav-hover:      rgba(0, 0, 0, 0.05);
 }
 
 @layer base {

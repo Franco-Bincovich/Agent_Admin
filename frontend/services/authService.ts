@@ -1,8 +1,8 @@
 import { get, post } from '@/services/api';
 import type { TokenResponse, User, UserRole } from '@/types';
 
-export async function login(email: string, password: string): Promise<TokenResponse> {
-  return post<TokenResponse>('/api/v1/auth/login', { email, password });
+export async function login(username: string, password: string): Promise<TokenResponse> {
+  return post<TokenResponse>('/api/v1/auth/login', { username, password });
 }
 
 export async function register(

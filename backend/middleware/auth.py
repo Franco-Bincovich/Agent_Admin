@@ -21,6 +21,8 @@ def register_auth_middleware(app: FastAPI) -> None:
 
     @app.middleware("http")
     async def auth_middleware(request: Request, call_next):
+        if request.method == "OPTIONS":
+            return await call_next(request)
         if request.url.path in PUBLIC_ROUTES:
             return await call_next(request)
 

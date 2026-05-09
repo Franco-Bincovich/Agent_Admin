@@ -20,6 +20,8 @@ interface Props {
   onRemove: (index: number) => void;
   plantilla: File | null;
   onSetPlantilla: (file: File | null) => void;
+  logo: File | null;
+  onSetLogo: (file: File | null) => void;
   titulo: string;
   onTituloChange: (value: string) => void;
 }
@@ -27,6 +29,7 @@ interface Props {
 export default function FuenteUploadSection({
   archivos, onAdd, onRemove,
   plantilla, onSetPlantilla,
+  logo, onSetLogo,
   titulo, onTituloChange,
 }: Props) {
   const [isDragging, setIsDragging] = useState(false);
@@ -103,6 +106,8 @@ export default function FuenteUploadSection({
       <PlantillaTituloFields
         plantilla={plantilla}
         onSetPlantilla={onSetPlantilla}
+        logo={logo}
+        onSetLogo={onSetLogo}
         titulo={titulo}
         onTituloChange={onTituloChange}
       />

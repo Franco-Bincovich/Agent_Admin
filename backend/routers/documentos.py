@@ -21,12 +21,13 @@ async def create_documento(
     indicaciones: str | None = Form(default=None),
     opciones: str = Form(default="{}"),
     plantilla: UploadFile | None = File(default=None),
+    logo: UploadFile | None = File(default=None),
     current_user: dict = Depends(get_current_user),
 ) -> DocumentoResponse:
     secciones_list: list[str] = json.loads(secciones)
     return await documento_controller.create_documento(
         titulo, secciones_list, indicaciones, opciones,
-        archivos, plantilla, background_tasks, current_user,
+        archivos, plantilla, logo, background_tasks, current_user,
     )
 
 

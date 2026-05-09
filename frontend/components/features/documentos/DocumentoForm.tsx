@@ -20,6 +20,7 @@ const DEFAULT_OPCIONES: DocumentoOpciones = {
 export default function DocumentoForm() {
   const [archivos,     setArchivos]     = useState<File[]>([]);
   const [plantilla,    setPlantilla]    = useState<File | null>(null);
+  const [logo,         setLogo]         = useState<File | null>(null);
   const [titulo,       setTitulo]       = useState('');
   const [secciones,    setSecciones]    = useState<DocumentoSeccion[]>([]);
   const [indicaciones, setIndicaciones] = useState('');
@@ -46,6 +47,7 @@ export default function DocumentoForm() {
       const fd = new FormData();
       archivos.forEach((f) => fd.append('archivos', f));
       if (plantilla) fd.append('plantilla', plantilla);
+      if (logo) fd.append('logo', logo);
       fd.append('titulo', titulo.trim());
       fd.append('secciones', JSON.stringify(secciones));
       if (indicaciones.trim()) fd.append('indicaciones', indicaciones.trim());
@@ -65,7 +67,7 @@ export default function DocumentoForm() {
   }
 
   function handleRetry() {
-    setArchivos([]); setPlantilla(null); setTitulo('');
+    setArchivos([]); setPlantilla(null); setLogo(null); setTitulo('');
     setSecciones([]); setIndicaciones(''); setOpciones(DEFAULT_OPCIONES);
     setIsSubmitting(false); setDocumentoId(null); setDocumento(null);
   }
@@ -81,6 +83,8 @@ export default function DocumentoForm() {
         onRemove={(i) => setArchivos((p) => p.filter((_, idx) => idx !== i))}
         plantilla={plantilla}
         onSetPlantilla={setPlantilla}
+        logo={logo}
+        onSetLogo={setLogo}
         titulo={titulo}
         onTituloChange={setTitulo}
       />

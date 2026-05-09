@@ -17,12 +17,14 @@ const ROL_BADGE: Record<UserRole, string> = {
   administrador: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
   editor:        'bg-blue-500/20 text-blue-400 border-blue-500/30',
   viewer:        'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
+  usuario:       'bg-teal-500/20 text-teal-400 border-teal-500/30',
 };
 
 const ROL_LABEL: Record<UserRole, string> = {
   administrador: 'Administrador',
   editor:        'Editor',
   viewer:        'Viewer',
+  usuario:       'Usuario',
 };
 
 function SkeletonRow() {
