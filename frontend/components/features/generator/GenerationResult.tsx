@@ -24,14 +24,19 @@ export default function GenerationResult({ generation, onRetry }: Props) {
 
       {isSuccess && (
         <div className="flex justify-center gap-3 flex-wrap">
+          {generation.pptx_gamma_url && (
+            <a href={generation.pptx_gamma_url} download>
+              <Button><Download className="w-4 h-4 mr-2" />Descargar PPTX (Gamma)</Button>
+            </a>
+          )}
           {generation.pptx_url && (
             <a href={generation.pptx_url} download>
-              <Button><Download className="w-4 h-4 mr-2" />Descargar PPTX</Button>
+              <Button variant="outline"><Download className="w-4 h-4 mr-2" />Descargar PPTX</Button>
             </a>
           )}
           {generation.gamma_url && (
             <a href={generation.gamma_url} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline">
+              <Button variant="ghost">
                 <ExternalLink className="w-4 h-4 mr-2" />Abrir en Gamma
               </Button>
             </a>

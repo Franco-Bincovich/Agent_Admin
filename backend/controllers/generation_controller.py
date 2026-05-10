@@ -3,7 +3,10 @@ from __future__ import annotations
 from fastapi import BackgroundTasks, UploadFile
 
 from repositories import generation_repo
-from schemas.generation import AudienceEnum, GenerationResponse, OutputEnum, TemplateEnum, ToneEnum
+from schemas.generation import (
+    AudienceEnum, EstiloImagenEnum, GenerationResponse, OutputEnum,
+    TemplateEnum, TemaVisualEnum, ToneEnum,
+)
 from services.extraction_service import extract_text_from_file
 from services.generation_service import run_generation
 from utils.errors import AppError, ErrorCode
@@ -20,29 +23,24 @@ async def start_generation(
     output: OutputEnum,
     logo: UploadFile | None,
     current_user: dict,
+    usar_imagenes_documento: bool = False,
+    tema_visual: TemaVisualEnum = TemaVisualEnum.minimalist,
+    estilo_imagen: EstiloImagenEnum = EstiloImagenEnum.aiGenerated,
+    paleta_colores: str = "",
+    cantidad_slides: int = 10,
 ) -> GenerationResponse:
     """
     Orquesta el inicio de una generación: extrae texto, crea el registro en DB
     con estado='procesando' y lanza run_generation() como BackgroundTask.
 
-    Args:
-        background_tasks: Objeto BackgroundTasks de FastAPI.
-        archivos: Lista de archivos subidos por el usuario (1-10).
-        objetivo: Objetivo declarado de la presentación.
-        informacion_adicional: Contexto adicional del usuario (puede ser None).
-        template: Template PPTX seleccionado.
-        tono: Tono de la presentación.
-        audiencia: Audiencia objetivo.
-        output: Tipo de output requerido ('pptx' | 'gamma' | 'ambos').
-        current_user: Payload JWT del usuario autenticado.
-
     Returns:
-        GenerationResponse con estado='procesando', listo para retornar al cliente.
+        GenerationResponse con estado='procesando'.
     """
-    textos = []
+    textos, archivo_bytes = [], []
     for archivo in archivos:
         contenido = await archivo.read()
         textos.append(extract_text_from_file(archivo.filename or "", contenido))
+        archivo_bytes.append((archivo.filename or "", contenido))
     texto_extraido = "\n\n".join(textos)
 
     logo_bytes: bytes | None = None
@@ -50,22 +48,22 @@ async def start_generation(
         logo_bytes = await logo.read()
 
     parametros = {
-        "template": template,
-        "tono": tono,
-        "audiencia": audiencia,
-        "output": output,
-        "informacion_adicional": informacion_adicional,
+        "template": template, "tono": tono, "audiencia": audiencia,
+        "output": output, "informacion_adicional": informacion_adicional,
+        "usar_imagenes_documento": usar_imagenes_documento,
+        "tema_visual": tema_visual, "estilo_imagen": estilo_imagen,
+        "paleta_colores": paleta_colores, "cantidad_slides": cantidad_slides,
     }
     gen = generation_repo.create(
-        current_user["sub"],
-        objetivo,
-        [f.filename for f in archivos],
-        parametros,
+        current_user["sub"], objetivo,
+        [f.filename for f in archivos], parametros,
     )
     background_tasks.add_task(
         run_generation,
-        gen["id"], texto_extraido, objetivo,
-        informacion_adicional, template, tono, audiencia, logo_bytes,
+        gen["id"], texto_extraido, objetivo, informacion_adicional,
+        template, tono, audiencia, logo_bytes, output,
+        usar_imagenes_documento, archivo_bytes,
+        tema_visual, estilo_imagen, paleta_colores, cantidad_slides,
     )
     return GenerationResponse(**gen)
 

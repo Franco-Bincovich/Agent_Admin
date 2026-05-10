@@ -110,7 +110,7 @@ def _extract_images_from_docx(file_bytes: bytes) -> list[bytes]:
     return images
 
 
-def _extract_images_from_xlsx(file_bytes: bytes) -> list[bytes]:
+def _extract_images_from_xlsx(file_bytes: bytes) -> list[tuple[str, bytes]]:
     """Extrae imágenes del directorio xl/media/ dentro del ZIP de un XLSX."""
     _IMG_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".bmp"}
     images: list[bytes] = []

@@ -36,11 +36,24 @@ export type GenerationAudiencia =
 
 export type GenerationOutput = 'pptx' | 'gamma' | 'ambos';
 
+export type TemaVisual =
+  | 'minimalist' | 'playful' | 'organic' | 'modular'
+  | 'elegant' | 'digital' | 'geometric';
+
+export type EstiloImagen =
+  | 'aiGenerated' | 'webAllImages' | 'webFreeToUse' | 'webFreeToUseCommercially'
+  | 'pictographic' | 'giphy' | 'pexels' | 'placeholder' | 'noImages';
+
 export interface GenerationParametros {
   template: GenerationTemplate;
   tono: GenerationTono;
   audiencia: GenerationAudiencia;
   output: GenerationOutput;
+  usar_imagenes_documento?: boolean;
+  tema_visual?: string;
+  estilo_imagen?: string;
+  paleta_colores?: string;
+  cantidad_slides?: number;
 }
 
 export interface Generation {
@@ -50,6 +63,7 @@ export interface Generation {
   estado: GenerationStatus;
   pptx_url: string | null;
   gamma_url: string | null;
+  pptx_gamma_url?: string | null;
   slides_count: number | null;
   creado_en: string;
   archivos?: string[];

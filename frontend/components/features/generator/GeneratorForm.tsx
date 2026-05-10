@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import FileUploadArea from './FileUploadArea';
 import ProgressTracker from './ProgressTracker';
 import GenerationResult from './GenerationResult';
+import GammaConfigFields from './GammaConfigFields';
 import { createGeneration } from '@/services/generationService';
 import type {
   Generation,
@@ -14,6 +15,8 @@ import type {
   GenerationTono,
   GenerationAudiencia,
   GenerationOutput,
+  TemaVisual,
+  EstiloImagen,
   ApiError,
 } from '@/types';
 
@@ -60,6 +63,11 @@ export default function GeneratorForm() {
   const [generationId, setGenerationId] = useState<string | null>(null);
   const [generation, setGeneration] = useState<Generation | null>(null);
   const logoRef = useRef<HTMLInputElement>(null);
+  const [usarImagenes, setUsarImagenes]       = useState(false);
+  const [temaVisual, setTemaVisual]           = useState<TemaVisual>('minimalist');
+  const [estiloImagen, setEstiloImagen]       = useState<EstiloImagen>('aiGenerated');
+  const [paletaColores, setPaletaColores]     = useState('');
+  const [cantidadSlides, setCantidadSlides]   = useState(10);
 
   useEffect(() => {
     if (!logo) { setLogoPreview(null); return; }
@@ -87,14 +95,21 @@ export default function GeneratorForm() {
     setIsSubmitting(true);
     try {
       const fd = new FormData();
-      files.forEach((f) => fd.append('files', f));
+      files.forEach((f) => fd.append('archivos', f));
       if (logo) fd.append('logo', logo);
       fd.append('objetivo', objetivo.trim());
-      if (info.trim()) fd.append('info_adicional', info.trim());
+      if (info.trim()) fd.append('informacion_adicional', info.trim());
       fd.append('template', template);
       fd.append('tono', tono);
       fd.append('audiencia', audiencia);
       fd.append('output', output);
+      if (usarImagenes) fd.append('usar_imagenes_documento', 'true');
+      if (output !== 'pptx') {
+        fd.append('tema_visual', temaVisual);
+        fd.append('estilo_imagen', estiloImagen);
+        fd.append('paleta_colores', paletaColores);
+        fd.append('cantidad_slides', String(cantidadSlides));
+      }
       const gen = await createGeneration(fd);
       setGenerationId(gen.id);
     } catch (err) {
@@ -116,6 +131,11 @@ export default function GeneratorForm() {
     setIsSubmitting(false);
     setGenerationId(null);
     setGeneration(null);
+    setUsarImagenes(false);
+    setTemaVisual('minimalist');
+    setEstiloImagen('aiGenerated');
+    setPaletaColores('');
+    setCantidadSlides(10);
   }
 
   if (generation) {
@@ -194,6 +214,43 @@ export default function GeneratorForm() {
           </select>
         </div>
       </div>
+
+      {output !== 'gamma' && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <input
+              id="usar-imagenes"
+              type="checkbox"
+              checked={usarImagenes}
+              onChange={(e) => setUsarImagenes(e.target.checked)}
+              className="h-4 w-4 cursor-pointer rounded accent-[var(--color-primary)]"
+            />
+            <label
+              htmlFor="usar-imagenes"
+              className="text-sm font-medium cursor-pointer"
+              style={{ color: 'var(--color-text-primary)' }}
+            >
+              Usar imágenes del documento
+            </label>
+          </div>
+          <p className="text-xs" style={{ color: 'var(--color-text-disabled)' }}>
+            Las imágenes extraídas de tus archivos se insertan directamente en la presentación
+          </p>
+        </div>
+      )}
+
+      {output !== 'pptx' && (
+        <GammaConfigFields
+          temaVisual={temaVisual}
+          setTemaVisual={setTemaVisual}
+          estiloImagen={estiloImagen}
+          setEstiloImagen={setEstiloImagen}
+          paletaColores={paletaColores}
+          setPaletaColores={setPaletaColores}
+          cantidadSlides={cantidadSlides}
+          setCantidadSlides={setCantidadSlides}
+        />
+      )}
 
       <div className="space-y-2">
         <label className="block text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>

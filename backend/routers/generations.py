@@ -6,7 +6,10 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, UploadFile
 
 from controllers import generation_controller
 from middleware.auth import get_current_user
-from schemas.generation import AudienceEnum, GenerationResponse, OutputEnum, TemplateEnum, ToneEnum
+from schemas.generation import (
+    AudienceEnum, EstiloImagenEnum, GenerationResponse, OutputEnum,
+    TemplateEnum, TemaVisualEnum, ToneEnum,
+)
 
 router = APIRouter()
 
@@ -22,11 +25,17 @@ async def create_generation(
     audiencia: AudienceEnum = Form(...),
     output: OutputEnum = Form(default=OutputEnum.ambos),
     logo: UploadFile | None = File(default=None),
+    usar_imagenes_documento: bool = Form(default=False),
+    tema_visual: TemaVisualEnum = Form(default=TemaVisualEnum.minimalist),
+    estilo_imagen: EstiloImagenEnum = Form(default=EstiloImagenEnum.aiGenerated),
+    paleta_colores: str = Form(default=""),
+    cantidad_slides: int = Form(default=10, ge=5, le=20),
     current_user: dict = Depends(get_current_user),
 ) -> GenerationResponse:
     return await generation_controller.start_generation(
         background_tasks, archivos, objetivo, informacion_adicional,
         template, tono, audiencia, output, logo, current_user,
+        usar_imagenes_documento, tema_visual, estilo_imagen, paleta_colores, cantidad_slides,
     )
 
 

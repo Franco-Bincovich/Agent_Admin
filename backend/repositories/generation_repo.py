@@ -29,16 +29,18 @@ def update_resultado(
     generation_id: str,
     pptx_url: str | None,
     gamma_url: str | None,
+    pptx_gamma_url: str | None,
     slides_count: int,
     outline: dict,
 ) -> dict:
-    """Actualiza a estado='listo' y persiste pptx_url, gamma_url, slides_count y outline."""
+    """Actualiza a estado='listo' y persiste pptx_url, gamma_url, pptx_gamma_url, slides_count y outline."""
     response = (
         _db()
         .update({
             "estado": "listo",
             "pptx_url": pptx_url,
             "gamma_url": gamma_url,
+            "pptx_gamma_url": pptx_gamma_url,
             "slides_count": slides_count,
             "outline": outline,
         })

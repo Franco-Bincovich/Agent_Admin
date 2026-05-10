@@ -25,7 +25,8 @@
       "Bash(pkill -9 -f \"next\")",
       "Bash(python -c \"from services.docx_service import extract_template_style, generate_docx; print\\('OK'\\)\")",
       "Bash(xargs ls -la)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(git *)"
     ]
   }
 }

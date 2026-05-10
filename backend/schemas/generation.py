@@ -38,6 +38,28 @@ class OutputEnum(str, Enum):
     ambos = "ambos"
 
 
+class TemaVisualEnum(str, Enum):
+    minimalist = "minimalist"
+    playful = "playful"
+    organic = "organic"
+    modular = "modular"
+    elegant = "elegant"
+    digital = "digital"
+    geometric = "geometric"
+
+
+class EstiloImagenEnum(str, Enum):
+    aiGenerated = "aiGenerated"
+    webAllImages = "webAllImages"
+    webFreeToUse = "webFreeToUse"
+    webFreeToUseCommercially = "webFreeToUseCommercially"
+    pictographic = "pictographic"
+    giphy = "giphy"
+    pexels = "pexels"
+    placeholder = "placeholder"
+    noImages = "noImages"
+
+
 class GenerationRequest(BaseModel):
     archivos: list[str] = Field(min_length=1, max_length=10)
     objetivo: str = Field(min_length=10, max_length=500)
@@ -46,6 +68,11 @@ class GenerationRequest(BaseModel):
     tono: ToneEnum
     audiencia: AudienceEnum
     output: OutputEnum = OutputEnum.ambos
+    usar_imagenes_documento: bool = False
+    tema_visual: TemaVisualEnum = TemaVisualEnum.minimalist
+    estilo_imagen: EstiloImagenEnum = EstiloImagenEnum.aiGenerated
+    paleta_colores: str = ""
+    cantidad_slides: int = Field(default=10, ge=5, le=20)
 
     @field_validator("objetivo", "informacion_adicional")
     @classmethod
@@ -71,5 +98,6 @@ class GenerationResponse(BaseModel):
     estado: GenerationStatus
     pptx_url: str | None = None
     gamma_url: str | None = None
+    pptx_gamma_url: str | None = None
     slides_count: int | None = None
     creado_en: str
