@@ -14,14 +14,14 @@ ALGORITHM = "HS256"
 _PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def hash_password(plain: str) -> str:
+def hash_password(password: str) -> str:
     """Hashea una contraseña en texto plano con bcrypt."""
-    return _PWD_CONTEXT.hash(plain)
+    return _PWD_CONTEXT.hash(password[:72])
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     """Verifica que una contraseña en texto plano coincide con su hash bcrypt."""
-    return _PWD_CONTEXT.verify(plain, hashed)
+    return _PWD_CONTEXT.verify(plain[:72], hashed)
 
 
 def create_access_token(user_id: str, role: str) -> str:
