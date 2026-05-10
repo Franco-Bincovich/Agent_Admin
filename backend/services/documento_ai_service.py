@@ -116,7 +116,6 @@ def generate_documento_outline(prompt: str) -> dict:
 
     Reintenta automáticamente una vez si el parsing JSON falla.
     Valida que el output no filtre el system prompt (SEGURIDAD 6.3).
-    Loguea éxito (INFO), reintento (WARNING) y error final (ERROR).
 
     Args:
         prompt: Prompt de usuario construido por build_documento_prompt().

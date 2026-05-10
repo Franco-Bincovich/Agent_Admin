@@ -26,26 +26,6 @@ async def create_documento(
     background_tasks: BackgroundTasks,
     current_user: dict,
 ) -> DocumentoResponse:
-    """
-    Crea un documento con estado='procesando' y lanza el pipeline en background.
-
-    Lee los bytes de cada archivo, valida y parsea las opciones, crea el registro
-    en DB y agrega run_document_generation como BackgroundTask. Retorna
-    DocumentoResponse inmediatamente sin esperar a que el pipeline termine.
-
-    Args:
-        titulo: Título del documento final.
-        secciones: Lista de secciones requeridas (ya parseada desde JSON).
-        indicaciones: Indicaciones adicionales del usuario (opcional).
-        opciones_raw: JSON string con homogeneizar, deduplicar, usar_imagenes.
-        archivos: Archivos fuente subidos (1 a 10).
-        plantilla: Archivo .docx base para estilos (opcional).
-        background_tasks: Objeto BackgroundTasks de FastAPI.
-        current_user: Payload JWT del usuario autenticado.
-
-    Returns:
-        DocumentoResponse con estado='procesando', listo para retornar al cliente.
-    """
     try:
         opciones = DocumentoOpciones(**json.loads(opciones_raw)).model_dump()
     except Exception:

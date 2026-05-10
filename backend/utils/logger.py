@@ -1,8 +1,23 @@
+import json
 import logging
 import sys
+from datetime import datetime, timezone
 from typing import Any
 
 from config.settings import get_settings
+
+
+class JSONFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        log_data = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "module": record.module,
+        }
+        if hasattr(record, "extra"):
+            log_data.update(record.extra)
+        return json.dumps(log_data)
 
 
 def _build_logger() -> logging.Logger:
@@ -16,11 +31,7 @@ def _build_logger() -> logging.Logger:
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(level)
 
-    fmt = logging.Formatter(
-        fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S",
-    )
-    handler.setFormatter(fmt)
+    handler.setFormatter(JSONFormatter())
     logger.addHandler(handler)
     logger.propagate = False
     return logger

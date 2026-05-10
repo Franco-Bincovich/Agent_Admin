@@ -3,58 +3,13 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { createUser } from '@/services/userService';
-import type { User, ApiError } from '@/types';
+import type { ApiError } from '@/types';
+import {
+  validate, EMPTY, NO_ERRORS, ALL_TOUCHED, NONE_TOUCHED,
+} from './useCreateUserFormTypes';
+import type { FormState, TextKey, FormErrors, CreateRol, Params } from './useCreateUserFormTypes';
 
-export type CreateRol = 'administrador' | 'usuario';
-
-export interface FormState {
-  nombre: string;
-  email: string;
-  username: string;
-  password: string;
-  rol: CreateRol;
-}
-
-export type TextKey = Exclude<keyof FormState, 'rol'>;
-export type FormErrors = Record<TextKey, string>;
-
-const EMPTY: FormState = { nombre: '', email: '', username: '', password: '', rol: 'usuario' };
-const NO_ERRORS: FormErrors = { nombre: '', email: '', username: '', password: '' };
-const ALL_TOUCHED: Record<TextKey, boolean> = { nombre: true, email: true, username: true, password: true };
-const NONE_TOUCHED: Record<TextKey, boolean> = { nombre: false, email: false, username: false, password: false };
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function validate(f: FormState): FormErrors {
-  return {
-    nombre: !f.nombre.trim()
-      ? 'El nombre es obligatorio'
-      : f.nombre.trim().length < 2
-      ? 'El nombre debe tener al menos 2 caracteres'
-      : '',
-    email: !f.email.trim()
-      ? 'El email es obligatorio'
-      : !EMAIL_RE.test(f.email)
-      ? 'Ingresá un email válido'
-      : '',
-    username: !f.username.trim()
-      ? 'El username es obligatorio'
-      : f.username.trim().length < 3
-      ? 'El username debe tener al menos 3 caracteres'
-      : !/^[a-zA-Z0-9_.-]+$/.test(f.username.trim())
-      ? 'Solo letras, números, puntos, guiones y guiones bajos'
-      : '',
-    password: !f.password
-      ? 'La contraseña es obligatoria'
-      : f.password.length < 8
-      ? 'La contraseña debe tener al menos 8 caracteres'
-      : '',
-  };
-}
-
-interface Params {
-  onClose: () => void;
-  onCreated: (user: User) => void;
-}
+export type { CreateRol, FormState, TextKey, FormErrors, Params };
 
 export function useCreateUserForm({ onClose, onCreated }: Params) {
   const [form, setForm]       = useState<FormState>(EMPTY);
