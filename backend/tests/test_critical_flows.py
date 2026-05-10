@@ -56,8 +56,8 @@ async def test_health(client):
 
 
 async def test_register_success(client):
-    with patch("controllers.auth_controller.find_by_email", return_value=None), \
-         patch("controllers.auth_controller.create", return_value=_USER), \
+    with patch("services.auth_service.find_by_email", return_value=None), \
+         patch("services.auth_service.create_user_record", return_value=_USER), \
          patch("repositories.token_repo.save", return_value={"id": "tok-1", "user_id": _USER_ID}):
         resp = await client.post("/api/v1/auth/register", json={
             "email": _EMAIL,
@@ -66,17 +66,16 @@ async def test_register_success(client):
             "rol": "editor",
         })
     assert resp.status_code == 201
-    body = resp.json()
-    assert "access_token" in body
-    assert "refresh_token" in body
-    assert body["token_type"] == "bearer"
+    assert resp.json() == {"ok": True}
+    assert "access_token" in resp.cookies
+    assert "refresh_token" in resp.cookies
 
 
 # ── 3. Registro con email duplicado ─────────────────────────────────────────
 
 
 async def test_register_duplicate_email(client):
-    with patch("controllers.auth_controller.find_by_email", return_value=_USER):
+    with patch("services.auth_service.find_by_email", return_value=_USER):
         resp = await client.post("/api/v1/auth/register", json={
             "email": _EMAIL,
             "password": _PASSWORD,
@@ -93,23 +92,23 @@ async def test_register_duplicate_email(client):
 
 
 async def test_login_success(client):
-    with patch("controllers.auth_controller.find_by_username", return_value=_USER), \
+    with patch("services.auth_service.find_by_username", return_value=_USER), \
          patch("repositories.token_repo.save", return_value={"id": "tok-1", "user_id": _USER_ID}):
         resp = await client.post("/api/v1/auth/login", json={
             "username": "testuser",
             "password": _PASSWORD,
         })
     assert resp.status_code == 200
-    body = resp.json()
-    assert "access_token" in body
-    assert "refresh_token" in body
+    assert resp.json() == {"ok": True}
+    assert "access_token" in resp.cookies
+    assert "refresh_token" in resp.cookies
 
 
 # ── 5. Login con password incorrecto ─────────────────────────────────────────
 
 
 async def test_login_wrong_password(client):
-    with patch("controllers.auth_controller.find_by_username", return_value=_USER):
+    with patch("services.auth_service.find_by_username", return_value=_USER):
         resp = await client.post("/api/v1/auth/login", json={
             "username": "testuser",
             "password": "wrong-password-that-does-not-match",
@@ -134,7 +133,7 @@ async def test_protected_endpoint_without_token(client):
 
 async def test_protected_endpoint_with_token(client):
     token = create_access_token(_USER_ID, "editor")
-    with patch("controllers.auth_controller.find_by_id", return_value=_USER):
+    with patch("services.auth_service.find_by_id", return_value=_USER):
         resp = await client.get(
             "/api/v1/auth/me",
             headers={"Authorization": f"Bearer {token}"},
@@ -199,7 +198,7 @@ async def test_generation_pptx_success(client):
 
     with patch("controllers.generation_controller.extract_text_from_file",
                return_value="Texto de prueba con contenido suficiente para la validación del pipeline."), \
-         patch("controllers.generation_controller.generation_repo.create",
+         patch("services.generation_record_service.generation_repo.create",
                return_value=_FAKE_GEN_PROCESANDO), \
          patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
          patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
@@ -256,7 +255,7 @@ async def test_generation_pptx_invalid_file(client):
 
 async def test_download_output_as_owner(client):
     token = create_access_token(_USER_ID, "editor")
-    with patch("controllers.generation_controller.generation_repo.find_by_id",
+    with patch("services.generation_record_service.generation_repo.find_by_id",
                return_value=_FAKE_GEN_LISTO):
         resp = await client.get(
             f"/api/v1/generations/{_GEN_ID}",
@@ -264,7 +263,7 @@ async def test_download_output_as_owner(client):
         )
     assert resp.status_code == 200
     body = resp.json()
-    assert body["output_url"] == _PPTX_URL
+    assert body["pptx_url"] == _PPTX_URL
 
 
 # ── 12. Otro usuario obtiene 404 — nunca 403 ────────────────────────────────
@@ -272,7 +271,7 @@ async def test_download_output_as_owner(client):
 
 async def test_download_output_as_other_user(client):
     other_token = create_access_token(_OTHER_USER_ID, "editor")
-    with patch("controllers.generation_controller.generation_repo.find_by_id",
+    with patch("services.generation_record_service.generation_repo.find_by_id",
                return_value=_FAKE_GEN_LISTO):
         resp = await client.get(
             f"/api/v1/generations/{_GEN_ID}",

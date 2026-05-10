@@ -4,8 +4,13 @@ import json
 
 from fastapi import BackgroundTasks, UploadFile
 
-from repositories import documento_mutations_repo, documento_repo
 from schemas.documento import DocumentoOpciones, DocumentoResponse
+from services.documento_record_service import (
+    create_documento_record,
+    get_documento_by_id,
+    list_all_documentos,
+    list_user_documentos,
+)
 from services.documento_service import run_document_generation
 from utils.errors import AppError, ErrorCode
 
@@ -25,8 +30,8 @@ async def create_documento(
     Crea un documento con estado='procesando' y lanza el pipeline en background.
 
     Lee los bytes de cada archivo, valida y parsea las opciones, crea el registro
-    en DB y agrega run_documento como BackgroundTask. Retorna DocumentoResponse
-    inmediatamente sin esperar a que el pipeline termine.
+    en DB y agrega run_document_generation como BackgroundTask. Retorna
+    DocumentoResponse inmediatamente sin esperar a que el pipeline termine.
 
     Args:
         titulo: Título del documento final.
@@ -60,7 +65,7 @@ async def create_documento(
     if logo:
         logo_bytes = await logo.read()
 
-    doc = documento_mutations_repo.create(
+    doc = create_documento_record(
         current_user["sub"],
         titulo,
         [nombre for nombre, _ in archivos_data],
@@ -81,9 +86,9 @@ async def create_documento(
 def get_documentos(current_user: dict) -> list[DocumentoResponse]:
     """Retorna el historial de documentos según el rol del usuario."""
     if current_user.get("role") == "administrador":
-        records = documento_repo.find_all()
+        records = list_all_documentos()
     else:
-        records = documento_repo.find_by_user(current_user["sub"])
+        records = list_user_documentos(current_user["sub"])
     return [DocumentoResponse(**r) for r in records]
 
 
@@ -92,10 +97,6 @@ def get_documento(documento_id: str, current_user: dict) -> DocumentoResponse:
     Retorna un documento verificando ownership. Devuelve 404 si no existe
     o si el usuario no es propietario — nunca 403 (SEGURIDAD 2.4).
     """
-    doc = documento_repo.find_by_id(documento_id)
-    if not doc:
-        raise AppError("No encontrado", ErrorCode.NOT_FOUND, 404)
     is_admin = current_user.get("role") == "administrador"
-    if not is_admin and doc["usuario_id"] != current_user["sub"]:
-        raise AppError("No encontrado", ErrorCode.NOT_FOUND, 404)
+    doc = get_documento_by_id(documento_id, current_user["sub"], is_admin)
     return DocumentoResponse(**doc)

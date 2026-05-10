@@ -31,6 +31,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
+MAX_PAYLOAD_BYTES = 50 * 1024 * 1024  # 50 MB
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
@@ -46,6 +49,20 @@ def create_app() -> FastAPI:
         redoc_url=None,
         lifespan=lifespan,
     )
+
+    @app.middleware("http")
+    async def limit_payload_size(request: Request, call_next):
+        content_length = request.headers.get("content-length")
+        if content_length and int(content_length) > MAX_PAYLOAD_BYTES:
+            return JSONResponse(
+                status_code=413,
+                content={
+                    "error": True,
+                    "message": "Payload demasiado grande",
+                    "code": "PAYLOAD_TOO_LARGE",
+                },
+            )
+        return await call_next(request)
 
     app.add_middleware(
         CORSMiddleware,

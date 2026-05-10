@@ -4,7 +4,11 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from config.settings import get_settings
+from repositories.user_mutations_repo import create as create_user_record
+from repositories.user_repo import find_by_email, find_by_id, find_by_username
+from schemas.auth import RegisterRequest
 from utils.errors import AppError, ErrorCode
+from utils.logger import log
 
 ALGORITHM = "HS256"
 _PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -43,3 +47,79 @@ def verify_token(token: str) -> dict:
     except JWTError:
         # Mensaje genérico — no informar si expiró, si la firma es incorrecta, etc.
         raise AppError("No autorizado", ErrorCode.UNAUTHORIZED, 401)
+
+
+def register_user(payload: RegisterRequest) -> dict:
+    """
+    Registra un usuario nuevo verificando unicidad de email.
+
+    Verifica que el email no esté en uso antes de crear. Nunca almacena
+    la contraseña en texto plano — delega el hash a hash_password.
+
+    Args:
+        payload: Datos de registro validados por Pydantic.
+
+    Returns:
+        Dict con los datos del usuario creado.
+
+    Raises:
+        AppError: code 'USER_ALREADY_EXISTS', status 409 si el email ya existe.
+    """
+    if find_by_email(payload.email):
+        raise AppError("El email ya está registrado.", ErrorCode.USER_ALREADY_EXISTS, 409)
+    return create_user_record(
+        email=payload.email,
+        nombre=payload.nombre,
+        password_hash=hash_password(payload.password),
+        rol=payload.rol,
+    )
+
+
+def authenticate_user(username: str, password: str) -> dict:
+    """
+    Verifica credenciales y retorna el usuario si son válidas.
+
+    Los errores siempre usan mensaje genérico para no revelar si el username
+    existe o si la contraseña es incorrecta (SEGURIDAD-PENTEST 2.3).
+
+    Args:
+        username: Nombre de usuario del candidato.
+        password: Contraseña en texto plano a verificar.
+
+    Returns:
+        Dict con los datos del usuario autenticado.
+
+    Raises:
+        AppError: code 'UNAUTHORIZED', status 401 ante cualquier fallo de auth.
+    """
+    _INVALID = AppError("No autorizado.", ErrorCode.UNAUTHORIZED, 401)
+    user = find_by_username(username)
+    if not user:
+        log.warning("Intento de login fallido")
+        raise _INVALID
+    if not verify_password(password, user.get("password_hash", "")):
+        log.warning("Intento de login fallido")
+        raise _INVALID
+    if not user.get("activo", False):
+        log.warning("Intento de login fallido")
+        raise _INVALID
+    return user
+
+
+def get_user_profile(user_id: str) -> dict:
+    """
+    Retorna el perfil del usuario autenticado.
+
+    Args:
+        user_id: UUID del usuario extraído del payload JWT.
+
+    Returns:
+        Dict con los datos del usuario en DB.
+
+    Raises:
+        AppError: code 'UNAUTHORIZED', status 401 si el usuario no existe.
+    """
+    user = find_by_id(user_id)
+    if not user:
+        raise AppError("No autorizado.", ErrorCode.UNAUTHORIZED, 401)
+    return user

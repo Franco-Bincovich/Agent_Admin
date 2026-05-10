@@ -2,14 +2,18 @@ from __future__ import annotations
 
 from fastapi import BackgroundTasks, UploadFile
 
-from repositories import generation_repo
 from schemas.generation import (
     AudienceEnum, EstiloImagenEnum, GenerationResponse, OutputEnum,
     TemplateEnum, TemaVisualEnum, ToneEnum,
 )
 from services.extraction_service import extract_text_from_file
+from services.generation_record_service import (
+    create_generation_record,
+    get_generation_by_id,
+    list_all_generations,
+    list_user_generations,
+)
 from services.generation_service import run_generation
-from utils.errors import AppError, ErrorCode
 
 
 async def start_generation(
@@ -54,7 +58,7 @@ async def start_generation(
         "tema_visual": tema_visual, "estilo_imagen": estilo_imagen,
         "paleta_colores": paleta_colores, "cantidad_slides": cantidad_slides,
     }
-    gen = generation_repo.create(
+    gen = create_generation_record(
         current_user["sub"], objetivo,
         [f.filename for f in archivos], parametros,
     )
@@ -71,9 +75,9 @@ async def start_generation(
 def list_generations(current_user: dict) -> list[GenerationResponse]:
     """Retorna el historial de generaciones según el rol del usuario."""
     if current_user.get("role") == "administrador":
-        records = generation_repo.find_all()
+        records = list_all_generations()
     else:
-        records = generation_repo.find_by_user(current_user["sub"])
+        records = list_user_generations(current_user["sub"])
     return [GenerationResponse(**r) for r in records]
 
 
@@ -82,10 +86,6 @@ def get_generation(generation_id: str, current_user: dict) -> GenerationResponse
     Retorna una generación verificando ownership. Devuelve 404 si no existe
     o si el usuario no es propietario — nunca 403 (SEGURIDAD 2.4).
     """
-    gen = generation_repo.find_by_id(generation_id)
-    if not gen:
-        raise AppError("No encontrado", ErrorCode.NOT_FOUND, 404)
     is_admin = current_user.get("role") == "administrador"
-    if not is_admin and gen["usuario_id"] != current_user["sub"]:
-        raise AppError("No encontrado", ErrorCode.NOT_FOUND, 404)
+    gen = get_generation_by_id(generation_id, current_user["sub"], is_admin)
     return GenerationResponse(**gen)
