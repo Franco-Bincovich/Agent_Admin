@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from integrations.gamma_client import publish_to_gamma
+from services.gamma_service import publish_presentation
 from integrations.supabase_client import get_supabase
 from repositories import generation_repo
 from services.ai_service import build_prompt, generate_outline
@@ -113,7 +113,7 @@ def run_generation(
         gamma_url: str | None = None
         pptx_gamma_url: str | None = None
         if output in ("gamma", "ambos"):
-            gamma_url, pptx_gamma_url = publish_to_gamma(
+            gamma_url, pptx_gamma_url = publish_presentation(
                 outline, tema_visual, estilo_imagen, paleta_colores, cantidad_slides,
             )
 

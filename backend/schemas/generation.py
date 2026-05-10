@@ -71,7 +71,7 @@ class GenerationRequest(BaseModel):
     usar_imagenes_documento: bool = False
     tema_visual: TemaVisualEnum = TemaVisualEnum.minimalist
     estilo_imagen: EstiloImagenEnum = EstiloImagenEnum.aiGenerated
-    paleta_colores: str = ""
+    paleta_colores: str = Field(default="", max_length=200)
     cantidad_slides: int = Field(default=10, ge=5, le=20)
 
     @field_validator("objetivo", "informacion_adicional")

@@ -1,12 +1,9 @@
-from repositories.user_repo import create, find_by_email, find_by_id, find_by_username
+from repositories.user_mutations_repo import create
+from repositories.user_repo import find_by_email, find_by_id, find_by_username
 from schemas.auth import LoginRequest, RegisterRequest, TokenResponse
 from schemas.user import UserResponse
-from services.auth_service import (
-    create_access_token,
-    create_refresh_token,
-    hash_password,
-    verify_password,
-)
+from services.auth_service import create_access_token, hash_password, verify_password
+from services.token_service import create_refresh_token
 from utils.errors import AppError, ErrorCode
 from utils.logger import log
 

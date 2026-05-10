@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from integrations.supabase_client import get_supabase
-from repositories import documento_repo
+from repositories import documento_mutations_repo, documento_repo
 from services.documento_ai_service import _DEFAULT_SECCIONES, build_documento_prompt, generate_documento_outline
 from services.docx_service import generate_docx
 from services.extraction_service import extract_images_from_file, extract_text_from_file
@@ -111,9 +111,9 @@ def run_documento(
         usar_imagenes = bool(opciones.get("usar_imagenes"))
         docx_bytes = generate_docx(outline, imagenes, usar_imagenes, plantilla_bytes, logo_bytes)
         docx_url = _upload_docx(documento_id, docx_bytes)
-        documento_repo.update_resultado(documento_id, docx_url)
+        documento_mutations_repo.update_resultado(documento_id, docx_url)
         log.info(f"documento.completed | id={documento_id}")
 
     except Exception as exc:
-        documento_repo.update_error(documento_id)
+        documento_mutations_repo.update_error(documento_id)
         log.error(f"documento.failed | id={documento_id} | error={exc}")

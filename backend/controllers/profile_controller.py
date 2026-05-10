@@ -1,4 +1,4 @@
-from repositories import user_repo
+from repositories import user_mutations_repo, user_repo
 from schemas.user import ChangePasswordRequest, ProfileResponse, UpdateProfileRequest
 from services.auth_service import hash_password, verify_password
 from utils.errors import AppError, ErrorCode
@@ -35,7 +35,7 @@ def update_profile(payload: UpdateProfileRequest, current_user: dict) -> Profile
     if not fields:
         return ProfileResponse(**user)
 
-    updated = user_repo.update_profile(user_id, fields)
+    updated = user_mutations_repo.update_profile(user_id, fields)
     return ProfileResponse(**updated)
 
 
@@ -48,5 +48,5 @@ def change_password(payload: ChangePasswordRequest, current_user: dict) -> dict:
     if not verify_password(payload.password_actual, user.get("password_hash", "")):
         raise AppError("Contraseña actual incorrecta.", ErrorCode.INVALID_PASSWORD, 400)
 
-    user_repo.update_profile(user_id, {"password_hash": hash_password(payload.password_nueva)})
+    user_mutations_repo.update_profile(user_id, {"password_hash": hash_password(payload.password_nueva)})
     return {"message": "Contraseña actualizada correctamente."}

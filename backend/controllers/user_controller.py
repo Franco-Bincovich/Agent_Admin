@@ -1,4 +1,4 @@
-from repositories import user_repo
+from repositories import user_mutations_repo, user_repo
 from schemas.user import CreateUserRequest, UserResponse
 from services.auth_service import hash_password
 from utils.errors import AppError, ErrorCode
@@ -16,7 +16,7 @@ def create_user(payload: CreateUserRequest) -> UserResponse:
         raise AppError("El email ya está en uso.", ErrorCode.USER_ALREADY_EXISTS, 409)
     if user_repo.find_by_username(payload.username):
         raise AppError("El nombre de usuario ya está en uso.", ErrorCode.USER_ALREADY_EXISTS, 409)
-    user = user_repo.create_full(
+    user = user_mutations_repo.create_full(
         email=payload.email,
         nombre=payload.nombre,
         username=payload.username,
@@ -86,5 +86,5 @@ def update_user_active(user_id: str, activo: bool, requester: dict) -> UserRespo
             ErrorCode.FORBIDDEN,
             403,
         )
-    updated = user_repo.update_active(user_id, activo)
+    updated = user_mutations_repo.update_active(user_id, activo)
     return UserResponse(**updated)

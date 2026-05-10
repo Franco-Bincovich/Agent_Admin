@@ -4,7 +4,7 @@ import json
 
 from fastapi import BackgroundTasks, UploadFile
 
-from repositories import documento_repo
+from repositories import documento_mutations_repo, documento_repo
 from schemas.documento import DocumentoOpciones, DocumentoResponse
 from services.documento_service import run_documento
 from utils.errors import AppError, ErrorCode
@@ -60,7 +60,7 @@ async def create_documento(
     if logo:
         logo_bytes = await logo.read()
 
-    doc = documento_repo.create(
+    doc = documento_mutations_repo.create(
         current_user["sub"],
         titulo,
         [nombre for nombre, _ in archivos_data],
