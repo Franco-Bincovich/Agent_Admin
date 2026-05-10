@@ -7,7 +7,7 @@ import type { Generation, ApiError } from '@/types';
 
 export function useGenerations() {
   const [generations, setGenerations] = useState<Generation[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchGenerations = useCallback(async () => {

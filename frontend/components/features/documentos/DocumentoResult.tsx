@@ -35,7 +35,8 @@ export default function DocumentoResult({ documento, onRetry }: Props) {
       {documento.documento_url && (
         <a
           href={documento.documento_url}
-          download
+          target="_blank"
+          rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium min-h-[44px] transition-colors"
           style={{
             backgroundColor: 'var(--color-primary)',
@@ -47,14 +48,16 @@ export default function DocumentoResult({ documento, onRetry }: Props) {
         </a>
       )}
       <div>
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={onRetry}
-          className="text-xs underline"
-          style={{ color: 'var(--color-text-secondary)' }}
+          className="gap-2"
         >
+          <RefreshCw className="w-4 h-4" />
           Generar otro documento
-        </button>
+        </Button>
       </div>
     </div>
   );
