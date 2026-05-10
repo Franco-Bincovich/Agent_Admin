@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import List
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -34,14 +33,7 @@ class Settings(BaseSettings):
     refresh_token_expiration_days: int = 30
 
     # ── CORS ──────────────────────────────────────────────────────────────────
-    allowed_origins: List[str] = ["http://localhost:3000"]
-
-    @field_validator("allowed_origins", mode="before")
-    @classmethod
-    def _parse_origins(cls, v):
-        if isinstance(v, str):
-            return [o.strip() for o in v.split(",") if o.strip()]
-        return v
+    allowed_origins: str = "http://localhost:3002"
 
     @field_validator("jwt_secret")
     @classmethod
