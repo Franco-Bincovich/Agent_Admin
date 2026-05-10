@@ -1,0 +1,7 @@
+backend/.env
+**/__pycache__/
+**/*.pyc
+.env
+.next/
+node_modules/
+.claude/settings.local.json

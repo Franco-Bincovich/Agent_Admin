@@ -1,8 +1,9 @@
-from __future__ import annotations
-
+from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Request, UploadFile
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from controllers import generation_controller
 from middleware.auth import get_current_user
@@ -12,19 +13,22 @@ from schemas.generation import (
 )
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/", response_model=GenerationResponse, status_code=202)
+@limiter.limit("20/minute")
 async def create_generation(
+    request: Request,
     background_tasks: BackgroundTasks,
     archivos: list[UploadFile] = File(...),
     objetivo: str = Form(...),
-    informacion_adicional: str | None = Form(default=None),
+    informacion_adicional: Optional[str] = Form(default=None),
     template: TemplateEnum = Form(...),
     tono: ToneEnum = Form(...),
     audiencia: AudienceEnum = Form(...),
     output: OutputEnum = Form(default=OutputEnum.ambos),
-    logo: UploadFile | None = File(default=None),
+    logo: Optional[UploadFile] = File(default=None),
     usar_imagenes_documento: bool = Form(default=False),
     tema_visual: TemaVisualEnum = Form(default=TemaVisualEnum.minimalist),
     estilo_imagen: EstiloImagenEnum = Form(default=EstiloImagenEnum.aiGenerated),

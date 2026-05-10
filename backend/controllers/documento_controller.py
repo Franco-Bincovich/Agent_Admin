@@ -80,7 +80,7 @@ async def create_documento(
 
 def get_documentos(current_user: dict) -> list[DocumentoResponse]:
     """Retorna el historial de documentos según el rol del usuario."""
-    if current_user.get("rol") == "administrador":
+    if current_user.get("role") == "administrador":
         records = documento_repo.find_all()
     else:
         records = documento_repo.find_by_user(current_user["sub"])
@@ -95,7 +95,7 @@ def get_documento(documento_id: str, current_user: dict) -> DocumentoResponse:
     doc = documento_repo.find_by_id(documento_id)
     if not doc:
         raise AppError("No encontrado", ErrorCode.NOT_FOUND, 404)
-    is_admin = current_user.get("rol") == "administrador"
+    is_admin = current_user.get("role") == "administrador"
     if not is_admin and doc["usuario_id"] != current_user["sub"]:
         raise AppError("No encontrado", ErrorCode.NOT_FOUND, 404)
     return DocumentoResponse(**doc)

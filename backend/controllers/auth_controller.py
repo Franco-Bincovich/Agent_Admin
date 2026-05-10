@@ -61,11 +61,9 @@ def login(payload: LoginRequest) -> TokenResponse:
     _INVALID = AppError("No autorizado.", ErrorCode.UNAUTHORIZED, 401)
 
     user = find_by_username(payload.username)
-    log.debug(f"[DEBUG login] username={payload.username!r} → user_found={user is not None} email={user.get('email') if user else None}")
     if not user:
         raise _INVALID
     pwd_ok = verify_password(payload.password, user.get("password_hash", ""))
-    log.debug(f"[DEBUG login] verify_password={pwd_ok} activo={user.get('activo')}")
     if not pwd_ok:
         raise _INVALID
     if not user.get("activo", False):

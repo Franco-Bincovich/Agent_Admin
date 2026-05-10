@@ -57,7 +57,7 @@ def get_user(user_id: str, current_user: dict) -> UserResponse:
     user = user_repo.find_by_id(user_id)
     if not user:
         raise AppError("No encontrado", ErrorCode.NOT_FOUND, 404)
-    is_admin = current_user.get("rol") == "administrador"
+    is_admin = current_user.get("role") == "administrador"
     if not is_admin and user["id"] != current_user["sub"]:
         raise AppError("No encontrado", ErrorCode.NOT_FOUND, 404)
     return UserResponse(**user)

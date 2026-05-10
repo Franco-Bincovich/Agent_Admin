@@ -70,7 +70,7 @@ async def start_generation(
 
 def list_generations(current_user: dict) -> list[GenerationResponse]:
     """Retorna el historial de generaciones según el rol del usuario."""
-    if current_user.get("rol") == "administrador":
+    if current_user.get("role") == "administrador":
         records = generation_repo.find_all()
     else:
         records = generation_repo.find_by_user(current_user["sub"])
@@ -85,7 +85,7 @@ def get_generation(generation_id: str, current_user: dict) -> GenerationResponse
     gen = generation_repo.find_by_id(generation_id)
     if not gen:
         raise AppError("No encontrado", ErrorCode.NOT_FOUND, 404)
-    is_admin = current_user.get("rol") == "administrador"
+    is_admin = current_user.get("role") == "administrador"
     if not is_admin and gen["usuario_id"] != current_user["sub"]:
         raise AppError("No encontrado", ErrorCode.NOT_FOUND, 404)
     return GenerationResponse(**gen)

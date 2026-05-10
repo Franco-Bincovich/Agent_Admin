@@ -92,9 +92,9 @@ async def test_register_duplicate_email(client):
 
 
 async def test_login_success(client):
-    with patch("controllers.auth_controller.find_by_email", return_value=_USER):
+    with patch("controllers.auth_controller.find_by_username", return_value=_USER):
         resp = await client.post("/api/v1/auth/login", json={
-            "email": _EMAIL,
+            "username": "testuser",
             "password": _PASSWORD,
         })
     assert resp.status_code == 200
@@ -107,9 +107,9 @@ async def test_login_success(client):
 
 
 async def test_login_wrong_password(client):
-    with patch("controllers.auth_controller.find_by_email", return_value=_USER):
+    with patch("controllers.auth_controller.find_by_username", return_value=_USER):
         resp = await client.post("/api/v1/auth/login", json={
-            "email": _EMAIL,
+            "username": "testuser",
             "password": "wrong-password-that-does-not-match",
         })
     assert resp.status_code == 401
