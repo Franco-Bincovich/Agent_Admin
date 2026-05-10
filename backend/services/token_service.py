@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 from jose import jwt
-from passlib.context import CryptContext
 
 from config.settings import get_settings
 from repositories import token_repo
@@ -9,12 +9,13 @@ from repositories.user_repo import find_by_id as _find_user
 from services.auth_service import ALGORITHM, create_access_token, verify_token
 from utils.errors import AppError, ErrorCode
 
-_PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 def hash_token(token: str) -> str:
     """Hashea un token con bcrypt antes de guardarlo en DB."""
-    return _PWD_CONTEXT.hash(token)
+    return bcrypt.hashpw(
+        token.encode("utf-8"),
+        bcrypt.gensalt()
+    ).decode("utf-8")
 
 
 def create_refresh_token(user_id: str) -> str:
@@ -44,7 +45,14 @@ def refresh_access_token(refresh_token: str) -> dict:
 
     user_id = payload["sub"]
     stored = token_repo.find_by_user(user_id)
-    if not stored or not _PWD_CONTEXT.verify(refresh_token, stored["token_hash"]):
+    try:
+        token_valid = bcrypt.checkpw(
+            refresh_token.encode("utf-8"),
+            stored["token_hash"].encode("utf-8")
+        )
+    except Exception:
+        token_valid = False
+    if not stored or not token_valid:
         raise _INVALID
 
     # Rotar: eliminar el viejo antes de generar el nuevo

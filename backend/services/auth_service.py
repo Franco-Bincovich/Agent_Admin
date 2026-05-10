@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from config.settings import get_settings
 from repositories.user_mutations_repo import create as create_user_record
@@ -11,17 +11,25 @@ from utils.errors import AppError, ErrorCode
 from utils.logger import log
 
 ALGORITHM = "HS256"
-_PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
     """Hashea una contraseña en texto plano con bcrypt."""
-    return _PWD_CONTEXT.hash(password[:72])
+    return bcrypt.hashpw(
+        password.encode("utf-8")[:72],
+        bcrypt.gensalt()
+    ).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     """Verifica que una contraseña en texto plano coincide con su hash bcrypt."""
-    return _PWD_CONTEXT.verify(plain[:72], hashed)
+    try:
+        return bcrypt.checkpw(
+            plain.encode("utf-8")[:72],
+            hashed.encode("utf-8")
+        )
+    except Exception:
+        return False
 
 
 def create_access_token(user_id: str, role: str) -> str:
