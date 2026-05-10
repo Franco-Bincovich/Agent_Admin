@@ -2,7 +2,9 @@ import re
 from enum import Enum
 from typing import Literal, Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+_EMAIL_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
 
 
 class UserRole(str, Enum):
@@ -15,7 +17,7 @@ class UserRole(str, Enum):
 class UserResponse(BaseModel):
     id: str
     nombre: str
-    email: EmailStr
+    email: str
     rol: UserRole
     activo: bool
     creado_en: str
@@ -24,7 +26,7 @@ class UserResponse(BaseModel):
 class ProfileResponse(BaseModel):
     id: str
     nombre: str
-    email: EmailStr
+    email: str
     username: Optional[str] = None
     rol: UserRole
     activo: bool
@@ -33,7 +35,7 @@ class ProfileResponse(BaseModel):
 
 class UpdateProfileRequest(BaseModel):
     nombre: Optional[str] = Field(None, min_length=2, max_length=100)
-    email: Optional[EmailStr] = None
+    email: Optional[str] = Field(None, max_length=200)
     username: Optional[str] = Field(None, min_length=3, max_length=50)
 
     @field_validator("nombre")
@@ -42,6 +44,15 @@ class UpdateProfileRequest(BaseModel):
         if v is None:
             return v
         return re.sub(r"[<>\"']", "", v).strip()
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        if not _EMAIL_RE.match(v):
+            raise ValueError("Email inválido")
+        return v.lower().strip()
 
     @field_validator("username")
     @classmethod
@@ -68,7 +79,7 @@ class ChangePasswordRequest(BaseModel):
 
 class CreateUserRequest(BaseModel):
     nombre: str = Field(min_length=2, max_length=100)
-    email: EmailStr
+    email: str = Field(max_length=200)
     username: str = Field(min_length=3, max_length=50)
     password: str = Field(min_length=8, max_length=128)
     rol: Literal["administrador", "usuario"]
@@ -77,6 +88,13 @@ class CreateUserRequest(BaseModel):
     @classmethod
     def sanitize_nombre(cls, v: str) -> str:
         return re.sub(r"[<>\"']", "", v).strip()
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        if not _EMAIL_RE.match(v):
+            raise ValueError("Email inválido")
+        return v.lower().strip()
 
     @field_validator("username")
     @classmethod
