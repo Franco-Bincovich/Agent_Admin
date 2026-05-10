@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { BarChart3, CheckCircle2, XCircle, CalendarDays } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +7,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { useAuth } from '@/hooks/useAuth';
+import { useGenerations } from '@/hooks/useGenerations';
 import { formatDate, formatTemplate, truncateText } from '@/utils/formatters';
 import type { Generation, GenerationStatus } from '@/types';
 
@@ -46,9 +46,19 @@ const STATUS_BADGE: Record<GenerationStatus, { label: string; className: string 
 export default function DashboardPage() {
   const { user } = useAuth();
   const isAdmin = user?.rol === 'administrador';
+  const { generations } = useGenerations();
 
-  const [metrics] = useState({ total: 0, listas: 0, errores: 0, mes: 0 });
-  const [recent] = useState<Generation[]>([]);
+  const now = new Date();
+  const metrics = {
+    total:   generations.length,
+    listas:  generations.filter((g) => g.estado === 'listo').length,
+    errores: generations.filter((g) => g.estado === 'error').length,
+    mes:     generations.filter((g) => {
+      const d = new Date(g.creado_en);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    }).length,
+  };
+  const recent = generations;
 
   const cards: MetricCardProps[] = [
     { label: isAdmin ? 'Total de generaciones' : 'Mis generaciones', value: metrics.total,   icon: BarChart3,    color: 'var(--color-primary)' },
