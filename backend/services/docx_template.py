@@ -8,6 +8,8 @@ from io import BytesIO
 from docx import Document
 from docx.shared import Cm, RGBColor
 
+from utils.logger import log
+
 _FONT = "Calibri"
 _C_TITULO = RGBColor(0x1E, 0x3A, 0x5F)   # #1E3A5F — título del documento
 _C_SECCION = RGBColor(0x2E, 0x6D, 0xA4)  # #2E6DA4 — nombre de sección
@@ -121,8 +123,8 @@ def extract_template_style(plantilla_bytes: bytes | None) -> dict:
                                     c_body = c_dk2
                         if c_body is not None:
                             style["color_cuerpo"] = c_body
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        log.debug("Error leyendo tema DOCX", extra={"error": str(e)})
 
                 # 1b. Fuente del tema solo si Normal style no la aportó
                 if style["font"] == _FONT:
@@ -136,8 +138,8 @@ def extract_template_style(plantilla_bytes: bytes | None) -> dict:
                                 # Los tokens "+mn-lt"/"+mj-lt" son referencias relativas, no nombres reales
                                 if tf and not tf.startswith("+"):
                                     style["font"] = tf
-    except Exception:
-        pass
+    except Exception as e:
+        log.debug("Error leyendo tema DOCX", extra={"error": str(e)})
 
     # 4b. color_cuerpo: fallback al color del estilo Normal si el theme no lo aportó
     if style["color_cuerpo"] is _C_CUERPO:
@@ -145,7 +147,7 @@ def extract_template_style(plantilla_bytes: bytes | None) -> dict:
             rgb = doc.styles["Normal"].font.color.rgb
             if rgb is not None:
                 style["color_cuerpo"] = rgb
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug("Error leyendo tema DOCX", extra={"error": str(e)})
 
     return style

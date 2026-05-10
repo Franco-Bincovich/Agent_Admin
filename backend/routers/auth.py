@@ -5,7 +5,8 @@ from slowapi.util import get_remote_address
 from controllers.auth_controller import get_me, login, register
 from controllers.token_controller import logout, refresh_tokens
 from middleware.auth import get_current_user
-from schemas.auth import LoginRequest, RefreshRequest, RegisterRequest
+from schemas.auth import LoginRequest, RegisterRequest
+from utils.errors import AppError
 from schemas.auth import TokenResponse as _TokenResponse
 from schemas.user import UserResponse
 
@@ -47,8 +48,11 @@ async def me_endpoint(current_user: dict = Depends(get_current_user)):
 
 @router.post("/refresh")
 @limiter.limit("10/minute")
-async def refresh_endpoint(request: Request, payload: RefreshRequest, response: Response):
-    _set_auth_cookies(response, refresh_tokens(payload))
+async def refresh_endpoint(request: Request, response: Response):
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise AppError("Refresh token no encontrado", "UNAUTHORIZED", 401)
+    _set_auth_cookies(response, refresh_tokens(refresh_token))
     return {"ok": True}
 
 

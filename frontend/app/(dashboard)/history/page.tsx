@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useGenerations } from '@/hooks/useGenerations';
 import { Download, ExternalLink, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,8 +30,7 @@ function SkeletonRow() {
 }
 
 export default function HistoryPage() {
-  const [isLoading] = useState(false);
-  const [generations] = useState<Generation[]>([]);
+  const { generations, isLoading } = useGenerations();
 
   return (
     <div className="space-y-6">

@@ -6,8 +6,8 @@ import { createUser } from '@/services/userService';
 import type { ApiError } from '@/types';
 import {
   validate, EMPTY, NO_ERRORS, ALL_TOUCHED, NONE_TOUCHED,
-} from './useCreateUserFormTypes';
-import type { FormState, TextKey, FormErrors, CreateRol, Params } from './useCreateUserFormTypes';
+} from './createUserFormTypes';
+import type { FormState, TextKey, FormErrors, CreateRol, Params } from './createUserFormTypes';
 
 export type { CreateRol, FormState, TextKey, FormErrors, Params };
 

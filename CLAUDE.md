@@ -202,13 +202,15 @@ ALLOWED_ORIGINS=http://localhost:3000
 
 ## Estado actual del proyecto
 
-**Implementado:** nada aún — proyecto en inicio.
-
-**En desarrollo:** estructura base del backend (primera tarea).
+**Implementado:**
+- Módulo de presentaciones (pipeline Claude → PPTX): funcional
+- Módulo de documentos Word (docx_template, extraction_service): funcional
+- Autenticación con refresh tokens vía cookies httpOnly: funcional
+- Tests críticos: 12/12
 
 **Pendiente:**
-- Migraciones SQL (fase siguiente al setup inicial)
-- Tests críticos
-- Deploy en Vercel + Supabase producción
+- Deploy en Vercel + Supabase producción (en curso)
+- Migraciones SQL versionadas (fase siguiente)
 - Templates PPTX v2 con imágenes (roadmap)
-- Integración Gamma (después de tener el pipeline Claude → PPTX funcionando)
+
+**Deuda técnica:** ver ARCHITECTURE.md

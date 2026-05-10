@@ -95,7 +95,13 @@ export default function UserTable({ users, isLoading, currentUserId, onToggleAct
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => onToggleActive(user.id, !user.activo)}
+                      onClick={() => {
+                        const confirmed = window.confirm(
+                          `¿Seguro que querés ${user.activo ? 'desactivar' : 'activar'} a ${user.nombre}?`
+                        );
+                        if (!confirmed) return;
+                        onToggleActive(user.id, !user.activo);
+                      }}
                       aria-label={user.activo ? `Desactivar ${user.nombre}` : `Activar ${user.nombre}`}
                     >
                       {user.activo
