@@ -29,8 +29,8 @@ export default function GenerationResult({ generation, onRetry }: Props) {
               <Button><Download className="w-4 h-4 mr-2" />Descargar PPTX (Gamma)</Button>
             </a>
           )}
-          {generation.pptx_url && (
-            <a href={generation.pptx_url} download>
+          {generation.output_url && (
+            <a href={generation.output_url} download>
               <Button variant="outline"><Download className="w-4 h-4 mr-2" />Descargar PPTX</Button>
             </a>
           )}

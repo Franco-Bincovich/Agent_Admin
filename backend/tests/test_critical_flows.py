@@ -264,7 +264,7 @@ async def test_download_output_as_owner(client):
         )
     assert resp.status_code == 200
     body = resp.json()
-    assert body["pptx_url"] == _PPTX_URL
+    assert body["output_url"] == _PPTX_URL
 
 
 # ── 12. Otro usuario obtiene 404 — nunca 403 ────────────────────────────────

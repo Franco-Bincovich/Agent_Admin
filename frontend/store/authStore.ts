@@ -10,23 +10,19 @@ interface AuthState {
 
 interface AuthActions {
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   loadUser: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState & AuthActions>((set) => ({
   user: null,
-  isLoading: false,
+  isLoading: true,
   isAuthenticated: false,
 
   login: async (username, password) => {
     set({ isLoading: true });
     try {
-      const tokens = await authService.login(username, password);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', tokens.access_token);
-        localStorage.setItem('refresh_token', tokens.refresh_token);
-      }
+      await authService.login(username, password);
       const user = await authService.getMe();
       set({ user, isAuthenticated: true, isLoading: false });
     } catch (err) {
@@ -35,21 +31,17 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
     }
   },
 
-  logout: () => {
-    authService.logout();
+  logout: async () => {
+    await authService.logout();
     set({ user: null, isAuthenticated: false });
   },
 
   loadUser: async () => {
-    if (typeof window === 'undefined') return;
-    const token = localStorage.getItem('access_token');
-    if (!token) return;
     set({ isLoading: true });
     try {
       const user = await authService.getMe();
       set({ user, isAuthenticated: true, isLoading: false });
     } catch {
-      authService.logout();
       set({ user: null, isAuthenticated: false, isLoading: false });
     }
   },

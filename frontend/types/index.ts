@@ -61,7 +61,7 @@ export interface Generation {
   usuario_id: string;
   objetivo: string;
   estado: GenerationStatus;
-  pptx_url: string | null;
+  output_url: string | null;
   gamma_url: string | null;
   pptx_gamma_url?: string | null;
   slides_count: number | null;
@@ -104,6 +104,6 @@ export interface Documento {
   usuario_id: string;
   titulo: string;
   estado: DocumentoEstado;
-  docx_url?: string;
+  documento_url?: string;
   creado_en: string;
 }

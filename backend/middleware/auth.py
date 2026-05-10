@@ -27,7 +27,8 @@ def register_auth_middleware(app: FastAPI) -> None:
             return await call_next(request)
 
         raw = request.headers.get("Authorization", "")
-        token = raw.removeprefix("Bearer ").strip()
+        header_token = raw.removeprefix("Bearer ").strip()
+        token = header_token or request.cookies.get("access_token", "")
         if not token:
             return JSONResponse(status_code=401, content=_UNAUTHORIZED)
 

@@ -28,7 +28,8 @@
       "Bash(python *)",
       "Bash(git *)",
       "Bash(xargs -I{} sh -c 'echo \"=== {} ===\"; cat {}')",
-      "Bash(pip3 install *)"
+      "Bash(pip3 install *)",
+      "Bash(grep -E '\\\\.\\(py|ts\\)$')"
     ]
   }
 }

@@ -104,8 +104,8 @@ export default function HistoryPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {gen.pptx_url && (
-                          <a href={gen.pptx_url} download aria-label="Descargar PPTX">
+                        {gen.output_url && (
+                          <a href={gen.output_url} download aria-label="Descargar PPTX">
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                               <Download className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
                             </Button>

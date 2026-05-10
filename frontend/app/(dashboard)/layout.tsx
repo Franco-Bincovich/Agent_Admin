@@ -11,8 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (isLoading) return;
-    const token = localStorage.getItem('access_token');
-    if (!user && !token) router.replace('/login');
+    if (!user) router.replace('/login');
   }, [user, isLoading, router]);
 
   if (!user) {

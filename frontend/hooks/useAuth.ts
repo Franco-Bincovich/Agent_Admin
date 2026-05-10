@@ -12,8 +12,7 @@ export function useAuth() {
   const loadUser = useAuthStore((s) => s.loadUser);
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) loadUser();
+    loadUser();
   }, [loadUser]);
 
   return { user, isLoading, isAuthenticated, login, logout };

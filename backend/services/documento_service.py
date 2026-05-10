@@ -4,7 +4,8 @@ from integrations.supabase_client import get_supabase
 from repositories import documento_mutations_repo, documento_repo
 from services.documento_ai_service import _DEFAULT_SECCIONES, build_documento_prompt, generate_documento_outline
 from services.docx_service import generate_docx
-from services.extraction_service import extract_images_from_file, extract_text_from_file
+from services.extraction_service import extract_text_from_file
+from services.image_extraction_service import extract_images_from_file
 from utils.errors import AppError
 from utils.logger import log
 

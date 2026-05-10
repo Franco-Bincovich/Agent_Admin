@@ -3,8 +3,9 @@ from __future__ import annotations
 from services.gamma_service import publish_presentation
 from integrations.supabase_client import get_supabase
 from repositories import generation_repo
-from services.ai_service import build_prompt, generate_outline
-from services.extraction_service import extract_images_from_file
+from services.ai_service import generate_outline
+from services.prompt_builder import build_prompt
+from services.image_extraction_service import extract_images_from_file
 from services.pptx_service import generate_pptx
 from utils.errors import AppError, ErrorCode
 from utils.logger import log

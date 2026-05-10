@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from enum import Enum
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class GenerationStatus(str, Enum):
@@ -92,11 +92,13 @@ class GenerationRequest(BaseModel):
 
 
 class GenerationResponse(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str
     usuario_id: str
     objetivo: str
     estado: GenerationStatus
-    pptx_url: str | None = None
+    output_url: str | None = Field(None, alias="pptx_url")
     gamma_url: str | None = None
     pptx_gamma_url: str | None = None
     slides_count: int | None = None

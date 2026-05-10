@@ -32,9 +32,9 @@ export default function DocumentoResult({ documento, onRetry }: Props) {
       <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
         {documento.titulo}
       </p>
-      {documento.docx_url && (
+      {documento.documento_url && (
         <a
-          href={documento.docx_url}
+          href={documento.documento_url}
           download
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium min-h-[44px] transition-colors"
           style={{
