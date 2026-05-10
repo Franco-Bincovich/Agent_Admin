@@ -104,6 +104,6 @@ export interface Documento {
   usuario_id: string;
   titulo: string;
   estado: DocumentoEstado;
-  documento_url?: string;
+  docx_url?: string;
   creado_en: string;
 }

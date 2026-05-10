@@ -32,9 +32,9 @@ export default function DocumentoResult({ documento, onRetry }: Props) {
       <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
         {documento.titulo}
       </p>
-      {documento.estado === 'listo' && documento.documento_url && (
+      {documento.estado === 'listo' && documento.docx_url && (
         <a
-          href={documento.documento_url}
+          href={documento.docx_url}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-white font-medium text-sm hover:opacity-90 transition-opacity"
