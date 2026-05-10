@@ -6,16 +6,19 @@ _TABLE = "usuarios"
 
 
 def find_by_email(email: str) -> dict | None:
+    """Busca un usuario por su email. Retorna None si no existe."""
     response = get_supabase().table(_TABLE).select("*").eq("email", email).execute()
     return response.data[0] if response.data else None
 
 
 def find_by_username(username: str) -> dict | None:
+    """Busca un usuario por su username. Retorna None si no existe."""
     response = get_supabase().table(_TABLE).select("*").eq("username", username).execute()
     return response.data[0] if response.data else None
 
 
 def find_by_id(user_id: str) -> dict | None:
+    """Busca un usuario por su ID. Retorna None si no existe."""
     response = get_supabase().table(_TABLE).select("*").eq("id", user_id).execute()
     return response.data[0] if response.data else None
 

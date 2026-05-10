@@ -2,16 +2,19 @@ import logging
 import sys
 from typing import Any
 
+from config.settings import get_settings
+
 
 def _build_logger() -> logging.Logger:
     logger = logging.getLogger("agent_admin")
     if logger.handlers:
         return logger
 
-    logger.setLevel(logging.INFO)
+    level = logging.INFO if get_settings().app_env == "production" else logging.DEBUG
+    logger.setLevel(level)
 
     handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel(logging.INFO)
+    handler.setLevel(level)
 
     fmt = logging.Formatter(
         fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",

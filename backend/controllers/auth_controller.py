@@ -1,3 +1,5 @@
+from fastapi import Request
+
 from repositories.user_mutations_repo import create
 from repositories.user_repo import find_by_email, find_by_id, find_by_username
 from schemas.auth import LoginRequest, RegisterRequest, TokenResponse
@@ -39,7 +41,7 @@ def register(payload: RegisterRequest) -> TokenResponse:
     )
 
 
-def login(payload: LoginRequest) -> TokenResponse:
+def login(payload: LoginRequest, request: Request) -> TokenResponse:
     """
     Autentica un usuario y devuelve sus tokens de acceso.
 
@@ -59,11 +61,14 @@ def login(payload: LoginRequest) -> TokenResponse:
 
     user = find_by_username(payload.username)
     if not user:
+        log.warning("Intento de login fallido", extra={"ip": request.client.host})
         raise _INVALID
     pwd_ok = verify_password(payload.password, user.get("password_hash", ""))
     if not pwd_ok:
+        log.warning("Intento de login fallido", extra={"ip": request.client.host})
         raise _INVALID
     if not user.get("activo", False):
+        log.warning("Intento de login fallido", extra={"ip": request.client.host})
         raise _INVALID
 
     return TokenResponse(

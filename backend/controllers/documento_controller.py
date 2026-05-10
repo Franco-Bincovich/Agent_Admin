@@ -6,7 +6,7 @@ from fastapi import BackgroundTasks, UploadFile
 
 from repositories import documento_mutations_repo, documento_repo
 from schemas.documento import DocumentoOpciones, DocumentoResponse
-from services.documento_service import run_documento
+from services.documento_service import run_document_generation
 from utils.errors import AppError, ErrorCode
 
 
@@ -71,7 +71,7 @@ async def create_documento(
     )
 
     background_tasks.add_task(
-        run_documento,
+        run_document_generation,
         doc["id"], archivos_data, plantilla_data, logo_bytes,
         titulo, secciones, indicaciones, opciones,
     )

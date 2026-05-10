@@ -36,7 +36,7 @@ async def register_endpoint(payload: RegisterRequest, response: Response):
 @router.post("/login")
 @limiter.limit("5/minute")
 async def login_endpoint(request: Request, payload: LoginRequest, response: Response):
-    _set_auth_cookies(response, login(payload))
+    _set_auth_cookies(response, login(payload, request))
     return {"ok": True}
 
 

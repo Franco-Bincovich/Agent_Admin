@@ -20,14 +20,22 @@ async def create_documento(
     request: Request,
     background_tasks: BackgroundTasks,
     archivos: list[UploadFile] = File(...),
-    titulo: str = Form(...),
+    titulo: str = Form(..., max_length=500),
     secciones: str = Form(default="[]"),
-    indicaciones: Optional[str] = Form(default=None),
+    indicaciones: Optional[str] = Form(default=None, max_length=1000),
     opciones: str = Form(default="{}"),
     plantilla: Optional[UploadFile] = File(default=None),
     logo: Optional[UploadFile] = File(default=None),
     current_user: dict = Depends(get_current_user),
 ) -> DocumentoResponse:
+    """
+    Crea un nuevo documento DOCX y lo procesa en background.
+
+    Raises:
+        400: Formato de archivo no soportado o opciones inválidas (UNSUPPORTED_FORMAT / VALIDATION_ERROR)
+        401: Token inválido o ausente (UNAUTHORIZED)
+        429: Rate limit excedido (RATE_LIMIT_EXCEEDED)
+    """
     secciones_list: list[str] = json.loads(secciones)
     return await documento_controller.create_documento(
         titulo, secciones_list, indicaciones, opciones,
@@ -39,6 +47,12 @@ async def create_documento(
 def list_documentos(
     current_user: dict = Depends(get_current_user),
 ) -> list[DocumentoResponse]:
+    """
+    Retorna el historial de documentos del usuario autenticado.
+
+    Raises:
+        401: Token inválido o ausente (UNAUTHORIZED)
+    """
     return documento_controller.get_documentos(current_user)
 
 
@@ -47,4 +61,11 @@ def get_documento(
     documento_id: UUID,
     current_user: dict = Depends(get_current_user),
 ) -> DocumentoResponse:
+    """
+    Retorna un documento por ID verificando ownership.
+
+    Raises:
+        401: Token inválido o ausente (UNAUTHORIZED)
+        404: Documento no encontrado o sin acceso (NOT_FOUND)
+    """
     return documento_controller.get_documento(str(documento_id), current_user)

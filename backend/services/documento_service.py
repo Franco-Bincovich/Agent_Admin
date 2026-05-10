@@ -50,7 +50,7 @@ def _detect_headings(text: str) -> list[str]:
     return headings[:10]
 
 
-def run_documento(
+def run_document_generation(
     documento_id: str,
     archivos: list[tuple[str, bytes]],
     plantilla: tuple[str, bytes] | None,
