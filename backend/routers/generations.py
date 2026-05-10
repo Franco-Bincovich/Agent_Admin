@@ -22,7 +22,7 @@ async def create_generation(
     request: Request,
     background_tasks: BackgroundTasks,
     archivos: list[UploadFile] = File(...),
-    objetivo: str = Form(...),
+    objetivo: str = Form(..., max_length=500),
     informacion_adicional: Optional[str] = Form(default=None),
     template: TemplateEnum = Form(...),
     tono: ToneEnum = Form(...),
@@ -32,7 +32,7 @@ async def create_generation(
     usar_imagenes_documento: bool = Form(default=False),
     tema_visual: TemaVisualEnum = Form(default=TemaVisualEnum.minimalist),
     estilo_imagen: EstiloImagenEnum = Form(default=EstiloImagenEnum.aiGenerated),
-    paleta_colores: str = Form(default=""),
+    paleta_colores: str = Form(default="", max_length=200),
     cantidad_slides: int = Form(default=10, ge=5, le=20),
     current_user: dict = Depends(get_current_user),
 ) -> GenerationResponse:

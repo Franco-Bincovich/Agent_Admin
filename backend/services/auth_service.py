@@ -67,12 +67,14 @@ def register_user(payload: RegisterRequest) -> dict:
     """
     if find_by_email(payload.email):
         raise AppError("El email ya está registrado.", ErrorCode.USER_ALREADY_EXISTS, 409)
-    return create_user_record(
+    user = create_user_record(
         email=payload.email,
         nombre=payload.nombre,
         password_hash=hash_password(payload.password),
         rol=payload.rol,
     )
+    log.info("Usuario registrado", extra={"user_id": str(user["id"])})
+    return user
 
 
 def authenticate_user(username: str, password: str) -> dict:
@@ -95,14 +97,15 @@ def authenticate_user(username: str, password: str) -> dict:
     _INVALID = AppError("No autorizado.", ErrorCode.UNAUTHORIZED, 401)
     user = find_by_username(username)
     if not user:
-        log.warning("Intento de login fallido")
+        log.warning("Intento de login fallido", extra={"username": username})
         raise _INVALID
     if not verify_password(password, user.get("password_hash", "")):
-        log.warning("Intento de login fallido")
+        log.warning("Intento de login fallido", extra={"username": username})
         raise _INVALID
     if not user.get("activo", False):
-        log.warning("Intento de login fallido")
+        log.warning("Intento de login fallido", extra={"username": username})
         raise _INVALID
+    log.info("Login exitoso", extra={"user_id": str(user["id"])})
     return user
 
 

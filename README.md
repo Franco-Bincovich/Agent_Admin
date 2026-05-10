@@ -25,6 +25,9 @@ cp backend/.env.example backend/.env
 cd backend
 pip install -r requirements.txt
 
+# 3a. Instalar dependencias de desarrollo (tests)
+pip install -r requirements-dev.txt
+
 # 4. Instalar dependencias frontend
 cd ../frontend
 npm install

@@ -9,6 +9,7 @@ from slowapi.util import get_remote_address
 from controllers import documento_controller
 from middleware.auth import get_current_user
 from schemas.documento import DocumentoResponse
+from utils.errors import AppError, ErrorCode
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
@@ -36,7 +37,10 @@ async def create_documento(
         401: Token inválido o ausente (UNAUTHORIZED)
         429: Rate limit excedido (RATE_LIMIT_EXCEEDED)
     """
-    secciones_list: list[str] = json.loads(secciones)
+    try:
+        secciones_list: list[str] = json.loads(secciones)
+    except json.JSONDecodeError:
+        raise AppError("El campo secciones no es JSON válido", "INVALID_JSON", 400)
     return await documento_controller.create_documento(
         titulo, secciones_list, indicaciones, opciones,
         archivos, plantilla, logo, background_tasks, current_user,

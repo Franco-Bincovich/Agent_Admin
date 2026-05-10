@@ -32,13 +32,14 @@ def build_prompt(
     Sanitiza texto_extraido e informacion_adicional para prevenir prompt injection.
     """
     fuente = sanitize_for_prompt(texto_extraido)
+    objetivo_clean = sanitize_for_prompt(objetivo)
     adicional = sanitize_for_prompt(informacion_adicional or "", 500)
     bloque_adicional = f"\nInformación adicional:\n{adicional}" if adicional else ""
     instruccion_tono = _TONO_MAP.get(tono, tono)
     instruccion_audiencia = _AUDIENCIA_MAP.get(audiencia, audiencia)
     return (
         f"## CONTENIDO FUENTE\n{fuente}{bloque_adicional}\n\n"
-        f"## OBJETIVO\n{objetivo}\n\n"
+        f"## OBJETIVO\n{objetivo_clean}\n\n"
         "## PARÁMETROS DE DISEÑO\n"
         f"- Template: {template}\n"
         f"- Tono: {tono} — {instruccion_tono}\n"

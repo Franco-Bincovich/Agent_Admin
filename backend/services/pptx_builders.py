@@ -22,11 +22,11 @@ def _build_portada(slide, data: dict, tpl) -> None:
         data: dict con 'titulo' (str) y 'contenido' (str).
         tpl: módulo de template con atributos TEMPLATE y LAYOUTS.
     """
-    t = tpl.TEMPLATE
-    lay = tpl.LAYOUTS["portada"]
-    set_slide_background(slide, t["background_color"])
-    add_textbox(slide, lay["title"], data["titulo"], t["font_title"], t["font_size_title_portada"], t["accent_color"], bold=True)
-    add_textbox(slide, lay["subtitle"], str(data["contenido"]), t["font_body"], t["font_size_body"], t["secondary_text"])
+    template = tpl.TEMPLATE
+    layout = tpl.LAYOUTS["portada"]
+    set_slide_background(slide, template["background_color"])
+    add_textbox(slide, layout["title"], data["titulo"], template["font_title"], template["font_size_title_portada"], template["accent_color"], bold=True)
+    add_textbox(slide, layout["subtitle"], str(data["contenido"]), template["font_body"], template["font_size_body"], template["secondary_text"])
 
 
 def _build_contenido(slide, data: dict, tpl, imagen: tuple[str, bytes] | None = None) -> None:
@@ -41,13 +41,13 @@ def _build_contenido(slide, data: dict, tpl, imagen: tuple[str, bytes] | None = 
         tpl: módulo de template con atributos TEMPLATE y LAYOUTS.
         imagen: Bytes de imagen a insertar a la derecha, o None para omitir.
     """
-    t = tpl.TEMPLATE
-    lay = tpl.LAYOUTS["contenido"]
-    set_slide_background(slide, t["background_color"])
-    add_textbox(slide, lay["title"], data["titulo"], t["font_title"], t["font_size_title_slide"], t["accent_color"], bold=True)
+    template = tpl.TEMPLATE
+    layout = tpl.LAYOUTS["contenido"]
+    set_slide_background(slide, template["background_color"])
+    add_textbox(slide, layout["title"], data["titulo"], template["font_title"], template["font_size_title_slide"], template["accent_color"], bold=True)
     bullets = data["contenido"] if isinstance(data["contenido"], list) else [str(data["contenido"])]
     bullet_text = "\n".join(f"• {b}" for b in bullets[:5])
-    add_textbox(slide, lay["body"], bullet_text, t["font_body"], t["font_size_body"], t["text_color"])
+    add_textbox(slide, layout["body"], bullet_text, template["font_body"], template["font_size_body"], template["text_color"])
     if imagen:
         _insert_image_on_slide(slide, imagen)
 
@@ -64,22 +64,22 @@ def _build_destacado(slide, data: dict, tpl, imagen: tuple[str, bytes] | None = 
         tpl: módulo de template con atributos TEMPLATE y LAYOUTS.
         imagen: Bytes de imagen a insertar a la derecha, o None para omitir.
     """
-    t = tpl.TEMPLATE
-    lay = tpl.LAYOUTS["destacado"]
-    set_slide_background(slide, t["background_color"])
-    add_textbox(slide, lay["title"], data["titulo"], t["font_title"], t["font_size_title_slide"], t["accent_color"], bold=True)
-    box = lay["box"]
+    template = tpl.TEMPLATE
+    layout = tpl.LAYOUTS["destacado"]
+    set_slide_background(slide, template["background_color"])
+    add_textbox(slide, layout["title"], data["titulo"], template["font_title"], template["font_size_title_slide"], template["accent_color"], bold=True)
+    box = layout["box"]
     shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, box["left"], box["top"], box["width"], box["height"])
     shape.fill.solid()
-    shape.fill.fore_color.rgb = RGBColor.from_string(t["accent_color"])
+    shape.fill.fore_color.rgb = RGBColor.from_string(template["accent_color"])
     shape.line.fill.background()
     tf = shape.text_frame
     tf.word_wrap = True
     tf.paragraphs[0].text = str(data["contenido"])
     run = tf.paragraphs[0].runs[0]
-    run.font.name = t["font_body"]
-    run.font.size = Pt(t["font_size_body"])
-    run.font.color.rgb = RGBColor.from_string(t["background_color"])
+    run.font.name = template["font_body"]
+    run.font.size = Pt(template["font_size_body"])
+    run.font.color.rgb = RGBColor.from_string(template["background_color"])
     if imagen:
         _insert_image_on_slide(slide, imagen)
 
@@ -94,14 +94,14 @@ def _build_cierre(slide, data: dict, tpl) -> None:
         data: dict con 'titulo' (str) y 'contenido' (str).
         tpl: módulo de template con atributos TEMPLATE y LAYOUTS.
     """
-    t = tpl.TEMPLATE
-    lay = tpl.LAYOUTS["cierre"]
-    set_slide_background(slide, t["background_color"])
-    add_textbox(slide, lay["text"], data["titulo"], t["font_title"], t["font_size_title_portada"], t["accent_color"], bold=True)
-    ln = lay["line"]
+    template = tpl.TEMPLATE
+    layout = tpl.LAYOUTS["cierre"]
+    set_slide_background(slide, template["background_color"])
+    add_textbox(slide, layout["text"], data["titulo"], template["font_title"], template["font_size_title_portada"], template["accent_color"], bold=True)
+    ln = layout["line"]
     line_shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, ln["left"], ln["top"], ln["width"], ln["height"])
     line_shape.fill.solid()
-    line_shape.fill.fore_color.rgb = RGBColor.from_string(t["secondary_text"])
+    line_shape.fill.fore_color.rgb = RGBColor.from_string(template["secondary_text"])
     line_shape.line.fill.background()
 
 

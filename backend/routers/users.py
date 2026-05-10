@@ -4,9 +4,8 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from controllers import user_controller
-from middleware.auth import get_current_user
+from middleware.auth import get_current_user, require_admin
 from schemas.user import CreateUserRequest, UserResponse
-from utils.errors import AppError, ErrorCode
 
 router = APIRouter()
 
@@ -20,8 +19,7 @@ def create_user(
     payload: CreateUserRequest,
     current_user: dict = Depends(get_current_user),
 ) -> UserResponse:
-    if current_user.get("role") != "administrador":
-        raise AppError("Acceso denegado", ErrorCode.FORBIDDEN, 403)
+    require_admin(current_user)
     return user_controller.create_user(payload)
 
 
@@ -29,8 +27,7 @@ def create_user(
 def list_users(
     current_user: dict = Depends(get_current_user),
 ) -> list[UserResponse]:
-    if current_user.get("role") != "administrador":
-        raise AppError("Acceso denegado", ErrorCode.FORBIDDEN, 403)
+    require_admin(current_user)
     return user_controller.get_all_users()
 
 
@@ -48,6 +45,5 @@ def update_active(
     payload: ActivePayload,
     current_user: dict = Depends(get_current_user),
 ) -> UserResponse:
-    if current_user.get("role") != "administrador":
-        raise AppError("Acceso denegado", ErrorCode.FORBIDDEN, 403)
+    require_admin(current_user)
     return user_controller.update_user_active(str(user_id), payload.activo, current_user)

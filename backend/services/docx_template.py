@@ -110,6 +110,10 @@ def extract_template_style(plantilla_bytes: bytes | None) -> dict:
                             dk2 = clr_scheme.find(f"{{{_NS_A}}}dk2")
                             if dk2 is not None:
                                 c_dk2 = _parse_theme_color(dk2)
+                                # Fórmula de luminancia relativa (WCAG 2.1)
+                                # para determinar si el color de tema es claro
+                                # u oscuro y elegir el color de texto con
+                                # contraste adecuado.
                                 if c_dk2 is not None and (
                                     0.2126 * c_dk2[0] + 0.7152 * c_dk2[1] + 0.0722 * c_dk2[2]
                                     < 0.2126 * c_body[0] + 0.7152 * c_body[1] + 0.0722 * c_body[2]

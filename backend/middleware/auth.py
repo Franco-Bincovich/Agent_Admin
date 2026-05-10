@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from services.auth_service import verify_token
+from utils.errors import AppError, ErrorCode
 
 # Rutas que no requieren autenticación — la lista es explícita e intencionalmente corta
 PUBLIC_ROUTES = [
@@ -47,3 +48,10 @@ def register_auth_middleware(app: FastAPI) -> None:
 def get_current_user(request: Request) -> dict:
     """FastAPI dependency: retorna el payload JWT del request ya autenticado por el middleware."""
     return request.state.user
+
+
+def require_admin(current_user: dict) -> None:
+    """Verifica que el usuario tiene rol admin.
+    Raises AppError FORBIDDEN 403 si no."""
+    if current_user.get("role") != "administrador":
+        raise AppError("No autorizado", ErrorCode.FORBIDDEN, 403)
