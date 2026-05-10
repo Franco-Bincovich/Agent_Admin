@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 # Las 7 secciones válidas que puede incluir un documento generado.
@@ -46,11 +46,9 @@ class CreateDocumentoRequest(BaseModel):
 
 
 class DocumentoResponse(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-
     id: str
     usuario_id: str
     titulo: str
     estado: str
-    documento_url: str | None = Field(None, alias="docx_url")
+    docx_url: str | None = None
     creado_en: str
