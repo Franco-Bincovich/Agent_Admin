@@ -49,6 +49,7 @@ def create_app() -> FastAPI:
         docs_url="/docs" if not settings.is_production else None,
         redoc_url=None,
         lifespan=lifespan,
+        redirect_slashes=False,
     )
 
     @app.middleware("http")

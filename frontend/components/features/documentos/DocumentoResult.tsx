@@ -44,16 +44,14 @@ export default function DocumentoResult({ documento, onRetry }: Props) {
         </a>
       )}
       <div>
-        <Button
+        <button
           type="button"
-          variant="outline"
-          size="sm"
           onClick={onRetry}
-          className="gap-2 border-white/20 text-white hover:bg-white/10"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-white/40 text-white font-medium text-sm hover:bg-white/10 transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           Generar otro documento
-        </Button>
+        </button>
       </div>
     </div>
   );
