@@ -19,9 +19,12 @@ def get_user_activity(user_id: str) -> list[dict]:
     generaciones = generation_repo.find_by_user(user_id)
     documentos = documento_repo.find_by_user(user_id)
 
-    items = (
-        [{**g, "tipo": "presentacion"} for g in generaciones]
-        + [{**d, "tipo": "documento"} for d in documentos]
-    )
+    gen_items = []
+    for g in generaciones:
+        item = {**g, "tipo": "presentacion"}
+        item["output_url"] = item.pop("pptx_url", None)
+        gen_items.append(item)
+
+    items = gen_items + [{**d, "tipo": "documento"} for d in documentos]
     items.sort(key=lambda x: x.get("creado_en", ""), reverse=True)
     return items
