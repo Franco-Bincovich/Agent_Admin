@@ -53,8 +53,7 @@ def build_destacado(slide, data: dict, tpl, imagen=None) -> None:
     add_rect(slide, Inches(0), Inches(0), _W, L["header_height"], T["header_color"])
     add_rect(slide, Inches(0), L["header_height"], _W, L["acento_height"], T["accent_color"])
     add_textbox(slide, L["titulo"], data["titulo"], T["font_title"], T["font_size_title_slide"], "FFFFFF", bold=True)
-    b = L["box"]
-    box = add_rect(slide, b["left"], b["top"], b["width"], b["height"], T["header_color"])
+    box = add_rect(slide, Inches(0.4), Inches(1.3), Inches(12.5), Inches(5.8), T["header_color"])
     set_shape_text(box, str(data.get("contenido", "")), T["font_body"], T["font_size_body"], "FFFFFF")
     if imagen:
         _insert_image(slide, imagen)
