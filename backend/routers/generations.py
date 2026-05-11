@@ -16,7 +16,7 @@ router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
 
 
-@router.post("/", response_model=GenerationResponse, status_code=202)
+@router.post("", response_model=GenerationResponse, status_code=202)
 @limiter.limit("20/minute")
 async def create_generation(
     request: Request,
@@ -51,7 +51,7 @@ async def create_generation(
     )
 
 
-@router.get("/", response_model=list[GenerationResponse])
+@router.get("", response_model=list[GenerationResponse])
 def list_generations(
     current_user: dict = Depends(get_current_user),
 ) -> list[GenerationResponse]:

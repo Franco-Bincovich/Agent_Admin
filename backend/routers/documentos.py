@@ -15,7 +15,7 @@ router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
 
 
-@router.post("/", response_model=DocumentoResponse, status_code=202)
+@router.post("", response_model=DocumentoResponse, status_code=202)
 @limiter.limit("20/minute")
 async def create_documento(
     request: Request,
@@ -47,7 +47,7 @@ async def create_documento(
     )
 
 
-@router.get("/", response_model=list[DocumentoResponse])
+@router.get("", response_model=list[DocumentoResponse])
 def list_documentos(
     current_user: dict = Depends(get_current_user),
 ) -> list[DocumentoResponse]:
