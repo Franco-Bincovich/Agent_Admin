@@ -1,4 +1,5 @@
 from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
 from pptx.util import Pt
 
 
@@ -18,8 +19,32 @@ def add_textbox(
     tf.word_wrap = True
     p = tf.paragraphs[0]
     p.text = text
-    run = p.runs[0]
-    run.font.name = font
-    run.font.size = Pt(size)
-    run.font.color.rgb = RGBColor.from_string(color)
-    run.font.bold = bold
+    if p.runs:
+        run = p.runs[0]
+        run.font.name = font
+        run.font.size = Pt(size)
+        run.font.color.rgb = RGBColor.from_string(color)
+        run.font.bold = bold
+
+
+def add_rect(slide, left, top, width, height, color: str):
+    """Adds a solid filled rectangle with no border. Returns the shape."""
+    sh = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, left, top, width, height)
+    sh.fill.solid()
+    sh.fill.fore_color.rgb = RGBColor.from_string(color)
+    sh.line.fill.background()
+    return sh
+
+
+def set_shape_text(sh, text: str, font: str, size: int, color: str, bold: bool = False) -> None:
+    """Writes formatted text into an existing shape's text frame."""
+    tf = sh.text_frame
+    tf.word_wrap = True
+    p = tf.paragraphs[0]
+    p.text = text
+    if p.runs:
+        run = p.runs[0]
+        run.font.name = font
+        run.font.size = Pt(size)
+        run.font.color.rgb = RGBColor.from_string(color)
+        run.font.bold = bold
