@@ -31,7 +31,7 @@ export default function GenerationResult({ generation, onRetry }: Props) {
           )}
           {generation.output_url && (
             <a href={generation.output_url} download>
-              <Button variant="outline"><Download className="w-4 h-4 mr-2" />Descargar PPTX</Button>
+              <Button variant="default"><Download className="w-4 h-4 mr-2" />Descargar PPTX</Button>
             </a>
           )}
           {generation.gamma_url && (

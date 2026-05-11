@@ -33,6 +33,7 @@ async def start_generation(
     estilo_imagen: EstiloImagenEnum = EstiloImagenEnum.aiGenerated,
     paleta_colores: str = "",
     cantidad_slides: int = 10,
+    titulo: str = "",
 ) -> GenerationResponse:
     """
     Orquesta el inicio de una generación: extrae texto, crea el registro en DB
@@ -62,6 +63,7 @@ async def start_generation(
     gen = create_generation_record(
         current_user["sub"], objetivo,
         [f.filename for f in archivos], parametros,
+        titulo,
     )
     background_tasks.add_task(
         run_generation,

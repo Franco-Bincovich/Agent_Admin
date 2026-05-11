@@ -34,6 +34,7 @@ async def create_generation(
     estilo_imagen: EstiloImagenEnum = Form(default=EstiloImagenEnum.aiGenerated),
     paleta_colores: str = Form(default="", max_length=200),
     cantidad_slides: int = Form(default=10, ge=5, le=20),
+    titulo: str = Form(default="", max_length=200),
     current_user: dict = Depends(get_current_user),
 ) -> GenerationResponse:
     """
@@ -48,6 +49,7 @@ async def create_generation(
         background_tasks, archivos, objetivo, informacion_adicional,
         template, tono, audiencia, output, logo, current_user,
         usar_imagenes_documento, tema_visual, estilo_imagen, paleta_colores, cantidad_slides,
+        titulo,
     )
 
 

@@ -10,12 +10,13 @@ def _db():
     return get_supabase().table(_TABLE)
 
 
-def create(usuario_id: str, objetivo: str, archivos: list, parametros: dict) -> dict:
+def create(usuario_id: str, objetivo: str, archivos: list, parametros: dict, titulo: str = "") -> dict:
     """Inserta generación con estado='procesando' y retorna el registro completo."""
     response = (
         _db()
         .insert({
             "usuario_id": str(usuario_id),
+            "titulo": titulo,
             "objetivo": objetivo,
             "archivos": archivos,
             "parametros": parametros,

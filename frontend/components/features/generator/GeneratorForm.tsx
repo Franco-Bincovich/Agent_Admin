@@ -33,6 +33,7 @@ export default function GeneratorForm() {
   const [estiloImagen, setEstiloImagen]     = useState<EstiloImagen>('aiGenerated');
   const [paletaColores, setPaletaColores]   = useState('');
   const [cantidadSlides, setCantidadSlides] = useState(10);
+  const [titulo, setTitulo]               = useState('');
 
   useEffect(() => {
     if (!logo) { setLogoPreview(null); return; }
@@ -52,6 +53,7 @@ export default function GeneratorForm() {
       const fd = new FormData();
       files.forEach((f) => fd.append('archivos', f));
       if (logo) fd.append('logo', logo);
+      fd.append('titulo', titulo.trim());
       fd.append('objetivo', objetivo.trim());
       if (info.trim()) fd.append('informacion_adicional', info.trim());
       fd.append('template', template); fd.append('tono', tono);
@@ -71,7 +73,7 @@ export default function GeneratorForm() {
   }
 
   function handleRetry() {
-    setFiles([]); setObjetivo(''); setInfo(''); setLogo(null); setIsSubmitting(false); setGenerationId(null); setGeneration(null);
+    setFiles([]); setTitulo(''); setObjetivo(''); setInfo(''); setLogo(null); setIsSubmitting(false); setGenerationId(null); setGeneration(null);
     setTemplate('ejecutivo_oscuro'); setTono('formal'); setAudiencia('directivos'); setOutput('ambos');
     setUsarImagenes(false); setTemaVisual('minimalist'); setEstiloImagen('aiGenerated'); setPaletaColores(''); setCantidadSlides(10);
   }
@@ -79,11 +81,23 @@ export default function GeneratorForm() {
   if (generationId) {
     return <ProgressTracker status="procesando" generationId={generationId} onComplete={setGeneration} />;
   }
-  const TA_CLASS = 'w-full rounded-lg border px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-background)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-disabled)] border-[var(--color-border)]';
+  const TA_CLASS    = 'w-full rounded-lg border px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-background)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-disabled)] border-[var(--color-border)]';
+  const INPUT_CLASS = 'w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-background)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-disabled)] border-[var(--color-border)]';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       <FileUploadArea files={files} onAdd={addFiles} onRemove={removeFile} />
+
+      <div className="space-y-3">
+        <label className="block text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+          Título de la presentación{' '}<span style={{ color: 'var(--color-text-disabled)' }}>(opcional)</span>
+        </label>
+        <input
+          type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)}
+          placeholder="Ej: Estrategia comercial Q2 2026"
+          className={INPUT_CLASS}
+        />
+      </div>
 
       <div className="space-y-3">
         <label className="block text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>

@@ -10,6 +10,7 @@ def create_generation_record(
     objetivo: str,
     filenames: list[str],
     parametros: dict,
+    titulo: str = "",
 ) -> dict:
     """
     Inserta un registro de generación con estado='procesando' en la DB.
@@ -19,11 +20,12 @@ def create_generation_record(
         objetivo: Objetivo declarado de la presentación.
         filenames: Lista de nombres de los archivos fuente.
         parametros: Dict con los parámetros de generación (template, tono, etc.).
+        titulo: Título opcional de la presentación.
 
     Returns:
         Dict con los datos del registro creado, incluyendo el ID asignado.
     """
-    return generation_repo.create(user_id, objetivo, filenames, parametros)
+    return generation_repo.create(user_id, objetivo, filenames, parametros, titulo)
 
 
 def list_all_generations() -> list[dict]:
