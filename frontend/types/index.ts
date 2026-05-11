@@ -107,3 +107,15 @@ export interface Documento {
   docx_url?: string;
   creado_en: string;
 }
+
+export interface ActivityItem {
+  id: string;
+  tipo: 'presentacion' | 'documento';
+  objetivo?: string;
+  titulo?: string;
+  estado: string;
+  creado_en: string;
+  output_url?: string;
+  docx_url?: string;
+  slides_count?: number;
+}

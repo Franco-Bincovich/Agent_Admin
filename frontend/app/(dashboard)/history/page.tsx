@@ -1,26 +1,31 @@
 'use client';
 
 import Link from 'next/link';
-import { useGenerations } from '@/hooks/useGenerations';
-import { Download, ExternalLink, FileText } from 'lucide-react';
+import { useActivity } from '@/hooks/useActivity';
+import { Download, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { formatDate, formatTemplate, truncateText } from '@/utils/formatters';
-import type { Generation, GenerationStatus } from '@/types';
+import { formatDate, truncateText } from '@/utils/formatters';
+import type { ActivityItem } from '@/types';
 
-const STATUS_BADGE: Record<GenerationStatus, { label: string; className: string }> = {
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   procesando: { label: 'Procesando...', className: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
   listo:      { label: 'Listo',         className: 'bg-green-500/20 text-green-400 border-green-500/30' },
   error:      { label: 'Error',         className: 'bg-red-500/20 text-red-400 border-red-500/30' },
 };
 
+const TYPE_BADGE: Record<ActivityItem['tipo'], { label: string; className: string }> = {
+  presentacion: { label: 'Presentación', className: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+  documento:    { label: 'Documento',    className: 'bg-green-500/20 text-green-400 border-green-500/30' },
+};
+
 function SkeletonRow() {
   return (
     <TableRow>
-      {Array.from({ length: 6 }).map((_, i) => (
+      {Array.from({ length: 7 }).map((_, i) => (
         <TableCell key={i}>
           <div className="h-4 w-full rounded animate-pulse" style={{ backgroundColor: 'var(--color-border)' }} />
         </TableCell>
@@ -30,7 +35,7 @@ function SkeletonRow() {
 }
 
 export default function HistoryPage() {
-  const { generations, isLoading } = useGenerations();
+  const { activity, isLoading } = useActivity();
 
   return (
     <div className="space-y-6">
@@ -39,7 +44,7 @@ export default function HistoryPage() {
           Historial
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-          Todas tus presentaciones generadas
+          Todas tus presentaciones y documentos generados
         </p>
       </div>
 
@@ -47,20 +52,21 @@ export default function HistoryPage() {
         <Table>
           <TableHeader>
             <TableRow style={{ borderColor: 'var(--color-border)' }}>
-              <TableHead className="w-[30%]"  style={{ color: 'var(--color-text-secondary)' }}>Objetivo</TableHead>
-              <TableHead                       style={{ color: 'var(--color-text-secondary)' }}>Template</TableHead>
-              <TableHead                       style={{ color: 'var(--color-text-secondary)' }}>Estado</TableHead>
-              <TableHead                       style={{ color: 'var(--color-text-secondary)' }}>Slides</TableHead>
-              <TableHead                       style={{ color: 'var(--color-text-secondary)' }}>Fecha</TableHead>
-              <TableHead className="text-right" style={{ color: 'var(--color-text-secondary)' }}>Acciones</TableHead>
+              <TableHead                          style={{ color: 'var(--color-text-secondary)' }}>Tipo</TableHead>
+              <TableHead className="w-[30%]"      style={{ color: 'var(--color-text-secondary)' }}>Objetivo</TableHead>
+              <TableHead                          style={{ color: 'var(--color-text-secondary)' }}>Template</TableHead>
+              <TableHead                          style={{ color: 'var(--color-text-secondary)' }}>Estado</TableHead>
+              <TableHead                          style={{ color: 'var(--color-text-secondary)' }}>Slides</TableHead>
+              <TableHead                          style={{ color: 'var(--color-text-secondary)' }}>Fecha</TableHead>
+              <TableHead className="text-right"   style={{ color: 'var(--color-text-secondary)' }}>Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-            ) : generations.length === 0 ? (
+            ) : activity.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-16">
+                <TableCell colSpan={7} className="py-16">
                   <div className="flex flex-col items-center gap-4 text-center">
                     <FileText className="w-12 h-12" style={{ color: 'var(--color-text-disabled)' }} />
                     <div>
@@ -82,42 +88,39 @@ export default function HistoryPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              generations.map((gen) => {
-                const badge = STATUS_BADGE[gen.estado];
+              activity.map((item) => {
+                const statusBadge = STATUS_BADGE[item.estado] ?? STATUS_BADGE['procesando'];
+                const typeBadge = TYPE_BADGE[item.tipo];
+                const label = item.objetivo ?? item.titulo ?? '';
+                const downloadUrl = item.output_url ?? item.docx_url;
                 return (
-                  <TableRow key={gen.id} style={{ borderColor: 'var(--color-border)' }}>
+                  <TableRow key={item.id} style={{ borderColor: 'var(--color-border)' }}>
+                    <TableCell>
+                      <Badge variant="outline" className={typeBadge.className}>{typeBadge.label}</Badge>
+                    </TableCell>
                     <TableCell style={{ color: 'var(--color-text-primary)' }}>
-                      {truncateText(gen.objetivo, 45)}
+                      {truncateText(label, 45)}
                     </TableCell>
                     <TableCell style={{ color: 'var(--color-text-secondary)' }}>
-                      {gen.parametros ? formatTemplate(gen.parametros.template) : '—'}
+                      —
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={badge.className}>{badge.label}</Badge>
+                      <Badge variant="outline" className={statusBadge.className}>{statusBadge.label}</Badge>
                     </TableCell>
                     <TableCell style={{ color: 'var(--color-text-secondary)' }}>
-                      {gen.slides_count ?? '—'}
+                      {item.tipo === 'presentacion' ? (item.slides_count ?? '—') : '—'}
                     </TableCell>
                     <TableCell style={{ color: 'var(--color-text-secondary)' }}>
-                      {formatDate(gen.creado_en)}
+                      {formatDate(item.creado_en)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {gen.output_url && (
-                          <a href={gen.output_url} download aria-label="Descargar PPTX">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <Download className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
-                            </Button>
-                          </a>
-                        )}
-                        {gen.gamma_url && (
-                          <a href={gen.gamma_url} target="_blank" rel="noopener noreferrer" aria-label="Abrir en Gamma">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <ExternalLink className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
-                            </Button>
-                          </a>
-                        )}
-                      </div>
+                      {downloadUrl && (
+                        <a href={downloadUrl} download aria-label="Descargar archivo">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Download className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
+                          </Button>
+                        </a>
+                      )}
                     </TableCell>
                   </TableRow>
                 );

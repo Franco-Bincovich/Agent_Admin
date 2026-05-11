@@ -11,7 +11,7 @@ from slowapi.util import get_remote_address
 from config.settings import get_settings
 from middleware.auth import register_auth_middleware
 from middleware.error_handler import register_error_handlers
-from routers import auth, documentos, generations, profile, users
+from routers import activity, auth, documentos, generations, profile, users
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -97,6 +97,7 @@ def create_app() -> FastAPI:
     app.include_router(documentos.router, prefix="/api/v1/documentos", tags=["documentos"])
     app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
     app.include_router(profile.router, prefix="/api/v1/profile", tags=["profile"])
+    app.include_router(activity.router, prefix="/api/v1/activity", tags=["activity"])
 
     @app.get("/health", include_in_schema=False)
     async def health():
