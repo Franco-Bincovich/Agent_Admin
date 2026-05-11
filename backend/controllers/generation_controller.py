@@ -7,6 +7,7 @@ from schemas.generation import (
     TemplateEnum, TemaVisualEnum, ToneEnum,
 )
 from services.extraction_service import extract_text_from_file
+from utils.logger import log
 from services.generation_record_service import (
     create_generation_record,
     get_generation_by_id,
@@ -74,6 +75,7 @@ async def start_generation(
 
 def list_generations(current_user: dict) -> list[GenerationResponse]:
     """Retorna el historial de generaciones según el rol del usuario."""
+    log.info("list_generations llamado", extra={"current_user": str(current_user)})
     if current_user.get("role") == "administrador":
         records = list_all_generations()
     else:

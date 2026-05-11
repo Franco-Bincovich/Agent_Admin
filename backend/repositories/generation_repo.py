@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from integrations.supabase_client import get_supabase
+from utils.logger import log
 
 _TABLE = "generaciones"
 
@@ -66,6 +67,7 @@ def find_by_user(usuario_id: str, limit: int = 20) -> list[dict]:
     Retorna las generaciones del usuario ordenadas por creado_en DESC.
     Máximo `limit` registros (default 20).
     """
+    log.info("find_by_user query", extra={"usuario_id": str(usuario_id)})
     response = (
         _db()
         .select("*")

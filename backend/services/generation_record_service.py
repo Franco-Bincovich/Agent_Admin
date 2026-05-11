@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from repositories import generation_repo
 from utils.errors import AppError, ErrorCode
+from utils.logger import log
 
 
 def create_generation_record(
@@ -32,6 +33,7 @@ def list_all_generations() -> list[dict]:
 
 def list_user_generations(user_id: str) -> list[dict]:
     """Retorna los registros de generación del usuario indicado."""
+    log.info("list_user_generations llamado", extra={"user_id": str(user_id)})
     return generation_repo.find_by_user(user_id)
 
 
