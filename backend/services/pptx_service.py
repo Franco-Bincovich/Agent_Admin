@@ -4,7 +4,7 @@ import io
 from typing import Optional
 
 from pptx import Presentation
-from pptx.util import Cm
+from pptx.util import Cm, Inches
 
 from services.pptx_builders import (
     _build_cierre,
@@ -68,6 +68,8 @@ def generate_pptx(
     _img_slides = {"contenido", "destacado"}
     try:
         prs = Presentation()
+        prs.slide_width = Inches(13.33)
+        prs.slide_height = Inches(7.5)
         blank_layout = prs.slide_layouts[6]
         img_iter = iter(imagenes or [])
         for idx, slide_data in enumerate(outline["slides"]):
