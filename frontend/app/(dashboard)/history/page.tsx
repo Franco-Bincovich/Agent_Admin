@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useActivity } from '@/hooks/useActivity';
-import { Download, FileText } from 'lucide-react';
+import { Download, ExternalLink, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -92,7 +92,6 @@ export default function HistoryPage() {
                 const statusBadge = STATUS_BADGE[item.estado] ?? STATUS_BADGE['procesando'];
                 const typeBadge = TYPE_BADGE[item.tipo];
                 const label = item.objetivo ?? item.titulo ?? '';
-                const downloadUrl = item.output_url ?? item.docx_url;
                 return (
                   <TableRow key={item.id} style={{ borderColor: 'var(--color-border)' }}>
                     <TableCell>
@@ -114,13 +113,40 @@ export default function HistoryPage() {
                       {formatDate(item.creado_en)}
                     </TableCell>
                     <TableCell className="text-right">
-                      {downloadUrl && (
-                        <a href={downloadUrl} download aria-label="Descargar archivo">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Download className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
-                          </Button>
-                        </a>
-                      )}
+                      <div className="flex flex-col items-end gap-1">
+                        {item.gamma_url && (
+                          <a href={item.gamma_url} target="_blank" rel="noopener noreferrer">
+                            <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              Abrir en Gamma
+                            </Button>
+                          </a>
+                        )}
+                        {item.pptx_gamma_url && (
+                          <a href={item.pptx_gamma_url} target="_blank" rel="noopener noreferrer">
+                            <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                              <Download className="w-3.5 h-3.5" />
+                              Descargar PPTX Gamma
+                            </Button>
+                          </a>
+                        )}
+                        {item.output_url && (
+                          <a href={item.output_url} download>
+                            <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                              <Download className="w-3.5 h-3.5" />
+                              Descargar PPTX
+                            </Button>
+                          </a>
+                        )}
+                        {item.docx_url && (
+                          <a href={item.docx_url} download>
+                            <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                              <Download className="w-3.5 h-3.5" />
+                              Descargar DOCX
+                            </Button>
+                          </a>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
