@@ -37,7 +37,7 @@ def _upload_pptx(generation_id: str, pptx_bytes: bytes) -> str:
     return storage.get_public_url(path)
 
 
-def run_generation(
+async def run_generation(
     generation_id: str,
     texto_extraido: str,
     objetivo: str,
@@ -114,9 +114,14 @@ def run_generation(
         gamma_url: str | None = None
         pptx_gamma_url: str | None = None
         if output in ("gamma", "ambos"):
-            gamma_url, pptx_gamma_url = publish_presentation(
-                outline, tema_visual, estilo_imagen, paleta_colores, cantidad_slides,
-            )
+            try:
+                result = await publish_presentation(
+                    outline, tema_visual, estilo_imagen, paleta_colores, cantidad_slides,
+                )
+                gamma_url = result["gamma_url"]
+                pptx_gamma_url = result["pptx_gamma_url"]
+            except AppError as exc:
+                log.warning(f"gamma.skipped | id={generation_id} | error={exc}")
 
         generation_repo.update_resultado(
             generation_id, pptx_url, gamma_url, pptx_gamma_url,

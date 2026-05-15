@@ -1,9 +1,14 @@
 from __future__ import annotations
 
-import httpx
+import asyncio
 
 from config.settings import get_settings
+from integrations.gamma_client import create_generation, poll_generation
+from utils.errors import AppError
 from utils.logger import log
+
+_POLL_INTERVAL = 3
+_MAX_ATTEMPTS = 20
 
 
 def _build_gamma_prompt(outline: dict, paleta_colores: str, cantidad_slides: int) -> str:
@@ -33,56 +38,66 @@ def _build_gamma_prompt(outline: dict, paleta_colores: str, cantidad_slides: int
     )
 
 
-def publish_presentation(
+async def publish_presentation(
     outline: dict,
     tema_visual: str = "minimalist",
     estilo_imagen: str = "aiGenerated",
     paleta_colores: str = "",
     cantidad_slides: int = 10,
-) -> tuple[str | None, str | None]:
+) -> dict[str, str]:
     """
-    Publica una presentación en Gamma y solicita exportación como PPTX.
+    Publica una presentación en Gamma API v1.0 y espera a que complete.
 
-    Construye el prompt desde el outline de Claude mediante _build_gamma_prompt,
-    lo envía a la Gamma API con los parámetros de configuración visual y captura
-    las URLs de resultado. Ante cualquier fallo retorna (None, None) y registra
-    un warning — no lanza excepción porque corre dentro del pipeline de generación.
+    Construye el prompt desde el outline de Claude, crea la generación vía POST /generations,
+    y realiza polling hasta obtener status 'completed' o 'failed' (máximo 20 intentos, 60s).
 
     Args:
         outline: Outline JSON con 'titulo_presentacion' y 'slides' generado por Claude.
-        tema_visual: Tema visual de Gamma (style). Ej: 'minimalist', 'elegant'.
-        estilo_imagen: Fuente de imágenes de Gamma (imageOptions.source).
-            Ej: 'aiGenerated', 'webFreeToUse'.
+        tema_visual: Identificador de tema visual. Se mapea a 'themeId' solo si
+            settings expone gamma_theme_ids; de lo contrario se omite.
+        estilo_imagen: Fuente de imágenes para Gamma (imageOptions.source).
+            Ej: 'aiGenerated', 'pexels'.
         paleta_colores: Paleta de colores sugerida. Se incluye en el prompt como hint.
-        cantidad_slides: Cantidad objetivo de slides (numCards). Rango recomendado: 5-20.
+        cantidad_slides: Cantidad objetivo de slides. Rango recomendado: 5-20.
 
     Returns:
-        Tupla (gamma_url, pptx_gamma_url):
-        - gamma_url: URL pública del documento Gamma generado, o None si falla.
-        - pptx_gamma_url: URL del PPTX exportado desde Gamma. None si la respuesta
-          no incluye 'exportUrl' o si la llamada falla.
+        Dict con 'gamma_url' y 'pptx_gamma_url'.
+
+    Raises:
+        AppError: GAMMA_FAILED 503 si la generación falla o supera el timeout de 60s.
     """
-    settings = get_settings()
     prompt = _build_gamma_prompt(outline, paleta_colores, cantidad_slides)
-    payload = {
-        "prompt": prompt,
-        "style": tema_visual,
-        "imageOptions": {"source": estilo_imagen},
+    payload: dict = {
+        "inputText": prompt,
+        "textMode": "preserve",
+        "format": "presentation",
         "numCards": cantidad_slides,
         "exportAs": "pptx",
+        "imageOptions": {"source": estilo_imagen},
     }
-    try:
-        with httpx.Client(
-            base_url="https://api.gamma.app",
-            headers={"Authorization": f"Bearer {settings.gamma_api_key}"},
-            timeout=60.0,
-        ) as client:
-            response = client.post("/ai/generate", json=payload)
-            response.raise_for_status()
-            data = response.json()
-            gamma_url: str | None = data.get("url") or data.get("shareUrl")
-            pptx_gamma_url: str | None = data.get("exportUrl")
-            return gamma_url, pptx_gamma_url
-    except Exception as exc:
-        log.warning(f"gamma.publish_failed | error={exc}")
-        return None, None
+
+    settings = get_settings()
+    if tema_visual and hasattr(settings, "gamma_theme_ids"):
+        theme_map = settings.gamma_theme_ids  # type: ignore[attr-defined]
+        if isinstance(theme_map, dict) and tema_visual in theme_map:
+            payload["themeId"] = theme_map[tema_visual]
+
+    log.info(f"gamma.create_generation | numCards={cantidad_slides}")
+    data = await create_generation(payload)
+    generation_id: str = data["generationId"]
+
+    for attempt in range(1, _MAX_ATTEMPTS + 1):
+        await asyncio.sleep(_POLL_INTERVAL)
+        result = await poll_generation(generation_id)
+        status: str = result.get("status", "")
+        log.info(f"gamma.poll | attempt={attempt} generationId={generation_id} status={status}")
+
+        if status == "completed":
+            return {
+                "gamma_url": result.get("gammaUrl", ""),
+                "pptx_gamma_url": result.get("exportUrl", ""),
+            }
+        if status == "failed":
+            raise AppError("Gamma generation failed", "GAMMA_FAILED", 503)
+
+    raise AppError("Gamma generation timed out", "GAMMA_FAILED", 503)
