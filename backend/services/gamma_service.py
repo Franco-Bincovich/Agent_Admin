@@ -60,6 +60,7 @@ async def resolve_user_folder(email: str, user_id: str) -> tuple[str | None, str
     """
     try:
         folders = await get_folders()
+        log.info(f"gamma.debug_folders | user={email} | total={len(folders)} | folders={folders}")
         for folder in folders:
             if folder.get("name", "").lower() == email.lower():
                 folder_id: str = folder["id"]
