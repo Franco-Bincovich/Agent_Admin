@@ -152,8 +152,15 @@ export default function GeneratorForm() {
         />
       )}
 
-      <LogoPicker logo={logo} logoPreview={logoPreview}
-        onPick={(f) => setLogo(f)} onRemove={() => setLogo(null)} />
+      {output !== 'gamma' && (
+        <div className="space-y-1">
+          <LogoPicker logo={logo} logoPreview={logoPreview}
+            onPick={(f) => setLogo(f)} onRemove={() => setLogo(null)} />
+          <p className="text-xs" style={{ color: 'var(--color-text-disabled)' }}>
+            El logo se incluye en el archivo PPTX descargable
+          </p>
+        </div>
+      )}
 
       <Button type="submit" disabled={!isFormValid || isSubmitting} className="w-full min-h-[44px]"
         style={{ backgroundColor: isFormValid && !isSubmitting ? 'var(--color-primary)' : undefined }}>
