@@ -91,7 +91,7 @@ export default function HistoryPage() {
               activity.map((item) => {
                 const statusBadge = STATUS_BADGE[item.estado] ?? STATUS_BADGE['procesando'];
                 const typeBadge = TYPE_BADGE[item.tipo];
-                const label = item.objetivo ?? item.titulo ?? '';
+                const label = item.titulo?.trim() || item.objetivo || '';
                 return (
                   <TableRow key={item.id} style={{ borderColor: 'var(--color-border)' }}>
                     <TableCell>

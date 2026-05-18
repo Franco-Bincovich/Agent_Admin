@@ -11,7 +11,7 @@ _POLL_INTERVAL = 3
 _MAX_ATTEMPTS = 20
 
 
-def _build_gamma_prompt(outline: dict, paleta_colores: str, cantidad_slides: int) -> str:
+def _build_gamma_prompt(outline: dict, paleta_colores: str, cantidad_slides: int, titulo: str = "") -> str:
     """
     Construye el texto de prompt para Gamma a partir del outline generado por Claude.
 
@@ -22,19 +22,23 @@ def _build_gamma_prompt(outline: dict, paleta_colores: str, cantidad_slides: int
         outline: Outline JSON con 'titulo_presentacion' y 'slides'.
         paleta_colores: Paleta sugerida para incluir como hint (puede ser vacía).
         cantidad_slides: Cantidad objetivo de slides para Gamma.
+        titulo: Título ingresado por el usuario. Tiene precedencia sobre el del outline.
 
     Returns:
         Prompt de texto listo para enviar al endpoint de Gamma.
     """
-    titulo = outline.get("titulo_presentacion", "Presentación")
-    slides_texto = "\n".join(
-        f"- {s.get('titulo', '')}: {s.get('contenido', '')}"
-        for s in outline.get("slides", [])
-    )
+    titulo = titulo.strip() or outline.get("titulo_presentacion", "Presentación")
+    slides_parts: list[str] = []
+    for i, s in enumerate(outline.get("slides", []), start=1):
+        contenido = s.get("contenido", "")
+        if isinstance(contenido, list):
+            contenido = "\n".join(contenido)
+        slides_parts.append(f"Slide {i} — {s.get('titulo', '')}\n{contenido}")
     paleta_hint = f"\nPaleta de colores: {paleta_colores}." if paleta_colores else ""
     return (
-        f"Crea una presentación de {cantidad_slides} slides titulada '{titulo}'.\n"
-        f"{slides_texto}{paleta_hint}"
+        f"Crea una presentación de {cantidad_slides} slides titulada '{titulo}'.\n\n"
+        + "\n\n".join(slides_parts)
+        + paleta_hint
     )
 
 
@@ -44,6 +48,7 @@ async def publish_presentation(
     estilo_imagen: str = "aiGenerated",
     paleta_colores: str = "",
     cantidad_slides: int = 10,
+    titulo: str = "",
 ) -> dict[str, str]:
     """
     Publica una presentación en Gamma API v1.0 y espera a que complete.
@@ -59,6 +64,7 @@ async def publish_presentation(
             Ej: 'aiGenerated', 'pexels'.
         paleta_colores: Paleta de colores sugerida. Se incluye en el prompt como hint.
         cantidad_slides: Cantidad objetivo de slides. Rango recomendado: 5-20.
+        titulo: Título ingresado por el usuario. Tiene precedencia sobre el del outline.
 
     Returns:
         Dict con 'gamma_url' y 'pptx_gamma_url'.
@@ -66,7 +72,7 @@ async def publish_presentation(
     Raises:
         AppError: GAMMA_FAILED 503 si la generación falla o supera el timeout de 60s.
     """
-    prompt = _build_gamma_prompt(outline, paleta_colores, cantidad_slides)
+    prompt = _build_gamma_prompt(outline, paleta_colores, cantidad_slides, titulo)
     payload: dict = {
         "inputText": prompt,
         "textMode": "preserve",

@@ -53,6 +53,7 @@ async def run_generation(
     estilo_imagen: str = "aiGenerated",
     paleta_colores: str = "",
     cantidad_slides: int = 10,
+    titulo: str = "",
 ) -> None:
     """
     Orquesta el pipeline completo de generación de presentaciones.
@@ -116,7 +117,7 @@ async def run_generation(
         if output in ("gamma", "ambos"):
             try:
                 result = await publish_presentation(
-                    outline, tema_visual, estilo_imagen, paleta_colores, cantidad_slides,
+                    outline, tema_visual, estilo_imagen, paleta_colores, cantidad_slides, titulo,
                 )
                 gamma_url = result["gamma_url"]
                 pptx_gamma_url = result["pptx_gamma_url"]

@@ -59,6 +59,7 @@ export interface GenerationParametros {
 export interface Generation {
   id: string;
   usuario_id: string;
+  titulo?: string;
   objetivo: string;
   estado: GenerationStatus;
   output_url: string | null;

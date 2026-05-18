@@ -96,6 +96,7 @@ class GenerationResponse(BaseModel):
 
     id: str
     usuario_id: str
+    titulo: str | None = None
     objetivo: str
     estado: GenerationStatus
     output_url: str | None = Field(None, validation_alias="pptx_url")

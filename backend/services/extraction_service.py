@@ -4,6 +4,7 @@ from pathlib import Path
 import fitz
 import mammoth
 import openpyxl
+from pptx import Presentation
 
 from utils.errors import AppError, ErrorCode
 
@@ -32,6 +33,28 @@ def _extract_from_txt(file_bytes: bytes) -> str:
         return file_bytes.decode("latin-1")
 
 
+def _extract_from_pptx(file_bytes: bytes) -> str:
+    """Extrae texto de un PPTX iterando slides en orden, separando título del resto."""
+    prs = Presentation(io.BytesIO(file_bytes))
+    slides_text: list[str] = []
+    for i, slide in enumerate(prs.slides, start=1):
+        title = ""
+        body_parts: list[str] = []
+        for shape in slide.shapes:
+            if not shape.has_text_frame:
+                continue
+            text = shape.text_frame.text.strip()
+            if not text:
+                continue
+            if shape.is_placeholder and shape.placeholder_format.idx == 0:
+                title = text
+            else:
+                body_parts.append(text)
+        header = f"## Slide {i}: {title}" if title else f"## Slide {i}"
+        slides_text.append(header + ("\n" + "\n".join(body_parts) if body_parts else ""))
+    return "\n\n".join(slides_text)
+
+
 def _extract_from_xlsx(file_bytes: bytes) -> str:
     """Extrae texto de todas las hojas de un XLSX, celda por celda."""
     wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
@@ -49,6 +72,7 @@ _EXTRACTORS = {
     ".docx": _extract_from_docx,
     ".txt": _extract_from_txt,
     ".xlsx": _extract_from_xlsx,
+    ".pptx": _extract_from_pptx,
 }
 
 
@@ -74,7 +98,7 @@ def extract_text_from_file(filename: str, file_bytes: bytes) -> str:
     extractor = _EXTRACTORS.get(ext)
     if not extractor:
         raise AppError(
-            f"Formato no soportado: '{ext}'. Formatos válidos: pdf, docx, txt, xlsx.",
+            f"Formato no soportado: '{ext}'. Formatos válidos: pdf, docx, txt, xlsx, pptx.",
             ErrorCode.UNSUPPORTED_FORMAT,
             400,
         )

@@ -71,6 +71,7 @@ async def start_generation(
         template, tono, audiencia, logo_bytes, output,
         usar_imagenes_documento, archivo_bytes,
         tema_visual, estilo_imagen, paleta_colores, cantidad_slides,
+        titulo,
     )
     return GenerationResponse(**gen)
 
