@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from services.gamma_service import publish_presentation
+from services.gamma_service import publish_presentation, resolve_user_folder
 from integrations.supabase_client import get_supabase
 from repositories import generation_repo
 from services.ai_service import generate_outline
@@ -54,6 +54,9 @@ async def run_generation(
     paleta_colores: str = "",
     cantidad_slides: int = 10,
     titulo: str = "",
+    user_id: str = "",
+    user_email: str = "",
+    gamma_folder_id: str | None = None,
 ) -> None:
     """
     Orquesta el pipeline completo de generación de presentaciones.
@@ -87,6 +90,9 @@ async def run_generation(
         estilo_imagen: Fuente de imágenes de Gamma pasado como 'imageOptions.source'.
         paleta_colores: Paleta de colores sugerida. Se incluye en el prompt de Gamma.
         cantidad_slides: Cantidad objetivo de slides pasada como 'numCards' en el MCP (5-20).
+        user_id: UUID del usuario, necesario para cachear el folder_id de Gamma si se resuelve.
+        user_email: Email del usuario, usado como nombre de carpeta en Gamma.
+        gamma_folder_id: ID de carpeta Gamma ya cacheado en DB; si es None se intenta resolver.
     """
     try:
         if output not in _VALID_OUTPUTS:
@@ -114,10 +120,15 @@ async def run_generation(
 
         gamma_url: str | None = None
         pptx_gamma_url: str | None = None
+        gamma_warning: str | None = None
         if output in ("gamma", "ambos"):
+            folder_id = gamma_folder_id
+            if folder_id is None and user_email:
+                folder_id, gamma_warning = await resolve_user_folder(user_email, user_id)
             try:
                 result = await publish_presentation(
                     outline, tema_visual, estilo_imagen, paleta_colores, cantidad_slides, titulo,
+                    folder_id,
                 )
                 gamma_url = result["gamma_url"]
                 pptx_gamma_url = result["pptx_gamma_url"]
@@ -126,7 +137,7 @@ async def run_generation(
 
         generation_repo.update_resultado(
             generation_id, pptx_url, gamma_url, pptx_gamma_url,
-            len(outline["slides"]), outline,
+            len(outline["slides"]), outline, gamma_warning,
         )
         log.info(f"generation.completed | id={generation_id}")
     except Exception as exc:

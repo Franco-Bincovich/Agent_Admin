@@ -43,3 +43,19 @@ async def poll_generation(generation_id: str) -> dict:
         )
         response.raise_for_status()
         return response.json()
+
+
+async def get_folders() -> list[dict]:
+    """
+    Lista todas las carpetas disponibles en el workspace de Gamma.
+    Retorna una lista de dicts; cada item contiene al menos 'id' y 'name'.
+    Raises: httpx.HTTPError si falla.
+    """
+    async with httpx.AsyncClient(timeout=30) as client:
+        response = await client.get(
+            f"{GAMMA_BASE_URL}/folders",
+            headers=get_headers(),
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data if isinstance(data, list) else data.get("folders", [])

@@ -103,4 +103,5 @@ class GenerationResponse(BaseModel):
     gamma_url: str | None = None
     pptx_gamma_url: str | None = None
     slides_count: int | None = None
+    gamma_warning: str | None = None
     creado_en: str

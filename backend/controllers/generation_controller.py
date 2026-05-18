@@ -7,6 +7,7 @@ from schemas.generation import (
     TemplateEnum, TemaVisualEnum, ToneEnum,
 )
 from services.extraction_service import extract_text_from_file
+from repositories.user_repo import find_by_id as find_user_by_id
 from utils.logger import log
 from services.generation_record_service import (
     create_generation_record,
@@ -53,6 +54,10 @@ async def start_generation(
     if logo:
         logo_bytes = await logo.read()
 
+    user = find_user_by_id(current_user["sub"]) or {}
+    user_email: str = user.get("email", "")
+    gamma_folder_id: str | None = user.get("gamma_folder_id")
+
     parametros = {
         "template": template, "tono": tono, "audiencia": audiencia,
         "output": output, "informacion_adicional": informacion_adicional,
@@ -72,6 +77,7 @@ async def start_generation(
         usar_imagenes_documento, archivo_bytes,
         tema_visual, estilo_imagen, paleta_colores, cantidad_slides,
         titulo,
+        current_user["sub"], user_email, gamma_folder_id,
     )
     return GenerationResponse(**gen)
 

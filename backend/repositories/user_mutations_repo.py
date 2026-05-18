@@ -63,3 +63,8 @@ def update_active(user_id: str, activo: bool) -> dict:
     if not response.data:
         raise AppError("Usuario no encontrado.", ErrorCode.NOT_FOUND, 404)
     return response.data[0]
+
+
+def update_gamma_folder_id(user_id: str, folder_id: str) -> None:
+    """Persiste el ID de carpeta Gamma del usuario para evitar lookups repetidos."""
+    get_supabase().table(_TABLE).update({"gamma_folder_id": folder_id}).eq("id", user_id).execute()

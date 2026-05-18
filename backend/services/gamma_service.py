@@ -3,7 +3,8 @@ from __future__ import annotations
 import asyncio
 
 from config.settings import get_settings
-from integrations.gamma_client import create_generation, poll_generation
+from integrations.gamma_client import create_generation, get_folders, poll_generation
+from repositories.user_mutations_repo import update_gamma_folder_id
 from utils.errors import AppError
 from utils.logger import log
 
@@ -42,6 +43,39 @@ def _build_gamma_prompt(outline: dict, paleta_colores: str, cantidad_slides: int
     )
 
 
+async def resolve_user_folder(email: str, user_id: str) -> tuple[str | None, str | None]:
+    """
+    Busca en Gamma la carpeta cuyo nombre coincide exactamente con el email del usuario.
+
+    Si la encuentra, persiste el folder_id en la tabla usuarios (caché) y retorna
+    (folder_id, None). Si no la encuentra, retorna (None, mensaje_advertencia).
+    Ante cualquier error de la API de Gamma, retorna (None, None) sin interrumpir el pipeline.
+
+    Args:
+        email: Email del usuario, usado como nombre exacto de carpeta.
+        user_id: UUID del usuario en Supabase, para persistir el folder_id encontrado.
+
+    Returns:
+        Tuple (folder_id, gamma_warning). Ambos pueden ser None simultáneamente si hay error de API.
+    """
+    try:
+        folders = await get_folders()
+        for folder in folders:
+            if folder.get("name", "").lower() == email.lower():
+                folder_id: str = folder["id"]
+                update_gamma_folder_id(user_id, folder_id)
+                log.info(f"gamma.folder_found | user={email} folder_id={folder_id}")
+                return folder_id, None
+        log.info(f"gamma.folder_not_found | user={email}")
+        return None, (
+            f"Para organizar tus presentaciones en Gamma, "
+            f"creá una carpeta con tu email como nombre ({email})"
+        )
+    except Exception as exc:
+        log.warning(f"gamma.resolve_folder_error | user={email} | error={exc}")
+        return None, None
+
+
 async def publish_presentation(
     outline: dict,
     tema_visual: str = "minimalist",
@@ -49,6 +83,7 @@ async def publish_presentation(
     paleta_colores: str = "",
     cantidad_slides: int = 10,
     titulo: str = "",
+    folder_id: str | None = None,
 ) -> dict[str, str]:
     """
     Publica una presentación en Gamma API v1.0 y espera a que complete.
@@ -81,6 +116,8 @@ async def publish_presentation(
         "exportAs": "pptx",
         "imageOptions": {"source": estilo_imagen},
     }
+    if folder_id:
+        payload["folderIds"] = [folder_id]
 
     settings = get_settings()
     if tema_visual and hasattr(settings, "gamma_theme_ids"):
