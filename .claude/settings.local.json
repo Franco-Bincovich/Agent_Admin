@@ -32,7 +32,9 @@
       "Bash(grep -E '\\\\.\\(py|ts\\)$')",
       "Bash(npm ls *)",
       "Bash(grep -v \"^$\")",
-      "Bash(xargs cat -n)"
+      "Bash(xargs cat -n)",
+      "Bash(Get-ChildItem -Path \"backend\" -Recurse -Filter \"*.py\")",
+      "Bash(Select-Object FullName)"
     ]
   }
 }
