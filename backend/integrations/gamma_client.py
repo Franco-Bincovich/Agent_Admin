@@ -58,4 +58,4 @@ async def get_folders() -> list[dict]:
         )
         response.raise_for_status()
         data = response.json()
-        return data if isinstance(data, list) else data.get("folders", [])
+        return data if isinstance(data, list) else data.get("data", [])
