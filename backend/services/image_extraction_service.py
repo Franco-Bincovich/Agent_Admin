@@ -6,6 +6,8 @@ from pathlib import Path
 
 import fitz
 
+_MIN_IMAGE_BYTES = 50 * 1024  # 50 KB — filtra logos e iconos pequeños
+
 
 def extract_images_from_file(filename: str, file_bytes: bytes) -> list[bytes]:
     """
@@ -40,7 +42,9 @@ def _extract_images_from_pdf(file_bytes: bytes) -> list[bytes]:
         for img_index in page.get_images():
             xref = img_index[0]
             base_image = doc.extract_image(xref)
-            images.append(base_image["image"])
+            img = base_image["image"]
+            if len(img) >= _MIN_IMAGE_BYTES:
+                images.append(img)
     doc.close()
     return images
 
@@ -51,7 +55,9 @@ def _extract_images_from_docx(file_bytes: bytes) -> list[bytes]:
     with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
         for name in zf.namelist():
             if name.startswith("word/media/"):
-                images.append(zf.read(name))
+                img = zf.read(name)
+                if len(img) >= _MIN_IMAGE_BYTES:
+                    images.append(img)
     return images
 
 
@@ -62,5 +68,7 @@ def _extract_images_from_xlsx(file_bytes: bytes) -> list[bytes]:
     with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
         for name in zf.namelist():
             if name.startswith("xl/media/") and Path(name).suffix.lower() in _IMG_EXTS:
-                images.append(zf.read(name))
+                img = zf.read(name)
+                if len(img) >= _MIN_IMAGE_BYTES:
+                    images.append(img)
     return images
