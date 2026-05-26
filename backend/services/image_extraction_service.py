@@ -6,7 +6,7 @@ from pathlib import Path
 
 import fitz
 
-_MIN_IMAGE_BYTES = 50 * 1024  # 50 KB — filtra logos e iconos pequeños
+_MIN_IMAGE_BYTES = 5 * 1024  # 5 KB — filtra solo íconos muy pequeños
 
 
 def extract_images_from_file(filename: str, file_bytes: bytes) -> list[bytes]:
