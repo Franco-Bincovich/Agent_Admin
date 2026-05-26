@@ -76,7 +76,15 @@ def generate_outline(prompt: str) -> dict:
                 raise ValueError("sin JSON en la respuesta")
             result = json.loads(match.group())
             validate_outline(result)
-            log.info("outline.generated")
+            slides_con_imagen = [
+                i for i, s in enumerate(result.get("slides", []))
+                if s.get("imagen_idx") is not None
+            ]
+            log.info(
+                f"outline.generated | slides={len(result.get('slides', []))} | "
+                f"con_imagen_idx={len(slides_con_imagen)} | "
+                f"indices={slides_con_imagen}"
+            )
             return result
         except AppError:
             raise
