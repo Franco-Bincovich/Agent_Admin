@@ -66,6 +66,7 @@ export interface Generation {
   gamma_url: string | null;
   pptx_gamma_url?: string | null;
   slides_count: number | null;
+  gamma_warning?: string | null;
   creado_en: string;
   archivos?: string[];
   parametros?: GenerationParametros;
@@ -121,4 +122,31 @@ export interface ActivityItem {
   gamma_url?: string | null;
   pptx_gamma_url?: string | null;
   slides_count?: number;
+}
+
+// ── Video agent ───────────────────────────────────────────────────────────────
+
+export type VideoJobStatus = 'pending' | 'processing' | 'completed' | 'failed';
+export type EstiloEdicion = 'dinamico' | 'corporativo' | 'minimalista';
+export type FormatoSalida = 'horizontal_16_9' | 'vertical_9_16' | 'cuadrado_1_1';
+export type PosicionSubtitulos = 'abajo' | 'centro' | 'arriba' | 'sin_subtitulos';
+export type ResolucionVideo = 'hd_720p' | 'full_hd_1080p' | 'ultra_hd_4k';
+
+export interface BrandConfigValues {
+  logo: File | null;
+  colorPrimario: string;
+  colorSecundario: string;
+  fuente: string;
+}
+
+export interface VideoJob {
+  id: string;
+  usuario_id: string;
+  titulo: string | null;
+  estado: VideoJobStatus;
+  video_input_url: string | null;
+  output_url: string | null;
+  parametros: Record<string, unknown>;
+  error_message: string | null;
+  creado_en: string;
 }

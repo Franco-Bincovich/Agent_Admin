@@ -103,10 +103,18 @@ def run_document_generation(
             for nombre, file_bytes in archivos:
                 for img_bytes in extract_images_from_file(nombre, file_bytes):
                     imagenes.append((nombre, img_bytes))
+            imagenes = imagenes[:20]  # máximo 20 imágenes
+            if imagenes:
+                log.info(
+                    "Imágenes extraídas del documento",
+                    extra={"cantidad": len(imagenes),
+                           "documento_id": str(documento_id)},
+                )
 
         prompt = build_documento_prompt(
             textos_extraidos, titulo, secciones,
             indicaciones, opciones, plantilla_secciones,
+            imagenes_count=len(imagenes),
         )
         outline = generate_documento_outline(prompt)
         usar_imagenes = bool(opciones.get("usar_imagenes"))

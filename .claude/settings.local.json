@@ -35,7 +35,8 @@
       "Bash(xargs cat -n)",
       "Bash(Get-ChildItem -Path \"backend\" -Recurse -Filter \"*.py\")",
       "Bash(Select-Object FullName)",
-      "Bash(dir \"C:\\\\Users\\\\Franco Bincovich\\\\Desktop\\\\Visual Code\\\\Agent-Admin\" /b /a-d)"
+      "Bash(dir \"C:\\\\Users\\\\Franco Bincovich\\\\Desktop\\\\Visual Code\\\\Agent-Admin\" /b /a-d)",
+      "Bash(awk -F'::' '{print $1}')"
     ]
   }
 }

@@ -1,0 +1,848 @@
+﻿pytest : C:\Users\Franco Bincovich\AppData\Local\
+Programs\Python\Python312\Lib\site-packages\pytes
+t_asyncio\plugin.py:208: 
+PytestDeprecationWarning: The configuration 
+option "asyncio_default_fixture_loop_scope" is 
+unset.
+En línea: 1 Carácter: 1
++ pytest backend/tests/ -v 
+--ignore=backend/tests/test_video_basic.py > ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\ 
+   Users\Franco...cope" is unset.:String) [], R  
+  emoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+The event loop scope for asynchronous fixtures 
+will default to the fixture caching scope. 
+Future versions of pytest-asyncio will default 
+the loop scope for asynchronous fixtures to 
+function scope. Set the default fixture loop 
+scope explicitly in order to avoid unexpected 
+behavior in the future. Valid fixture loop 
+scopes are: "function", "class", "module", 
+"package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT
+_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-8.3.3, pluggy-1.6.0 -- C:\Users\Franco Bincovich\AppData\Local\Programs\Python\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend
+configfile: pytest.ini
+plugins: anyio-4.13.0, asyncio-0.24.0
+asyncio: mode=Mode.AUTO, default_loop_scope=None
+collecting ... collected 79 items
+
+backend\tests\test_activity.py::test_get_activity_authenticated PASSED   [  1%]
+backend\tests\test_activity.py::test_get_activity_without_token PASSED   [  2%]
+backend\tests\test_activity.py::test_activity_records_for_successful_generation PASSED [  3%]
+backend\tests\test_activity.py::test_activity_limit_query_param_does_not_break PASSED [  5%]
+backend\tests\test_activity.py::test_activity_isolated_by_user PASSED    [  6%]
+backend\tests\test_auth_extended.py::test_refresh_with_valid_token_rotates PASSED [  7%]
+backend\tests\test_auth_extended.py::test_refresh_with_invalid_token PASSED [  8%]
+backend\tests\test_auth_extended.py::test_refresh_with_access_token_returns_401 PASSED [ 10%]
+backend\tests\test_auth_extended.py::test_refresh_without_token PASSED   [ 11%]
+backend\tests\test_auth_extended.py::test_logout_invalidates_refresh_token PASSED [ 12%]
+backend\tests\test_auth_extended.py::test_logout_without_token PASSED    [ 13%]
+backend\tests\test_auth_extended.py::test_protected_endpoint_with_expired_token PASSED [ 15%]
+backend\tests\test_auth_extended.py::test_register_password_too_short PASSED [ 16%]
+backend\tests\test_auth_extended.py::test_register_invalid_email PASSED  [ 17%]
+backend\tests\test_auth_extended.py::test_register_missing_fields PASSED [ 18%]
+backend\tests\test_auth_flows.py::test_health PASSED                     [ 20%]
+backend\tests\test_auth_flows.py::test_register_success PASSED           [ 21%]
+backend\tests\test_auth_flows.py::test_register_duplicate_email PASSED   [ 22%]
+backend\tests\test_auth_flows.py::test_login_success PASSED              [ 24%]
+backend\tests\test_auth_flows.py::test_login_wrong_password PASSED       [ 25%]
+backend\tests\test_auth_flows.py::test_protected_endpoint_without_token PASSED [ 26%]
+backend\tests\test_auth_flows.py::test_protected_endpoint_with_token PASSED [ 27%]
+backend\tests\test_file_types.py::test_accept_txt_file FAILED            [ 29%]
+backend\tests\test_file_types.py::test_accept_pdf_file FAILED            [ 30%]
+backend\tests\test_file_types.py::test_accept_docx_file FAILED           [ 31%]
+backend\tests\test_file_types.py::test_accept_pptx_file FAILED           [ 32%]
+backend\tests\test_file_types.py::test_accept_xlsx_file FAILED           [ 34%]
+backend\tests\test_file_types.py::test_reject_png_as_archivo FAILED      [ 35%]
+backend\tests\test_file_types.py::test_reject_jpg_as_archivo FAILED      [ 36%]
+backend\tests\test_file_types.py::test_reject_exe_file FAILED            [ 37%]
+backend\tests\test_file_types.py::test_reject_zip_file FAILED            [ 39%]
+backend\tests\test_file_types.py::test_reject_js_file FAILED             [ 40%]
+backend\tests\test_file_types.py::test_reject_py_file FAILED             [ 41%]
+backend\tests\test_file_types.py::test_reject_empty_file FAILED          [ 43%]
+backend\tests\test_file_types.py::test_reject_file_without_extension FAILED [ 44%]
+backend\tests\test_file_types.py::test_accept_multiple_files_in_request FAILED [ 45%]
+backend\tests\test_file_types.py::test_accept_filename_with_special_chars FAILED [ 46%]
+backend\tests\test_generation_complete.py::test_output_pptx_returns_pptx_url FAILED [ 48%]
+backend\tests\test_generation_complete.py::test_output_gamma_returns_gamma_url FAILED [ 49%]
+backend\tests\test_generation_complete.py::test_output_ambos_returns_pptx_and_gamma FAILED [ 50%]
+backend\tests\test_generation_complete.py::test_generation_with_image_attachment FAILED [ 51%]
+backend\tests\test_generation_complete.py::test_claude_failure_sets_error_state FAILED [ 53%]
+backend\tests\test_generation_complete.py::test_supabase_upload_failure_sets_error_state FAILED [ 54%]
+backend\tests\test_generation_complete.py::test_gamma_failure_does_not_break_generation FAILED [ 55%]
+backend\tests\test_generation_complete.py::test_objetivo_empty_rejected SKIPPED [ 56%]
+backend\tests\test_generation_complete.py::test_objetivo_too_long_rejected FAILED [ 58%]
+backend\tests\test_generation_complete.py::test_estado_listo_after_successful_generation FAILED [ 59%]
+backend\tests\test_generation_complete.py::test_list_generations_only_own FAILED [ 60%]
+backend\tests\test_generation_complete.py::test_list_generations_pagination_params_do_not_break FAILED [ 62%]
+backend\tests\test_generation_complete.py::test_get_generation_not_found PASSED [ 63%]
+backend\tests\test_generation_complete.py::test_get_generation_invalid_uuid PASSED [ 64%]
+backend\tests\test_generation_flows.py::test_create_generation_unauthorized PASSED [ 65%]
+backend\tests\test_generation_flows.py::test_generation_pptx_success FAILED [ 67%]
+backend\tests\test_generation_flows.py::test_generation_pptx_invalid_file FAILED [ 68%]
+backend\tests\test_generation_flows.py::test_download_output_as_owner FAILED [ 69%]
+backend\tests\test_generation_flows.py::test_download_output_as_other_user PASSED [ 70%]
+backend\tests\test_profile_and_users.py::test_get_profile_authenticated PASSED [ 72%]
+backend\tests\test_profile_and_users.py::test_get_profile_without_token PASSED [ 73%]
+backend\tests\test_profile_and_users.py::test_update_profile_name_success PASSED [ 74%]
+backend\tests\test_profile_and_users.py::test_update_profile_empty_name PASSED [ 75%]
+backend\tests\test_profile_and_users.py::test_update_profile_invalid_email PASSED [ 77%]
+backend\tests\test_profile_and_users.py::test_list_users_as_editor_forbidden PASSED [ 78%]
+backend\tests\test_profile_and_users.py::test_list_users_as_admin_success PASSED [ 79%]
+backend\tests\test_profile_and_users.py::test_create_user_as_editor_forbidden PASSED [ 81%]
+backend\tests\test_profile_and_users.py::test_create_user_as_admin_success PASSED [ 82%]
+backend\tests\test_profile_and_users.py::test_patch_active_as_admin_can_modify_any_user PASSED [ 83%]
+backend\tests\test_profile_and_users.py::test_patch_active_as_editor_forbidden PASSED [ 84%]
+backend\tests\test_profile_and_users.py::test_patch_active_as_admin_success PASSED [ 86%]
+backend\tests\test_profile_and_users.py::test_editor_cannot_view_other_user_profile PASSED [ 87%]
+backend\tests\test_profile_and_users.py::test_delete_user_as_editor_forbidden SKIPPED [ 88%]
+backend\tests\test_profile_and_users.py::test_delete_user_as_admin_success SKIPPED [ 89%]
+backend\tests\test_security.py::test_security_headers_present PASSED     [ 91%]
+backend\tests\test_security.py::test_server_header_not_revealed PASSED   [ 92%]
+backend\tests\test_security.py::test_payload_too_large_returns_413 PASSED [ 93%]
+backend\tests\test_security.py::test_rate_limit_login_returns_429 PASSED [ 94%]
+backend\tests\test_security.py::test_login_generic_error_for_unknown_user PASSED [ 96%]
+backend\tests\test_security.py::test_login_generic_error_for_wrong_password PASSED [ 97%]
+backend\tests\test_security.py::test_cors_disallowed_origin_not_echoed PASSED [ 98%]
+backend\tests\test_security.py::test_cors_allowed_origin_echoed FAILED   [100%]
+
+================================== FAILURES ===================================
+____________________________ test_accept_txt_file _____________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CCB2120>
+
+    async def test_accept_txt_file(client):
+        """Archivo .txt debe aceptarse y retornar 202."""
+        mocks = _accept_mocks()
+        with mocks[0], mocks[1], mocks[2], mocks[3], mocks[4], mocks[5], mocks[6], \
+             patch("services.generation_service.get_supabase") as mock_supabase:
+            mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
+            resp = await _post_with_file(client, "informe.txt", b"texto plano", "text/plain")
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:106: AssertionError
+____________________________ test_accept_pdf_file _____________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CC53950>
+
+    async def test_accept_pdf_file(client):
+        """Archivo .pdf debe aceptarse y retornar 202."""
+        mocks = _accept_mocks()
+        with mocks[0], mocks[1], mocks[2], mocks[3], mocks[4], mocks[5], mocks[6], \
+             patch("services.generation_service.get_supabase") as mock_supabase:
+            mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
+            resp = await _post_with_file(client, "informe.pdf", b"%PDF-1.4 fake", "application/pdf")
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:116: AssertionError
+____________________________ test_accept_docx_file ____________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CD4D8B0>
+
+    async def test_accept_docx_file(client):
+        """Archivo .docx debe aceptarse y retornar 202."""
+        mocks = _accept_mocks()
+        with mocks[0], mocks[1], mocks[2], mocks[3], mocks[4], mocks[5], mocks[6], \
+             patch("services.generation_service.get_supabase") as mock_supabase:
+            mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
+            resp = await _post_with_file(client, "informe.docx", b"PK fake docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:126: AssertionError
+____________________________ test_accept_pptx_file ____________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CD8FBF0>
+
+    async def test_accept_pptx_file(client):
+        """Archivo .pptx debe aceptarse y retornar 202 (con mock del extractor PPTX)."""
+        mocks = _accept_mocks()
+        with mocks[0], mocks[1], mocks[2], mocks[3], mocks[4], mocks[5], mocks[6], \
+             patch("services.generation_service.get_supabase") as mock_supabase:
+            mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
+            resp = await _post_with_file(client, "deck.pptx", b"PK fake pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation")
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:136: AssertionError
+____________________________ test_accept_xlsx_file ____________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CD822D0>
+
+    async def test_accept_xlsx_file(client):
+        """Archivo .xlsx debe aceptarse y retornar 202."""
+        mocks = _accept_mocks()
+        with mocks[0], mocks[1], mocks[2], mocks[3], mocks[4], mocks[5], mocks[6], \
+             patch("services.generation_service.get_supabase") as mock_supabase:
+            mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
+            resp = await _post_with_file(client, "datos.xlsx", b"PK fake xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:146: AssertionError
+_________________________ test_reject_png_as_archivo __________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CD5E090>
+
+    async def test_reject_png_as_archivo(client):
+        """Imagen .png como archivo principal debe rechazarse con UNSUPPORTED_FORMAT."""
+        resp = await _post_with_file(client, "foto.png", b"\x89PNG fake", "image/png")
+>       assert resp.status_code == 400
+E       assert 404 == 400
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:155: AssertionError
+_________________________ test_reject_jpg_as_archivo __________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CD5D7C0>
+
+    async def test_reject_jpg_as_archivo(client):
+        """Imagen .jpg como archivo principal debe rechazarse con UNSUPPORTED_FORMAT."""
+        resp = await _post_with_file(client, "foto.jpg", b"\xff\xd8 fake jpg", "image/jpeg")
+>       assert resp.status_code == 400
+E       assert 404 == 400
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:164: AssertionError
+____________________________ test_reject_exe_file _____________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CD5CF50>
+
+    async def test_reject_exe_file(client):
+        """Archivo .exe debe rechazarse con UNSUPPORTED_FORMAT."""
+        resp = await _post_with_file(client, "malware.exe", b"MZ fake")
+>       assert resp.status_code == 400
+E       assert 404 == 400
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:176: AssertionError
+____________________________ test_reject_zip_file _____________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CCB6B70>
+
+    async def test_reject_zip_file(client):
+        """Archivo .zip debe rechazarse con UNSUPPORTED_FORMAT."""
+        resp = await _post_with_file(client, "paquete.zip", b"PK fake zip")
+>       assert resp.status_code == 400
+E       assert 404 == 400
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:183: AssertionError
+_____________________________ test_reject_js_file _____________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CCB6930>
+
+    async def test_reject_js_file(client):
+        """Archivo .js debe rechazarse con UNSUPPORTED_FORMAT."""
+        resp = await _post_with_file(client, "script.js", b"console.log('x')")
+>       assert resp.status_code == 400
+E       assert 404 == 400
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:190: AssertionError
+_____________________________ test_reject_py_file _____________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CD62480>
+
+    async def test_reject_py_file(client):
+        """Archivo .py debe rechazarse con UNSUPPORTED_FORMAT."""
+        resp = await _post_with_file(client, "script.py", b"print('x')")
+>       assert resp.status_code == 400
+E       assert 404 == 400
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:197: AssertionError
+___________________________ test_reject_empty_file ____________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CD605F0>
+
+    async def test_reject_empty_file(client):
+        """Archivo de 0 bytes debe rechazarse con EMPTY_FILE (< 50 chars de texto)."""
+        resp = await _post_with_file(client, "vacio.txt", b"", "text/plain")
+>       assert resp.status_code in (400, 422)
+E       assert 404 in (400, 422)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:207: AssertionError
+_____________________ test_reject_file_without_extension ______________________
+
+client = <httpx.AsyncClient object at 0x000001A12CC2E3C0>
+
+    async def test_reject_file_without_extension(client):
+        """Archivo sin extensi¾n debe rechazarse con UNSUPPORTED_FORMAT."""
+        resp = await _post_with_file(client, "informe", b"contenido sin extension")
+>       assert resp.status_code == 400
+E       assert 404 == 400
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:216: AssertionError
+____________________ test_accept_multiple_files_in_request ____________________
+
+client = <httpx.AsyncClient object at 0x000001A12CC2E540>
+
+    async def test_accept_multiple_files_in_request(client):
+        """M·ltiples archivos en un mismo request deben aceptarse."""
+        token = create_access_token(_USER_ID, "editor")
+        mocks = _accept_mocks()
+        with mocks[0], mocks[1], mocks[2], mocks[3], mocks[4], mocks[5], mocks[6], \
+             patch("services.generation_service.get_supabase") as mock_supabase:
+            mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
+            resp = await client.post(
+                "/api/v1/generations/",
+                headers={"Authorization": f"Bearer {token}"},
+                files=[
+                    ("archivos", ("a.txt", b"contenido a", "text/plain")),
+                    ("archivos", ("b.txt", b"contenido b", "text/plain")),
+                ],
+                data=_BASE_DATA,
+            )
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:238: AssertionError
+___________________ test_accept_filename_with_special_chars ___________________
+
+client = <httpx.AsyncClient object at 0x000001A12CD8CBC0>
+
+    async def test_accept_filename_with_special_chars(client):
+        """Archivo con caracteres especiales en el nombre debe aceptarse limpiamente (sin 500)."""
+        mocks = _accept_mocks()
+        with mocks[0], mocks[1], mocks[2], mocks[3], mocks[4], mocks[5], mocks[6], \
+             patch("services.generation_service.get_supabase") as mock_supabase:
+            mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
+            resp = await _post_with_file(
+                client, "informe ±o±o & cÝa (2024).txt", b"texto", "text/plain",
+            )
+        assert resp.status_code != 500
+>       assert resp.status_code in (200, 202)
+E       assert 404 in (200, 202)
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_file_types.py:251: AssertionError
+______________________ test_output_pptx_returns_pptx_url ______________________
+
+client = <httpx.AsyncClient object at 0x000001A12CC64710>
+
+    async def test_output_pptx_returns_pptx_url(client):
+        """Output 'pptx' debe disparar update_resultado con la pptx_url en posici¾n 1."""
+        token = create_access_token(_USER_ID, "editor")
+        with patch("controllers.generation_controller.extract_text_from_file",
+                   return_value="Texto largo y suficiente para satisfacer el mÝnimo del extractor."), \
+             patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+             patch("services.generation_record_service.generation_repo.create",
+                   return_value=_FAKE_GEN_PROCESANDO), \
+             patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+             patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
+             patch("services.generation_service.get_supabase") as mock_supabase, \
+             patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
+             patch("services.generation_service.generation_repo.update_error"):
+            mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
+            resp = await client.post(
+                "/api/v1/generations/",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"archivos": ("a.txt", b"contenido", "text/plain")},
+                data={**_BASE_DATA, "output": "pptx"},
+            )
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_generation_complete.py:101: AssertionError
+_____________________ test_output_gamma_returns_gamma_url _____________________
+
+client = <httpx.AsyncClient object at 0x000001A12CDB7AD0>
+
+    async def test_output_gamma_returns_gamma_url(client):
+        """Output 'gamma' debe disparar update_resultado con gamma_url y sin pptx_url."""
+        token = create_access_token(_USER_ID, "editor")
+        with patch("controllers.generation_controller.extract_text_from_file",
+                   return_value="Texto largo y suficiente para satisfacer el mÝnimo del extractor."), \
+             patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+             patch("services.generation_record_service.generation_repo.create",
+                   return_value=_FAKE_GEN_PROCESANDO), \
+             patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+             patch("services.generation_service.resolve_user_folder",
+                   return_value=("folder-1", None)), \
+             patch("services.generation_service.publish_presentation",
+                   return_value={"gamma_url": _GAMMA_URL, "pptx_gamma_url": _PPTX_GAMMA_URL}), \
+             patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
+             patch("services.generation_service.generation_repo.update_error"):
+            resp = await client.post(
+                "/api/v1/generations/",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"archivos": ("a.txt", b"contenido", "text/plain")},
+                data={**_BASE_DATA, "output": "gamma"},
+            )
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_generation_complete.py:129: AssertionError
+__________________ test_output_ambos_returns_pptx_and_gamma ___________________
+
+client = <httpx.AsyncClient object at 0x000001A12CDF3380>
+
+    async def test_output_ambos_returns_pptx_and_gamma(client):
+        """Output 'ambos' debe disparar update_resultado con pptx_url, gamma_url y pptx_gamma_url."""
+        token = create_access_token(_USER_ID, "editor")
+        with patch("controllers.generation_controller.extract_text_from_file",
+                   return_value="Texto largo y suficiente para satisfacer el mÝnimo del extractor."), \
+             patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+             patch("services.generation_record_service.generation_repo.create",
+                   return_value=_FAKE_GEN_PROCESANDO), \
+             patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+             patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
+             patch("services.generation_service.get_supabase") as mock_supabase, \
+             patch("services.generation_service.resolve_user_folder",
+                   return_value=("folder-1", None)), \
+             patch("services.generation_service.publish_presentation",
+                   return_value={"gamma_url": _GAMMA_URL, "pptx_gamma_url": _PPTX_GAMMA_URL}), \
+             patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
+             patch("services.generation_service.generation_repo.update_error"):
+            mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
+            resp = await client.post(
+                "/api/v1/generations/",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"archivos": ("a.txt", b"contenido", "text/plain")},
+                data={**_BASE_DATA, "output": "ambos"},
+            )
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_generation_complete.py:159: AssertionError
+____________________ test_generation_with_image_attachment ____________________
+
+client = <httpx.AsyncClient object at 0x000001A12CCB28A0>
+
+    async def test_generation_with_image_attachment(client):
+        """Generaci¾n con imagen adjunta (usar_imagenes_documento=True) debe procesarse sin error."""
+        token = create_access_token(_USER_ID, "editor")
+        with patch("controllers.generation_controller.extract_text_from_file",
+                   return_value="Texto largo y suficiente para satisfacer el mÝnimo del extractor."), \
+             patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+             patch("services.generation_record_service.generation_repo.create",
+                   return_value=_FAKE_GEN_PROCESANDO), \
+             patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+             patch("services.generation_service.extract_images_from_file",
+                   return_value=[b"\x89PNG fake"]), \
+             patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
+             patch("services.generation_service.get_supabase") as mock_supabase, \
+             patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
+             patch("services.generation_service.generation_repo.update_error"):
+            mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
+            resp = await client.post(
+                "/api/v1/generations/",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"archivos": ("a.docx", b"PK fake docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
+                data={**_BASE_DATA, "output": "pptx", "usar_imagenes_documento": "true"},
+            )
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_generation_complete.py:188: AssertionError
+____________________ test_claude_failure_sets_error_state _____________________
+
+client = <httpx.AsyncClient object at 0x000001A12CC64E30>
+
+    async def test_claude_failure_sets_error_state(client):
+        """Si generate_outline lanza excepci¾n, update_error debe llamarse."""
+        token = create_access_token(_USER_ID, "editor")
+        with patch("controllers.generation_controller.extract_text_from_file",
+                   return_value="Texto largo y suficiente para satisfacer el mÝnimo del extractor."), \
+             patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+             patch("services.generation_record_service.generation_repo.create",
+                   return_value=_FAKE_GEN_PROCESANDO), \
+             patch("services.generation_service.generate_outline",
+                   side_effect=Exception("Anthropic API down")), \
+             patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
+             patch("services.generation_service.generation_repo.update_error") as mock_error:
+            resp = await client.post(
+                "/api/v1/generations/",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"archivos": ("a.txt", b"contenido", "text/plain")},
+                data={**_BASE_DATA, "output": "pptx"},
+            )
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_generation_complete.py:213: AssertionError
+________________ test_supabase_upload_failure_sets_error_state ________________
+
+client = <httpx.AsyncClient object at 0x000001A12CD7E7B0>
+
+    async def test_supabase_upload_failure_sets_error_state(client):
+        """Si Supabase storage falla al subir el PPTX, update_error debe llamarse."""
+        token = create_access_token(_USER_ID, "editor")
+        with patch("controllers.generation_controller.extract_text_from_file",
+                   return_value="Texto largo y suficiente para satisfacer el mÝnimo del extractor."), \
+             patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+             patch("services.generation_record_service.generation_repo.create",
+                   return_value=_FAKE_GEN_PROCESANDO), \
+             patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+             patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
+             patch("services.generation_service.get_supabase") as mock_supabase, \
+             patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
+             patch("services.generation_service.generation_repo.update_error") as mock_error:
+            mock_supabase.return_value.storage.from_.return_value.upload.side_effect = Exception("storage error")
+            resp = await client.post(
+                "/api/v1/generations/",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"archivos": ("a.txt", b"contenido", "text/plain")},
+                data={**_BASE_DATA, "output": "pptx"},
+            )
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_generation_complete.py:238: AssertionError
+________________ test_gamma_failure_does_not_break_generation _________________
+
+client = <httpx.AsyncClient object at 0x000001A12CCB6990>
+
+    async def test_gamma_failure_does_not_break_generation(client):
+        """Si Gamma falla con AppError, la generaci¾n PPTX se completa con gamma_url=None."""
+        from utils.errors import AppError, ErrorCode
+        token = create_access_token(_USER_ID, "editor")
+        with patch("controllers.generation_controller.extract_text_from_file",
+                   return_value="Texto largo y suficiente para satisfacer el mÝnimo del extractor."), \
+             patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+             patch("services.generation_record_service.generation_repo.create",
+                   return_value=_FAKE_GEN_PROCESANDO), \
+             patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+             patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
+             patch("services.generation_service.get_supabase") as mock_supabase, \
+             patch("services.generation_service.resolve_user_folder",
+                   return_value=("folder-1", None)), \
+             patch("services.generation_service.publish_presentation",
+                   side_effect=AppError("Gamma down", ErrorCode.GAMMA_PUBLISH_ERROR, 500)), \
+             patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
+             patch("services.generation_service.generation_repo.update_error"):
+            mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
+            resp = await client.post(
+                "/api/v1/generations/",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"archivos": ("a.txt", b"contenido", "text/plain")},
+                data={**_BASE_DATA, "output": "ambos"},
+            )
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_generation_complete.py:268: AssertionError
+_______________________ test_objetivo_too_long_rejected _______________________
+
+client = <httpx.AsyncClient object at 0x000001A12CD5C080>
+
+    async def test_objetivo_too_long_rejected(client):
+        """Objetivo > 500 chars (max_length del Form) debe rechazarse con 422."""
+        token = create_access_token(_USER_ID, "editor")
+        resp = await client.post(
+            "/api/v1/generations/",
+            headers={"Authorization": f"Bearer {token}"},
+            files={"archivos": ("a.txt", b"contenido", "text/plain")},
+            data={**_BASE_DATA, "objetivo": "x" * 5001},
+        )
+>       assert resp.status_code == 422
+E       assert 404 == 422
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_generation_complete.py:299: AssertionError
+________________ test_estado_listo_after_successful_generation ________________
+
+client = <httpx.AsyncClient object at 0x000001A12CD5D0D0>
+
+    async def test_estado_listo_after_successful_generation(client):
+        """Tras un Úxito en background, update_resultado se invoca (lo que persiste estado='listo')."""
+        token = create_access_token(_USER_ID, "editor")
+        with patch("controllers.generation_controller.extract_text_from_file",
+                   return_value="Texto largo y suficiente para satisfacer el mÝnimo del extractor."), \
+             patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+             patch("services.generation_record_service.generation_repo.create",
+                   return_value=_FAKE_GEN_PROCESANDO), \
+             patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+             patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
+             patch("services.generation_service.get_supabase") as mock_supabase, \
+             patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
+             patch("services.generation_service.generation_repo.update_error") as mock_error:
+            mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
+            resp = await client.post(
+                "/api/v1/generations/",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"archivos": ("a.txt", b"contenido", "text/plain")},
+                data={**_BASE_DATA, "output": "pptx"},
+            )
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_generation_complete.py:322: AssertionError
+_______________________ test_list_generations_only_own ________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CD82420>
+
+    async def test_list_generations_only_own(client):
+        """GET /generations/ devuelve s¾lo las generaciones del usuario autenticado."""
+        token = create_access_token(_USER_ID, "editor")
+        with patch("services.generation_record_service.generation_repo.find_by_user",
+                   return_value=[_FAKE_GEN_LISTO]) as mock_find:
+            resp = await client.get(
+                "/api/v1/generations/",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+>       assert resp.status_code == 200
+E       assert 404 == 200
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_generation_complete.py:340: AssertionError
+____________ test_list_generations_pagination_params_do_not_break _____________
+
+client = <httpx.AsyncClient object at 0x000001A12CC53590>
+
+    async def test_list_generations_pagination_params_do_not_break(client):
+        """Query params ?page=1&limit=10 no rompen el endpoint (ignorados por FastAPI)."""
+        token = create_access_token(_USER_ID, "editor")
+        with patch("services.generation_record_service.generation_repo.find_by_user",
+                   return_value=[]):
+            resp = await client.get(
+                "/api/v1/generations/?page=1&limit=10",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+>       assert resp.status_code == 200
+E       assert 404 == 200
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_generation_complete.py:356: AssertionError
+________________________ test_generation_pptx_success _________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CC6F7D0>
+
+    async def test_generation_pptx_success(client):
+        token = create_access_token(_USER_ID, "editor")
+    
+        with patch("controllers.generation_controller.extract_text_from_file",
+                   return_value="Texto de prueba con contenido suficiente para la validaci¾n del pipeline."), \
+             patch("services.generation_record_service.generation_repo.create",
+                   return_value=_FAKE_GEN_PROCESANDO), \
+             patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+             patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
+             patch("services.generation_service.get_supabase") as mock_supabase, \
+             patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
+             patch("services.generation_service.generation_repo.update_error"):
+    
+            mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
+    
+            resp = await client.post(
+                "/api/v1/generations/",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"archivos": ("informe.txt", b"contenido de prueba para presentacion", "text/plain")},
+                data={
+                    "objetivo": "Presentar resultados Q1 a directivos",
+                    "template": "ejecutivo_oscuro",
+                    "tono": "formal",
+                    "audiencia": "directivos",
+                    "output": "pptx",
+                },
+            )
+    
+>       assert resp.status_code == 202
+E       assert 404 == 202
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_generation_flows.py:109: AssertionError
+______________________ test_generation_pptx_invalid_file ______________________
+
+client = <httpx.AsyncClient object at 0x000001A12CBC98E0>
+
+    async def test_generation_pptx_invalid_file(client):
+        token = create_access_token(_USER_ID, "editor")
+        resp = await client.post(
+            "/api/v1/generations/",
+            headers={"Authorization": f"Bearer {token}"},
+            files={"archivos": ("malware.exe", b"MZ fake binary content", "application/octet-stream")},
+            data={
+                "objetivo": "Presentar resultados Q1 a directivos",
+                "template": "ejecutivo_oscuro",
+                "tono": "formal",
+                "audiencia": "directivos",
+                "output": "pptx",
+            },
+        )
+>       assert resp.status_code == 400
+E       assert 404 == 400
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+backend\tests\test_generation_flows.py:132: AssertionError
+________________________ test_download_output_as_owner ________________________
+
+client = <httpx.AsyncClient object at 0x000001A12CDB5490>
+
+    async def test_download_output_as_owner(client):
+        token = create_access_token(_USER_ID, "editor")
+        with patch("services.generation_record_service.generation_repo.find_by_id",
+                   return_value=_FAKE_GEN_LISTO):
+            resp = await client.get(
+                f"/api/v1/generations/{_GEN_ID}",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+        assert resp.status_code == 200
+        body = resp.json()
+>       assert body["pptx_url"] == _PPTX_URL
+E       KeyError: 'pptx_url'
+
+backend\tests\test_generation_flows.py:151: KeyError
+_______________________ test_cors_allowed_origin_echoed _______________________
+
+client = <httpx.AsyncClient object at 0x000001A12CD8D760>
+
+    async def test_cors_allowed_origin_echoed(client):
+        """Origin permitido recibe Access-Control-Allow-Origin con su valor."""
+        allowed = "http://localhost:3000"
+        resp = await client.get(
+            "/health",
+            headers={"Origin": allowed},
+        )
+        acao = resp.headers.get("access-control-allow-origin", "")
+>       assert acao == allowed
+E       AssertionError: assert '' == 'http://localhost:3000'
+E         
+E         - http://localhost:3000
+
+backend\tests\test_security.py:152: AssertionError
+============================== warnings summary ===============================
+..\..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\supabase\_async\auth_client.py:3
+  C:\Users\Franco Bincovich\AppData\Local\Programs\Python\Python312\Lib\site-packages\supabase\_async\auth_client.py:3: DeprecationWarning: The `gotrue` package is deprecated, is not going to receive updates in the future. Please, use `supabase_auth` instead.
+    from gotrue import (
+
+backend\tests\test_activity.py:25
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_activity.py:25: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+backend\tests\test_activity.py:37
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_activity.py:37: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+backend\tests\test_activity.py:44
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_activity.py:44: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": (datetime.utcnow() - timedelta(hours=1)).isoformat(),
+
+backend\tests\test_auth_extended.py:30
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_auth_extended.py:30: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+backend\tests\test_auth_flows.py:25
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_auth_flows.py:25: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+backend\tests\test_file_types.py:26
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_file_types.py:26: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+backend\tests\test_file_types.py:52
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_file_types.py:52: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+backend\tests\test_generation_complete.py:25
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_generation_complete.py:25: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+backend\tests\test_generation_complete.py:54
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_generation_complete.py:54: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+backend\tests\test_generation_flows.py:25
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_generation_flows.py:25: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+backend\tests\test_generation_flows.py:52
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_generation_flows.py:52: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+backend\tests\test_profile_and_users.py:28
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_profile_and_users.py:28: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+backend\tests\test_profile_and_users.py:39
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_profile_and_users.py:39: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+backend\tests\test_profile_and_users.py:50
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_profile_and_users.py:50: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+backend\tests\test_security.py:24
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_security.py:24: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+tests/test_activity.py: 4 warnings
+tests/test_auth_extended.py: 4 warnings
+tests/test_auth_flows.py: 1 warning
+tests/test_file_types.py: 15 warnings
+tests/test_generation_complete.py: 13 warnings
+tests/test_generation_flows.py: 4 warnings
+tests/test_profile_and_users.py: 12 warnings
+  C:\Users\Franco Bincovich\AppData\Local\Programs\Python\Python312\Lib\site-packages\jose\jwt.py:311: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    now = timegm(datetime.utcnow().utctimetuple())
+
+tests/test_auth_extended.py::test_refresh_with_valid_token_rotates
+tests/test_auth_extended.py::test_refresh_with_invalid_token
+tests/test_auth_extended.py::test_refresh_with_access_token_returns_401
+  C:\Users\Franco Bincovich\AppData\Local\Programs\Python\Python312\Lib\site-packages\httpx\_client.py:1570: DeprecationWarning: Setting per-request cookies=<...> is being deprecated, because the expected behaviour on cookie persistence is ambiguous. Set cookies directly on the client instance instead.
+    warnings.warn(message, DeprecationWarning)
+
+tests/test_profile_and_users.py::test_create_user_as_admin_success
+  C:\Users\Franco Bincovich\Desktop\Visual Code\Agent-Admin\backend\tests\test_profile_and_users.py:181: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "creado_en": datetime.utcnow().isoformat(),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED backend\tests\test_file_types.py::test_accept_txt_file - assert 404 ==...
+FAILED backend\tests\test_file_types.py::test_accept_pdf_file - assert 404 ==...
+FAILED backend\tests\test_file_types.py::test_accept_docx_file - assert 404 =...
+FAILED backend\tests\test_file_types.py::test_accept_pptx_file - assert 404 =...
+FAILED backend\tests\test_file_types.py::test_accept_xlsx_file - assert 404 =...
+FAILED backend\tests\test_file_types.py::test_reject_png_as_archivo - assert ...
+FAILED backend\tests\test_file_types.py::test_reject_jpg_as_archivo - assert ...
+FAILED backend\tests\test_file_types.py::test_reject_exe_file - assert 404 ==...
+FAILED backend\tests\test_file_types.py::test_reject_zip_file - assert 404 ==...
+FAILED backend\tests\test_file_types.py::test_reject_js_file - assert 404 == 400
+FAILED backend\tests\test_file_types.py::test_reject_py_file - assert 404 == 400
+FAILED backend\tests\test_file_types.py::test_reject_empty_file - assert 404 ...
+FAILED backend\tests\test_file_types.py::test_reject_file_without_extension
+FAILED backend\tests\test_file_types.py::test_accept_multiple_files_in_request
+FAILED backend\tests\test_file_types.py::test_accept_filename_with_special_chars
+FAILED backend\tests\test_generation_complete.py::test_output_pptx_returns_pptx_url
+FAILED backend\tests\test_generation_complete.py::test_output_gamma_returns_gamma_url
+FAILED backend\tests\test_generation_complete.py::test_output_ambos_returns_pptx_and_gamma
+FAILED backend\tests\test_generation_complete.py::test_generation_with_image_attachment
+FAILED backend\tests\test_generation_complete.py::test_claude_failure_sets_error_state
+FAILED backend\tests\test_generation_complete.py::test_supabase_upload_failure_sets_error_state
+FAILED backend\tests\test_generation_complete.py::test_gamma_failure_does_not_break_generation
+FAILED backend\tests\test_generation_complete.py::test_objetivo_too_long_rejected
+FAILED backend\tests\test_generation_complete.py::test_estado_listo_after_successful_generation
+FAILED backend\tests\test_generation_complete.py::test_list_generations_only_own
+FAILED backend\tests\test_generation_complete.py::test_list_generations_pagination_params_do_not_break
+FAILED backend\tests\test_generation_flows.py::test_generation_pptx_success
+FAILED backend\tests\test_generation_flows.py::test_generation_pptx_invalid_file
+FAILED backend\tests\test_generation_flows.py::test_download_output_as_owner
+FAILED backend\tests\test_security.py::test_cors_allowed_origin_echoed - Asse...
+============ 30 failed, 46 passed, 3 skipped, 73 warnings in 7.13s ============

@@ -71,13 +71,20 @@ def generate_pptx(
         prs.slide_width = Inches(13.33)
         prs.slide_height = Inches(7.5)
         blank_layout = prs.slide_layouts[6]
-        img_iter = iter(imagenes or [])
+        img_map: dict[int, bytes] = {}
+        if imagenes:
+            for i, img in enumerate(imagenes):
+                img_map[i] = img
         for idx, slide_data in enumerate(outline["slides"]):
             slide = prs.slides.add_slide(blank_layout)
             builder = _builders.get(slide_data["tipo"])
             if builder:
                 if slide_data["tipo"] in _img_slides:
-                    builder(slide, slide_data, tpl, next(img_iter, None))
+                    imagen_para_slide = None
+                    img_idx = slide_data.get("imagen_idx")
+                    if isinstance(img_idx, int) and img_idx in img_map:
+                        imagen_para_slide = img_map[img_idx]
+                    builder(slide, slide_data, tpl, imagen_para_slide)
                 else:
                     builder(slide, slide_data, tpl)
             if idx == 0 and logo_bytes:

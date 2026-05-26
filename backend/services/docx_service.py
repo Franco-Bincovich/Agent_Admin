@@ -82,7 +82,9 @@ def generate_docx(
             p_b.paragraph_format.line_spacing = 1.15
 
             if usar_imagenes:
-                _insert_relevant_image(doc, nombre, contenido, imagenes, sec_idx)
+                imagen_idx = seccion.get("imagen_idx")
+                if isinstance(imagen_idx, int) or imagen_idx is None:
+                    _insert_relevant_image(doc, imagenes, imagen_idx)
 
         buffer = BytesIO()
         doc.save(buffer)
@@ -98,16 +100,16 @@ def generate_docx(
 
 def _insert_relevant_image(
     doc: Document,
-    seccion_nombre: str,
-    seccion_contenido: str,
     imagenes: list[tuple[str, bytes]],
-    sec_idx: int,
+    imagen_idx: int | None,
 ) -> None:
     """Inserta la imagen asignada a esta sección (por índice) centrada al ancho de contenido."""
-    if not imagenes or sec_idx >= len(imagenes):
+    if not imagenes or imagen_idx is None:
+        return
+    if not isinstance(imagen_idx, int) or imagen_idx >= len(imagenes):
         return
 
-    _, img_bytes = imagenes[sec_idx]
+    _, img_bytes = imagenes[imagen_idx]
 
     section = doc.sections[-1]
     available_width = section.page_width - section.left_margin - section.right_margin

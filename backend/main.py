@@ -11,7 +11,7 @@ from slowapi.util import get_remote_address
 from config.settings import get_settings
 from middleware.auth import register_auth_middleware
 from middleware.error_handler import register_error_handlers
-from routers import activity, auth, documentos, generations, profile, users
+from routers import activity, auth, documentos, generations, profile, users, video
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -70,7 +70,7 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=settings.allowed_origins.split(","),
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "DELETE"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],
     )
     app.add_middleware(SecurityHeadersMiddleware)
@@ -98,6 +98,7 @@ def create_app() -> FastAPI:
     app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
     app.include_router(profile.router, prefix="/api/v1/profile", tags=["profile"])
     app.include_router(activity.router, prefix="/api/v1/activity", tags=["activity"])
+    app.include_router(video.router, prefix="/api/v1/video", tags=["video"])
 
     @app.get("/health", include_in_schema=False)
     async def health():

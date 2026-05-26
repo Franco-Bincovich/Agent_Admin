@@ -102,19 +102,26 @@ async def run_generation(
                 400,
             )
 
-        prompt = build_prompt(texto_extraido, objetivo, informacion_adicional, template, tono, audiencia)
+        imagenes: list[bytes] = []
+        if usar_imagenes_documento and archivo_bytes:
+            for nombre, contenido in archivo_bytes:
+                imagenes.extend(extract_images_from_file(nombre, contenido))
+            imagenes = imagenes[:20]
+            log.info(
+                "Imágenes extraídas del documento",
+                extra={"cantidad": len(imagenes), "generation_id": str(generation_id)},
+            )
+
+        prompt = build_prompt(
+            texto_extraido, objetivo, informacion_adicional,
+            template, tono, audiencia,
+            cantidad_slides=cantidad_slides,
+            imagenes_count=len(imagenes),
+        )
         outline = generate_outline(prompt)
 
         pptx_url: str | None = None
         if output in ("pptx", "ambos"):
-            imagenes: list[bytes] = []
-            if usar_imagenes_documento and archivo_bytes:
-                for nombre, contenido in archivo_bytes:
-                    imagenes.extend(extract_images_from_file(nombre, contenido))
-                log.info(
-                    "Imágenes extraídas del documento",
-                    extra={"cantidad": len(imagenes), "generation_id": str(generation_id)},
-                )
             pptx_bytes = generate_pptx(outline, template, logo_bytes, imagenes)
             pptx_url = _upload_pptx(generation_id, pptx_bytes)
 

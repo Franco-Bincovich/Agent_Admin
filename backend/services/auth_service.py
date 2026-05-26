@@ -76,6 +76,7 @@ def register_user(payload: RegisterRequest) -> dict:
     if find_by_email(payload.email):
         raise AppError("El email ya está registrado.", ErrorCode.USER_ALREADY_EXISTS, 409)
     user = create_user_record(
+        username=payload.username,
         email=payload.email,
         nombre=payload.nombre,
         password_hash=hash_password(payload.password),

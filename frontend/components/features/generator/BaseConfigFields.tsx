@@ -70,6 +70,23 @@ export default function BaseConfigFields({ template, setTemplate, tono, setTono,
           {OUTPUTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
       </div>
+      {(output === 'gamma' || output === 'ambos') && (
+        <div
+          className="col-span-full rounded-lg border px-4 py-3 text-sm"
+          style={{
+            borderColor: 'var(--color-warning, #f59e0b)',
+            backgroundColor: 'var(--color-warning-bg, rgba(245,158,11,0.08))',
+            color: 'var(--color-text-secondary)',
+          }}
+        >
+          <strong style={{ color: 'var(--color-warning, #f59e0b)' }}>
+            Imágenes del documento:
+          </strong>{' '}
+          Las imágenes de los archivos originales no se incluyen
+          automáticamente en presentaciones Gamma. Para agregarlas,
+          descargá el PPTX desde los resultados y editalo desde ahí.
+        </div>
+      )}
     </div>
   );
 }

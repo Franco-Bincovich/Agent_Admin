@@ -23,6 +23,8 @@ def build_prompt(
     template: str,
     tono: str,
     audiencia: str,
+    cantidad_slides: int = 10,
+    imagenes_count: int = 0,
 ) -> str:
     """
     Construye el prompt de usuario con los bloques 2-6 de instrucción para Claude.
@@ -30,6 +32,17 @@ def build_prompt(
     El bloque 1 (identidad/rol) vive en _SYSTEM_PROMPT dentro de ai_service y se
     pasa siempre como parámetro system= en la llamada a la API (SEGURIDAD 6.1).
     Sanitiza texto_extraido e informacion_adicional para prevenir prompt injection.
+
+    Args:
+        texto_extraido: Texto concatenado de todos los archivos fuente.
+        objetivo: Objetivo declarado de la presentación.
+        informacion_adicional: Contexto adicional del usuario (puede ser None).
+        template: Nombre del template PPTX.
+        tono: Clave de tono. Ver _TONO_MAP.
+        audiencia: Clave de audiencia. Ver _AUDIENCIA_MAP.
+        cantidad_slides: Máximo de slides a generar (5 mínimo). Default 10.
+        imagenes_count: Cantidad de imágenes extraídas disponibles. Si > 0,
+            se instruye a Claude a asignar imagen_idx por slide.
     """
     fuente = sanitize_for_prompt(texto_extraido)
     objetivo_clean = sanitize_for_prompt(objetivo)
@@ -37,6 +50,17 @@ def build_prompt(
     bloque_adicional = f"\nInformación adicional:\n{adicional}" if adicional else ""
     instruccion_tono = _TONO_MAP.get(tono, tono)
     instruccion_audiencia = _AUDIENCIA_MAP.get(audiencia, audiencia)
+    bloque_imagenes = (
+        f"- Tenés {imagenes_count} imágenes extraídas "
+        f"del documento fuente (índices 0 a {imagenes_count - 1}).\n"
+        "- Para cada slide de tipo 'contenido' o 'destacado' "
+        "donde una imagen sea relevante para el contenido, "
+        "agregá el campo 'imagen_idx' con el índice (int) "
+        "de la imagen más apropiada según el tema del slide.\n"
+        "- Si un slide no tiene imagen relevante, "
+        "omitir el campo 'imagen_idx'.\n"
+        "- No repitas el mismo índice en más de un slide.\n"
+    ) if imagenes_count > 0 else ""
     return (
         f"## CONTENIDO FUENTE\n{fuente}{bloque_adicional}\n\n"
         f"## OBJETIVO\n{objetivo_clean}\n\n"
@@ -47,11 +71,12 @@ def build_prompt(
         "## ESTRUCTURA DE SLIDES\n"
         "- Inicia SIEMPRE con portada, finaliza SIEMPRE con cierre.\n"
         "- Tipos de slide: portada, contenido, destacado, cierre.\n"
-        "- Mínimo 5 slides, máximo 12.\n"
+        f"- Mínimo 5 slides, máximo {cantidad_slides}.\n"
         "- Slide 'contenido': campo 'contenido' es list[str] de máximo 5 bullets.\n"
-        "- Slide 'portada' / 'destacado' / 'cierre': campo 'contenido' es str.\n\n"
+        "- Slide 'portada' / 'destacado' / 'cierre': campo 'contenido' es str.\n"
+        f"{bloque_imagenes}\n"
         "## OUTPUT REQUERIDO\n"
         "Responde SOLO con JSON válido, sin texto ni markdown adicional:\n"
         '{"titulo_presentacion": "str", '
-        '"slides": [{"tipo": "str", "titulo": "str", "contenido": "str | list[str]"}]}'
+        '"slides": [{"tipo": "str", "titulo": "str", "contenido": "str | list[str]", "imagen_idx": "int (opcional, solo si hay imagen relevante)"}]}'
     )

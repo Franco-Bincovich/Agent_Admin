@@ -45,6 +45,7 @@ def build_documento_prompt(
     indicaciones: str | None,
     opciones: dict,
     plantilla_secciones: list[str] | None,
+    imagenes_count: int = 0,
 ) -> str:
     """
     Construye el prompt de usuario para la unificación de documentos.
@@ -59,6 +60,9 @@ def build_documento_prompt(
         indicaciones: Indicaciones adicionales del usuario (opcional).
         opciones: Claves soportadas — homogeneizar (bool), deduplicar (bool).
         plantilla_secciones: Secciones detectadas en plantilla cargada (opcional).
+        imagenes_count: Cantidad de imágenes disponibles del documento fuente.
+            Si > 0, Claude recibe instrucciones para asignar imagen_idx a cada
+            sección donde corresponda.
 
     Returns:
         Prompt de usuario listo para enviarse junto a _SYSTEM_PROMPT.
@@ -88,14 +92,30 @@ def build_documento_prompt(
         indicaciones_limpias = sanitize_for_prompt(indicaciones, max_length=500)
         indicaciones_block = f"\n\n## INDICACIONES ADICIONALES\n{indicaciones_limpias}"
 
+    imagenes_block = ""
+    if imagenes_count > 0:
+        imagenes_block = (
+            f"\n\n## IMÁGENES DISPONIBLES\n"
+            f"- Tenés {imagenes_count} imágenes extraídas "
+            f"del documento fuente (índices 0 a {imagenes_count - 1}).\n"
+            "- Para cada sección donde una imagen sea relevante "
+            "para el contenido, agregá el campo 'imagen_idx' "
+            "con el índice (int) de la imagen más apropiada "
+            "según el tema de esa sección.\n"
+            "- Si una sección no tiene imagen relevante, "
+            "omitir el campo 'imagen_idx'.\n"
+            "- No repitas el mismo índice en más de una sección.\n"
+        )
+
     return (
         f"## DOCUMENTOS FUENTE\n{docs_block}\n\n"
         f"## TÍTULO DEL DOCUMENTO FINAL\n{titulo}"
         f"{secciones_block}"
         f"{instrucciones_block}"
-        f"{indicaciones_block}\n\n"
+        f"{indicaciones_block}"
+        f"{imagenes_block}\n\n"
         "## OUTPUT REQUERIDO\nRespondé SOLO con JSON válido, sin texto ni markdown:\n"
-        '{"titulo": "str", "secciones": [{"nombre": "str", "contenido": "str"}]}'
+        '{"titulo": "str", "secciones": [{"nombre": "str", "contenido": "str", "imagen_idx": "int (opcional, solo si hay imagen relevante)"}]}'
     )
 
 

@@ -43,6 +43,12 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   error:      { label: 'Error',         className: 'bg-red-500/20 text-red-400 border-red-500/30' },
 };
 
+const TEMPLATE_LABELS: Record<string, string> = {
+  ejecutivo_oscuro: 'Ejecutivo oscuro',
+  profesional_claro: 'Profesional claro',
+  corporativo_neutro: 'Corporativo neutro',
+};
+
 const TYPE_BADGE: Record<ActivityItem['tipo'], { label: string; className: string }> = {
   presentacion: { label: 'Presentación', className: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
   documento:    { label: 'Documento',    className: 'bg-green-500/20 text-green-400 border-green-500/30' },
@@ -121,7 +127,7 @@ export default function DashboardPage() {
                         {truncateText(label, 50)}
                       </TableCell>
                       <TableCell style={{ color: 'var(--color-text-secondary)' }}>
-                        —
+                        {TEMPLATE_LABELS[item.parametros?.template ?? ''] ?? '—'}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className={statusBadge.className}>{statusBadge.label}</Badge>
