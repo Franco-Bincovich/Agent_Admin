@@ -103,7 +103,15 @@ def run_document_generation(
             for nombre, file_bytes in archivos:
                 for img_bytes in extract_images_from_file(nombre, file_bytes):
                     imagenes.append((nombre, img_bytes))
-            imagenes = imagenes[:20]  # máximo 20 imágenes
+            # Deduplicar por hash de contenido
+            seen = set()
+            imagenes_unicas = []
+            for nombre_img, img_bytes in imagenes:
+                h = hash(img_bytes)
+                if h not in seen:
+                    seen.add(h)
+                    imagenes_unicas.append((nombre_img, img_bytes))
+            imagenes = imagenes_unicas[:20]  # máximo 20 imágenes
             if imagenes:
                 log.info(
                     "Imágenes extraídas del documento",

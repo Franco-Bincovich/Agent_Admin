@@ -113,7 +113,15 @@ async def run_generation(
                     f"id={generation_id}"
                 )
                 imagenes.extend(imgs)
-            imagenes = imagenes[:20]
+            # Deduplicar por hash de contenido
+            seen: set[int] = set()
+            imagenes_unicas: list[bytes] = []
+            for img in imagenes:
+                h = hash(img)
+                if h not in seen:
+                    seen.add(h)
+                    imagenes_unicas.append(img)
+            imagenes = imagenes_unicas[:20]
             log.info(
                 f"img.total | cantidad={len(imagenes)} | id={generation_id}"
             )
