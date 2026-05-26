@@ -15,6 +15,20 @@ def validate_outline(outline: dict, cantidad_slides: int = 12) -> None:
             raise AppError("Outline inválido", ErrorCode.GENERATION_FAILED, 503)
         if slide["tipo"] not in _VALID_TYPES:
             raise AppError("Outline inválido", ErrorCode.GENERATION_FAILED, 503)
+        # Validar que el contenido no esté vacío
+        contenido = slide.get("contenido")
+        if contenido is None:
+            raise AppError("Outline inválido",
+                ErrorCode.GENERATION_FAILED, 503)
+        if isinstance(contenido, str) and not contenido.strip():
+            raise AppError("Outline inválido",
+                ErrorCode.GENERATION_FAILED, 503)
+        if isinstance(contenido, list) and (
+            len(contenido) == 0 or
+            all(not str(b).strip() for b in contenido)
+        ):
+            raise AppError("Outline inválido",
+                ErrorCode.GENERATION_FAILED, 503)
         if "imagen_idx" in slide and not isinstance(slide["imagen_idx"], (int, type(None))):
             raise AppError("Outline inválido", ErrorCode.GENERATION_FAILED, 503)
     if slides[0]["tipo"] != "portada" or slides[-1]["tipo"] != "cierre":
