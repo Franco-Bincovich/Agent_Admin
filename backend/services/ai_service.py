@@ -50,8 +50,11 @@ def _call_claude_for_json(
             "type": "text",
             "text": (
                 f"A continuación encontrás {len(imagenes)} imágenes "
-                f"extraídas de los documentos fuente (imagen 0 a "
-                f"{len(imagenes) - 1}). "
+                f"extraídas de los documentos fuente. "
+                f"Los índices válidos son ÚNICAMENTE del 0 al "
+                f"{len(imagenes) - 1} — no uses índices fuera de este rango. "
+                f"La primera imagen es índice 0, "
+                f"la última es índice {len(imagenes) - 1}. "
                 "Analizá el contenido visual de cada una para asignar "
                 "imagen_idx en el outline según corresponda."
             )
