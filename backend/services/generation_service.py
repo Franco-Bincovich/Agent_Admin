@@ -107,19 +107,15 @@ async def run_generation(
             for nombre, contenido in archivo_bytes:
                 imgs = extract_images_from_file(nombre, contenido)
                 log.info(
-                    "Extracción imagen por archivo",
-                    extra={
-                        "archivo": nombre,
-                        "bytes_archivo": len(contenido),
-                        "imagenes_extraidas": len(imgs),
-                        "generation_id": str(generation_id),
-                    },
+                    f"img.extract | archivo={nombre} | "
+                    f"bytes={len(contenido)} | "
+                    f"extraidas={len(imgs)} | "
+                    f"id={generation_id}"
                 )
                 imagenes.extend(imgs)
             imagenes = imagenes[:20]
             log.info(
-                "Imágenes extraídas del documento",
-                extra={"cantidad": len(imagenes), "generation_id": str(generation_id)},
+                f"img.total | cantidad={len(imagenes)} | id={generation_id}"
             )
 
         prompt = build_prompt(
