@@ -32,13 +32,14 @@ def build_contenido(slide, data: dict, tpl, imagen=None) -> None:
     add_textbox(slide, L["titulo"], data["titulo"], T["font_title"], T["font_size_title_slide"], "FFFFFF", bold=True)
     bullets = data["contenido"] if isinstance(data["contenido"], list) else [str(data["contenido"])]
     bs = L["bullet_box_size"]
+    bullet_width = Inches(6.2) if imagen else Inches(11.5)
     for i, bullet in enumerate(bullets[:5]):
         top = L["bullets_start_y"] + i * L["bullet_height"]
         num_box = add_rect(slide, Inches(0.5), top, bs, bs, T["header_color"])
         set_shape_text(num_box, str(i + 1), T["font_body"], T["font_size_body"] - 2, "FFFFFF", bold=True)
         add_textbox(
             slide,
-            {"left": L["bullet_text_x"], "top": top, "width": Inches(11.5), "height": bs},
+            {"left": L["bullet_text_x"], "top": top, "width": bullet_width, "height": bs},
             bullet, T["font_body"], T["font_size_body"], T["text_color"],
         )
     if imagen:
@@ -52,7 +53,8 @@ def build_destacado(slide, data: dict, tpl, imagen=None) -> None:
     add_rect(slide, Inches(0), Inches(0), _W, L["header_height"], T["header_color"])
     add_rect(slide, Inches(0), L["header_height"], _W, Inches(0.06), T["accent_color"])
     add_textbox(slide, L["titulo"], data["titulo"], T["font_title"], T["font_size_title_slide"], "FFFFFF", bold=True)
-    box = add_rect(slide, Inches(0.4), Inches(1.3), Inches(12.5), Inches(5.8), T["header_color"])
+    panel_width = Inches(7.0) if imagen else Inches(12.5)
+    box = add_rect(slide, Inches(0.4), Inches(1.3), panel_width, Inches(5.8), T["header_color"])
     set_shape_text(box, str(data.get("contenido", "")), T["font_body"], T["font_size_body"], "FFFFFF")
     if imagen:
         _insert_image(slide, imagen)
@@ -73,7 +75,8 @@ def _insert_image(slide, imagen) -> None:
         img_bytes = imagen if isinstance(imagen, bytes) else imagen[1]
         slide.shapes.add_picture(
             io.BytesIO(img_bytes),
-            left=int(Inches(8.0)), top=int(Inches(2.5)), width=int(Inches(4.8)),
+            left=int(Inches(7.8)), top=int(Inches(1.3)),
+            width=int(Inches(5.0)), height=int(Inches(5.8)),
         )
     except Exception:
         pass
