@@ -114,9 +114,12 @@ def run_document_generation(
         prompt = build_documento_prompt(
             textos_extraidos, titulo, secciones,
             indicaciones, opciones, plantilla_secciones,
-            imagenes_count=len(imagenes),
         )
-        outline = generate_documento_outline(prompt)
+        imagenes_bytes = [img for _, img in imagenes] if imagenes else None
+        outline = generate_documento_outline(
+            prompt,
+            imagenes=imagenes_bytes if imagenes_bytes else None,
+        )
         usar_imagenes = bool(opciones.get("usar_imagenes"))
         docx_bytes = generate_docx(outline, imagenes, usar_imagenes, plantilla_bytes, logo_bytes)
         docx_url = _upload_docx(documento_id, docx_bytes)

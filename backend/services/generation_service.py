@@ -122,9 +122,11 @@ async def run_generation(
             texto_extraido, objetivo, informacion_adicional,
             template, tono, audiencia,
             cantidad_slides=cantidad_slides,
-            imagenes_count=len(imagenes),
         )
-        outline = generate_outline(prompt)
+        outline = generate_outline(
+            prompt,
+            imagenes=imagenes if imagenes else None,
+        )
 
         pptx_url: str | None = None
         if output in ("pptx", "ambos"):

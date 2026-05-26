@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import re
 
@@ -45,7 +46,6 @@ def build_documento_prompt(
     indicaciones: str | None,
     opciones: dict,
     plantilla_secciones: list[str] | None,
-    imagenes_count: int = 0,
 ) -> str:
     """
     Construye el prompt de usuario para la unificación de documentos.
@@ -60,9 +60,8 @@ def build_documento_prompt(
         indicaciones: Indicaciones adicionales del usuario (opcional).
         opciones: Claves soportadas — homogeneizar (bool), deduplicar (bool).
         plantilla_secciones: Secciones detectadas en plantilla cargada (opcional).
-        imagenes_count: Cantidad de imágenes disponibles del documento fuente.
-            Si > 0, Claude recibe instrucciones para asignar imagen_idx a cada
-            sección donde corresponda.
+        Si hay imágenes adjuntas al mensaje de Claude,
+        el prompt instruye a asignarlas por contenido visual.
 
     Returns:
         Prompt de usuario listo para enviarse junto a _SYSTEM_PROMPT.
@@ -92,20 +91,15 @@ def build_documento_prompt(
         indicaciones_limpias = sanitize_for_prompt(indicaciones, max_length=500)
         indicaciones_block = f"\n\n## INDICACIONES ADICIONALES\n{indicaciones_limpias}"
 
-    imagenes_block = ""
-    if imagenes_count > 0:
-        imagenes_block = (
-            f"\n\n## IMÁGENES DISPONIBLES\n"
-            f"- Tenés {imagenes_count} imágenes extraídas "
-            f"del documento fuente (índices 0 a {imagenes_count - 1}).\n"
-            "- Para cada sección donde una imagen sea relevante "
-            "para el contenido, agregá el campo 'imagen_idx' "
-            "con el índice (int) de la imagen más apropiada "
-            "según el tema de esa sección.\n"
-            "- Si una sección no tiene imagen relevante, "
-            "omitir el campo 'imagen_idx'.\n"
-            "- No repitas el mismo índice en más de una sección.\n"
-        )
+    imagenes_block = (
+        "\n\n## IMÁGENES DISPONIBLES\n"
+        "- Si recibís imágenes junto a este mensaje, "
+        "analizá su contenido visual y asigná imagen_idx "
+        "en cada sección donde la imagen sea temáticamente relevante.\n"
+        "- Si una sección no tiene imagen relevante, "
+        "omitir el campo 'imagen_idx'.\n"
+        "- No repitas el mismo índice en más de una sección.\n"
+    )
 
     return (
         f"## DOCUMENTOS FUENTE\n{docs_block}\n\n"
@@ -119,18 +113,59 @@ def build_documento_prompt(
     )
 
 
-def _call_claude_for_documento(user_message: str) -> str:
+def _call_claude_for_documento(
+    user_message: str,
+    imagenes: list[bytes] | None = None,
+) -> str:
     """Envía el prompt a Claude y retorna el texto raw de la respuesta."""
+    content: list[dict] = []
+
+    if imagenes:
+        content.append({
+            "type": "text",
+            "text": (
+                f"A continuación encontrás {len(imagenes)} imágenes "
+                f"extraídas de los documentos fuente (imagen 0 a "
+                f"{len(imagenes) - 1}). "
+                "Analizá el contenido visual de cada una para asignar "
+                "imagen_idx en el outline según corresponda."
+            )
+        })
+        for img_bytes in imagenes:
+            try:
+                media_type = "image/png"
+                if img_bytes[:3] == b"\xff\xd8\xff":
+                    media_type = "image/jpeg"
+                elif img_bytes[:4] == b"\x89PNG":
+                    media_type = "image/png"
+                content.append({
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": media_type,
+                        "data": base64.standard_b64encode(
+                            img_bytes
+                        ).decode("utf-8"),
+                    }
+                })
+            except Exception:
+                pass
+
+    content.append({"type": "text", "text": user_message})
+
     response = get_anthropic_client().messages.create(
         model=get_settings().anthropic_model,
         max_tokens=MAX_TOKENS_DOCUMENTO,
         system=_SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_message}],
+        messages=[{"role": "user", "content": content}],
     )
     return response.content[0].text
 
 
-def generate_documento_outline(prompt: str) -> dict:
+def generate_documento_outline(
+    prompt: str,
+    imagenes: list[bytes] | None = None,
+) -> dict:
     """
     Llama a Claude con el prompt y retorna el outline de documento como dict JSON.
 
@@ -139,6 +174,9 @@ def generate_documento_outline(prompt: str) -> dict:
 
     Args:
         prompt: Prompt de usuario construido por build_documento_prompt().
+        imagenes: Lista de bytes de imágenes a enviar
+            a Claude para asignación visual de imagen_idx.
+            None omite el análisis visual.
 
     Returns:
         Dict con estructura {titulo: str, secciones: list[{nombre, contenido}]}.
@@ -148,7 +186,7 @@ def generate_documento_outline(prompt: str) -> dict:
     """
     for attempt in range(2):
         try:
-            raw = _call_claude_for_documento(prompt)
+            raw = _call_claude_for_documento(prompt, imagenes)
             if _SYSTEM_PROMPT[:40] in raw:
                 log.error("documento.security | system prompt detectado en output")
                 raise AppError("Error generando documento.", ErrorCode.DOCUMENTO_GENERATION_FAILED, 500)

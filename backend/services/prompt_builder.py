@@ -24,7 +24,6 @@ def build_prompt(
     tono: str,
     audiencia: str,
     cantidad_slides: int = 10,
-    imagenes_count: int = 0,
 ) -> str:
     """
     Construye el prompt de usuario con los bloques 2-6 de instrucción para Claude.
@@ -41,8 +40,8 @@ def build_prompt(
         tono: Clave de tono. Ver _TONO_MAP.
         audiencia: Clave de audiencia. Ver _AUDIENCIA_MAP.
         cantidad_slides: Máximo de slides a generar (5 mínimo). Default 10.
-        imagenes_count: Cantidad de imágenes extraídas disponibles. Si > 0,
-            se instruye a Claude a asignar imagen_idx por slide.
+        Si hay imágenes adjuntas al mensaje de Claude,
+        el prompt instruye a asignarlas por contenido visual.
     """
     fuente = sanitize_for_prompt(texto_extraido)
     objetivo_clean = sanitize_for_prompt(objetivo)
@@ -51,16 +50,14 @@ def build_prompt(
     instruccion_tono = _TONO_MAP.get(tono, tono)
     instruccion_audiencia = _AUDIENCIA_MAP.get(audiencia, audiencia)
     bloque_imagenes = (
-        f"- Tenés {imagenes_count} imágenes extraídas "
-        f"del documento fuente (índices 0 a {imagenes_count - 1}).\n"
-        "- Para cada slide de tipo 'contenido' o 'destacado' "
-        "donde una imagen sea relevante para el contenido, "
-        "agregá el campo 'imagen_idx' con el índice (int) "
-        "de la imagen más apropiada según el tema del slide.\n"
+        "- Si recibís imágenes junto a este mensaje, "
+        "analizá su contenido visual y asigná imagen_idx "
+        "en cada slide de tipo 'contenido' o 'destacado' "
+        "donde la imagen sea temáticamente relevante.\n"
         "- Si un slide no tiene imagen relevante, "
         "omitir el campo 'imagen_idx'.\n"
         "- No repitas el mismo índice en más de un slide.\n"
-    ) if imagenes_count > 0 else ""
+    )
     return (
         f"## CONTENIDO FUENTE\n{fuente}{bloque_adicional}\n\n"
         f"## OBJETIVO\n{objetivo_clean}\n\n"

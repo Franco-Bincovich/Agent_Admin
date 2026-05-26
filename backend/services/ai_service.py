@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import re
 
@@ -29,7 +30,10 @@ _SYSTEM_PROMPT = (
 )
 
 
-def _call_claude_for_json(user_message: str) -> str:
+def _call_claude_for_json(
+    user_message: str,
+    imagenes: list[bytes] | None = None,
+) -> str:
     """
     Envía el prompt a Claude y retorna el texto raw de la respuesta.
 
@@ -39,16 +43,54 @@ def _call_claude_for_json(user_message: str) -> str:
     Returns:
         Texto raw retornado por Claude.
     """
+    content: list[dict] = []
+
+    if imagenes:
+        content.append({
+            "type": "text",
+            "text": (
+                f"A continuación encontrás {len(imagenes)} imágenes "
+                f"extraídas de los documentos fuente (imagen 0 a "
+                f"{len(imagenes) - 1}). "
+                "Analizá el contenido visual de cada una para asignar "
+                "imagen_idx en el outline según corresponda."
+            )
+        })
+        for img_bytes in imagenes:
+            try:
+                media_type = "image/png"
+                if img_bytes[:3] == b"\xff\xd8\xff":
+                    media_type = "image/jpeg"
+                elif img_bytes[:4] == b"\x89PNG":
+                    media_type = "image/png"
+                content.append({
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": media_type,
+                        "data": base64.standard_b64encode(
+                            img_bytes
+                        ).decode("utf-8"),
+                    }
+                })
+            except Exception:
+                pass
+
+    content.append({"type": "text", "text": user_message})
+
     response = get_anthropic_client().messages.create(
         model=get_settings().anthropic_model,
         max_tokens=MAX_TOKENS,
         system=_SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_message}],
+        messages=[{"role": "user", "content": content}],
     )
     return response.content[0].text
 
 
-def generate_outline(prompt: str) -> dict:
+def generate_outline(
+    prompt: str,
+    imagenes: list[bytes] | None = None,
+) -> dict:
     """
     Llama a Claude con el prompt y retorna el outline como dict JSON.
 
@@ -58,6 +100,9 @@ def generate_outline(prompt: str) -> dict:
 
     Args:
         prompt: Prompt de usuario construido por build_prompt().
+        imagenes: Lista de bytes de imágenes a enviar
+            a Claude para asignación visual de imagen_idx.
+            None omite el análisis visual.
 
     Returns:
         Dict con estructura {titulo_presentacion: str, slides: list}.
@@ -67,7 +112,7 @@ def generate_outline(prompt: str) -> dict:
     """
     for attempt in range(2):
         try:
-            raw = _call_claude_for_json(prompt)
+            raw = _call_claude_for_json(prompt, imagenes)
             if _SYSTEM_PROMPT[:40] in raw:
                 log.error("outline.security | system prompt detectado en output")
                 raise AppError("Error generando outline.", ErrorCode.GENERATION_FAILED, 500)
