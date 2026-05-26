@@ -105,7 +105,17 @@ async def run_generation(
         imagenes: list[bytes] = []
         if usar_imagenes_documento and archivo_bytes:
             for nombre, contenido in archivo_bytes:
-                imagenes.extend(extract_images_from_file(nombre, contenido))
+                imgs = extract_images_from_file(nombre, contenido)
+                log.info(
+                    "Extracción imagen por archivo",
+                    extra={
+                        "archivo": nombre,
+                        "bytes_archivo": len(contenido),
+                        "imagenes_extraidas": len(imgs),
+                        "generation_id": str(generation_id),
+                    },
+                )
+                imagenes.extend(imgs)
             imagenes = imagenes[:20]
             log.info(
                 "Imágenes extraídas del documento",
