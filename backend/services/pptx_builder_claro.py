@@ -70,7 +70,7 @@ def build_cierre(slide, data: dict, tpl) -> None:
 def _insert_image(slide, imagen) -> None:
     """Inserta imagen a la derecha del área de texto. Falla silenciosamente."""
     try:
-        _, img_bytes = imagen
+        img_bytes = imagen if isinstance(imagen, bytes) else imagen[1]
         slide.shapes.add_picture(
             io.BytesIO(img_bytes),
             left=int(Inches(8.0)), top=int(Inches(2.5)), width=int(Inches(4.8)),
