@@ -51,11 +51,13 @@ def build_prompt(
     instruccion_audiencia = _AUDIENCIA_MAP.get(audiencia, audiencia)
     bloque_imagenes = (
         "- Si recibís imágenes junto a este mensaje, "
-        "analizá su contenido visual y asigná imagen_idx "
-        "en cada slide de tipo 'contenido' o 'destacado' "
-        "donde la imagen sea temáticamente relevante.\n"
-        "- Si un slide no tiene imagen relevante, "
-        "omitir el campo 'imagen_idx'.\n"
+        "analizá su contenido visual.\n"
+        "- Asigná imagen_idx ÚNICAMENTE en slides de tipo "
+        "'contenido' o 'destacado' — NUNCA en portada ni cierre.\n"
+        "- Intentá usar TODAS las imágenes recibidas — "
+        "distribuílas en los slides más relevantes según su contenido visual.\n"
+        "- Si hay más imágenes que slides de tipo contenido/destacado, "
+        "priorizá las más relevantes.\n"
         "- No repitas el mismo índice en más de un slide.\n"
     )
     return (

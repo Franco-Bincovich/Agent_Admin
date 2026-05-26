@@ -94,10 +94,13 @@ def build_documento_prompt(
     imagenes_block = (
         "\n\n## IMÁGENES DISPONIBLES\n"
         "- Si recibís imágenes junto a este mensaje, "
-        "analizá su contenido visual y asigná imagen_idx "
-        "en cada sección donde la imagen sea temáticamente relevante.\n"
-        "- Si una sección no tiene imagen relevante, "
-        "omitir el campo 'imagen_idx'.\n"
+        "analizá su contenido visual.\n"
+        "- Asigná imagen_idx en cada sección donde la imagen "
+        "sea temáticamente relevante según su contenido visual.\n"
+        "- Intentá usar TODAS las imágenes recibidas — "
+        "distribuílas en las secciones más relevantes.\n"
+        "- Si hay más imágenes que secciones, "
+        "priorizá las más relevantes.\n"
         "- No repitas el mismo índice en más de una sección.\n"
     )
 
