@@ -116,6 +116,7 @@ def generate_outline(
     for attempt in range(2):
         try:
             raw = _call_claude_for_json(prompt, imagenes)
+            log.info(f"outline.raw | id_len={len(raw)} | preview={raw[:200]}")
             if _SYSTEM_PROMPT[:40] in raw:
                 log.error("outline.security | system prompt detectado en output")
                 raise AppError("Error generando outline.", ErrorCode.GENERATION_FAILED, 500)
