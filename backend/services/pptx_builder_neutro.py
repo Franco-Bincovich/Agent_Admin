@@ -70,6 +70,13 @@ def build_cierre(slide, data: dict, tpl) -> None:
     pb = L["panel_borde"]
     add_rect(slide, pb["left"], pb["top"], pb["width"], pb["height"], T["accent_color"])
     add_textbox(slide, L["titulo"], data["titulo"], T["font_title"], T["font_size_title_portada"], "FFFFFF", bold=True)
+    contenido = data.get("contenido")
+    if contenido and str(contenido).strip():
+        add_textbox(
+            slide,
+            {"left": Inches(0.5), "top": Inches(3.0), "width": Inches(7.5), "height": Inches(3.5)},
+            str(contenido), T["font_body"], T["font_size_body"], T["text_color"],
+        )
 
 
 def _insert_image(slide, imagen) -> None:
