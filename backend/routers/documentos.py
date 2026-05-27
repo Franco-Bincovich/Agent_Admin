@@ -1,14 +1,13 @@
 import json
-from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from controllers import documento_controller
 from middleware.auth import get_current_user
-from schemas.documento import DocumentoResponse
+from schemas.documento import CreateDocumentoRequestV2, DocumentoResponse
 from utils.errors import AppError, ErrorCode
 
 router = APIRouter()
@@ -20,13 +19,7 @@ limiter = Limiter(key_func=get_remote_address)
 async def create_documento(
     request: Request,
     background_tasks: BackgroundTasks,
-    archivos: list[UploadFile] = File(...),
-    titulo: str = Form(..., max_length=500),
-    secciones: str = Form(default="[]"),
-    indicaciones: Optional[str] = Form(default=None, max_length=1000),
-    opciones: str = Form(default="{}"),
-    plantilla: Optional[UploadFile] = File(default=None),
-    logo: Optional[UploadFile] = File(default=None),
+    payload: CreateDocumentoRequestV2,
     current_user: dict = Depends(get_current_user),
 ) -> DocumentoResponse:
     """
@@ -38,12 +31,13 @@ async def create_documento(
         429: Rate limit excedido (RATE_LIMIT_EXCEEDED)
     """
     try:
-        secciones_list: list[str] = json.loads(secciones)
+        secciones_list: list[str] = json.loads(payload.secciones)
     except json.JSONDecodeError:
         raise AppError("El campo secciones no es JSON válido", "INVALID_JSON", 400)
     return await documento_controller.create_documento(
-        titulo, secciones_list, indicaciones, opciones,
-        archivos, plantilla, logo, background_tasks, current_user,
+        payload.titulo, secciones_list, payload.indicaciones, payload.opciones,
+        payload.archivos_urls, payload.plantilla_url, payload.logo_url,
+        background_tasks, current_user,
     )
 
 

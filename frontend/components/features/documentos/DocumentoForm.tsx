@@ -44,15 +44,15 @@ export default function DocumentoForm() {
     if (!isFormValid || isSubmitting) return;
     setIsSubmitting(true);
     try {
-      const fd = new FormData();
-      archivos.forEach((f) => fd.append('archivos', f));
-      if (plantilla) fd.append('plantilla', plantilla);
-      if (logo) fd.append('logo', logo);
-      fd.append('titulo', titulo.trim());
-      fd.append('secciones', JSON.stringify(secciones));
-      if (indicaciones.trim()) fd.append('indicaciones', indicaciones.trim());
-      fd.append('opciones', JSON.stringify(opciones));
-      const doc = await createDocumento(fd);
+      const doc = await createDocumento({
+        archivos,
+        plantilla,
+        logo,
+        titulo: titulo.trim(),
+        secciones,
+        indicaciones: indicaciones.trim(),
+        opciones,
+      });
       setDocumentoId(doc.id);
     } catch (err) {
       const apiErr = err as ApiError;

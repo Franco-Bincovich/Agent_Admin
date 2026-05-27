@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
+from urllib.parse import unquote, urlparse
 
-from fastapi import BackgroundTasks, UploadFile
+from fastapi import BackgroundTasks
 
 from schemas.documento import DocumentoOpciones, DocumentoResponse
 from services.documento_record_service import (
@@ -15,14 +16,19 @@ from services.documento_service import run_document_generation
 from utils.errors import AppError, ErrorCode
 
 
+def _filename_from_url(url: str) -> str:
+    path = urlparse(url).path
+    return unquote(path.rsplit("/", 1)[-1]) or "archivo"
+
+
 async def create_documento(
     titulo: str,
     secciones: list[str],
     indicaciones: str | None,
     opciones_raw: str,
-    archivos: list[UploadFile],
-    plantilla: UploadFile | None,
-    logo: UploadFile | None,
+    archivos_urls: list[str],
+    plantilla_url: str | None,
+    logo_url: str | None,
     background_tasks: BackgroundTasks,
     current_user: dict,
 ) -> DocumentoResponse:
@@ -31,25 +37,14 @@ async def create_documento(
     except Exception:
         raise AppError("Opciones inválidas.", ErrorCode.VALIDATION_ERROR, 400)
 
-    archivos_data: list[tuple[str, bytes]] = []
-    for archivo in archivos:
-        contenido = await archivo.read()
-        archivos_data.append((archivo.filename or "archivo", contenido))
-
-    plantilla_data: tuple[str, bytes] | None = None
-    if plantilla:
-        plantilla_bytes = await plantilla.read()
-        plantilla_data = (plantilla.filename or "plantilla.docx", plantilla_bytes)
-
-    logo_bytes: bytes | None = None
-    if logo:
-        logo_bytes = await logo.read()
+    archivos_nombres = [_filename_from_url(u) for u in archivos_urls]
+    plantilla_nombre = _filename_from_url(plantilla_url) if plantilla_url else None
 
     doc = create_documento_record(
         current_user["sub"],
         titulo,
-        [nombre for nombre, _ in archivos_data],
-        plantilla_data[0] if plantilla_data else None,
+        archivos_nombres,
+        plantilla_nombre,
         secciones,
         indicaciones,
         opciones,
@@ -57,7 +52,7 @@ async def create_documento(
 
     background_tasks.add_task(
         run_document_generation,
-        doc["id"], archivos_data, plantilla_data, logo_bytes,
+        doc["id"], archivos_urls, plantilla_url, logo_url,
         titulo, secciones, indicaciones, opciones,
     )
     return DocumentoResponse(**doc)

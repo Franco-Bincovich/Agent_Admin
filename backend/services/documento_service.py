@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from urllib.parse import unquote, urlparse
+
+import httpx
+
 from integrations.supabase_client import get_supabase
 from repositories import documento_mutations_repo, documento_repo
 from services.documento_ai_service import _DEFAULT_SECCIONES, build_documento_prompt, generate_documento_outline
@@ -10,6 +14,34 @@ from utils.errors import AppError
 from utils.logger import log
 
 _DOCX_BUCKET = "docx-generados"
+
+
+async def _download_file(url: str) -> tuple[str, bytes]:
+    """
+    Descarga un archivo desde una URL de Supabase Storage.
+
+    Args:
+        url: URL pública (o firmada) del archivo a descargar.
+
+    Returns:
+        Tupla (nombre_archivo, bytes). El nombre se deriva del último
+        segmento del path de la URL.
+
+    Raises:
+        AppError DOWNLOAD_FAILED (502) si la descarga falla.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise AppError(
+            f"No se pudo descargar el archivo desde Storage: {exc}",
+            "DOWNLOAD_FAILED",
+            502,
+        ) from exc
+    nombre = unquote(urlparse(url).path.rsplit("/", 1)[-1]) or "archivo"
+    return nombre, response.content
 
 
 def _upload_docx(documento_id: str, docx_bytes: bytes) -> str:
@@ -50,11 +82,11 @@ def _detect_headings(text: str) -> list[str]:
     return headings[:10]
 
 
-def run_document_generation(
+async def run_document_generation(
     documento_id: str,
-    archivos: list[tuple[str, bytes]],
-    plantilla: tuple[str, bytes] | None,
-    logo_bytes: bytes | None,
+    archivos_urls: list[str],
+    plantilla_url: str | None,
+    logo_url: str | None,
     titulo: str,
     secciones: list[str],
     indicaciones: str | None,
@@ -63,8 +95,9 @@ def run_document_generation(
     """
     Orquesta el pipeline completo de unificación de documentos.
 
-    Ejecuta en orden: extracción de texto → detección de headings de plantilla →
-    extracción de imágenes (si usar_imagenes) → build_documento_prompt →
+    Descarga los archivos desde Supabase Storage y luego ejecuta en orden:
+    extracción de texto → detección de headings de plantilla → extracción
+    de imágenes (si usar_imagenes) → build_documento_prompt →
     generate_documento_outline → generate_docx → Supabase Storage upload →
     DB update_resultado.
 
@@ -73,15 +106,19 @@ def run_document_generation(
 
     Args:
         documento_id: UUID del documento ya insertado con estado='procesando'.
-        archivos: Lista de (nombre, bytes) de los archivos fuente.
-        plantilla: (nombre, bytes) de la plantilla DOCX base, o None.
-        logo_bytes: Bytes del logo a insertar en la primera página, o None.
+        archivos_urls: URLs de Supabase Storage de los archivos fuente.
+        plantilla_url: URL de la plantilla DOCX base, o None.
+        logo_url: URL del logo a insertar en la primera página, o None.
         titulo: Título del documento final.
         secciones: Secciones requeridas por el usuario.
         indicaciones: Indicaciones adicionales del usuario (puede ser None).
         opciones: Dict con homogeneizar, deduplicar, usar_imagenes.
     """
     try:
+        archivos = [await _download_file(url) for url in archivos_urls]
+        plantilla = await _download_file(plantilla_url) if plantilla_url else None
+        logo_bytes = (await _download_file(logo_url))[1] if logo_url else None
+
         textos_extraidos: dict[str, str] = {}
         for nombre, file_bytes in archivos:
             textos_extraidos[nombre] = extract_text_from_file(nombre, file_bytes)

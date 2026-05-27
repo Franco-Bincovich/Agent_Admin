@@ -45,6 +45,30 @@ class CreateDocumentoRequest(BaseModel):
         return v.strip()
 
 
+class CreateDocumentoRequestV2(BaseModel):
+    titulo: str = Field(min_length=3, max_length=500)
+    secciones: str = Field(default="[]")
+    indicaciones: str | None = Field(default=None, max_length=1000)
+    opciones: str = Field(default="{}")
+    archivos_urls: list[str] = Field(...)
+    plantilla_url: str | None = Field(default=None)
+    logo_url: str | None = Field(default=None)
+
+    @field_validator("titulo")
+    @classmethod
+    def sanitize_titulo(cls, v: str) -> str:
+        v = re.sub(r'[<>"\']', "", v)
+        return v.strip()
+
+    @field_validator("indicaciones")
+    @classmethod
+    def sanitize_indicaciones(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        v = re.sub(r'[<>"\']', "", v)
+        return v.strip()
+
+
 class DocumentoResponse(BaseModel):
     id: str
     usuario_id: str
