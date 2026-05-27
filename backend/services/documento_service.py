@@ -67,21 +67,6 @@ def _upload_docx(documento_id: str, docx_bytes: bytes) -> str:
     return storage.get_public_url(path)
 
 
-def _detect_headings(text: str) -> list[str]:
-    """Detecta líneas que parecen headings en el texto de la plantilla."""
-    headings = []
-    for line in text.splitlines():
-        stripped = line.strip()
-        if (
-            3 <= len(stripped) <= 60
-            and stripped[0].isupper()
-            and not stripped.endswith((".", ",", ";", ":"))
-            and " " in stripped
-        ):
-            headings.append(stripped)
-    return headings[:10]
-
-
 async def run_document_generation(
     documento_id: str,
     archivos_urls: list[str],
@@ -96,10 +81,12 @@ async def run_document_generation(
     Orquesta el pipeline completo de unificación de documentos.
 
     Descarga los archivos desde Supabase Storage y luego ejecuta en orden:
-    extracción de texto → detección de headings de plantilla → extracción
-    de imágenes (si usar_imagenes) → build_documento_prompt →
-    generate_documento_outline → generate_docx → Supabase Storage upload →
-    DB update_resultado.
+    extracción de texto → extracción de imágenes (si usar_imagenes) →
+    build_documento_prompt → generate_documento_outline → generate_docx →
+    Supabase Storage upload → DB update_resultado.
+
+    La plantilla DOCX (si se provee) se usa únicamente como molde visual en
+    generate_docx — su texto NO se extrae ni influye en las secciones.
 
     Si cualquier paso falla, registra estado='error' en la DB y loguea con
     log.error. No relanza la excepción — el pipeline corre en background.
@@ -123,15 +110,7 @@ async def run_document_generation(
         for nombre, file_bytes in archivos:
             textos_extraidos[nombre] = extract_text_from_file(nombre, file_bytes)
 
-        plantilla_secciones: list[str] | None = None
-        plantilla_bytes: bytes | None = None
-        if plantilla:
-            plantilla_nombre, plantilla_bytes = plantilla
-            try:
-                texto_plantilla = extract_text_from_file(plantilla_nombre, plantilla_bytes)
-                plantilla_secciones = _detect_headings(texto_plantilla)
-            except AppError:
-                pass  # plantilla sin texto útil — se ignoran sus secciones
+        plantilla_bytes: bytes | None = plantilla[1] if plantilla else None
 
         secciones = secciones if secciones else _DEFAULT_SECCIONES
 
@@ -158,7 +137,7 @@ async def run_document_generation(
 
         prompt = build_documento_prompt(
             textos_extraidos, titulo, secciones,
-            indicaciones, opciones, plantilla_secciones,
+            indicaciones, opciones,
         )
         imagenes_bytes = [img for _, img in imagenes] if imagenes else None
         outline = generate_documento_outline(

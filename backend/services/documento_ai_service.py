@@ -49,7 +49,6 @@ def build_documento_prompt(
     secciones: list[str],
     indicaciones: str | None,
     opciones: dict,
-    plantilla_secciones: list[str] | None,
 ) -> str:
     """
     Construye el prompt de usuario para la unificación de documentos.
@@ -63,7 +62,6 @@ def build_documento_prompt(
         secciones: Secciones requeridas en el documento final.
         indicaciones: Indicaciones adicionales del usuario (opcional).
         opciones: Claves soportadas — homogeneizar (bool), deduplicar (bool).
-        plantilla_secciones: Secciones detectadas en plantilla cargada (opcional).
         Si hay imágenes adjuntas al mensaje de Claude,
         el prompt instruye a asignarlas por contenido visual.
 
@@ -76,8 +74,7 @@ def build_documento_prompt(
         bloques_docs.append(f"### {nombre}\n{texto_limpio}")
     docs_block = "\n\n".join(bloques_docs)
 
-    secciones_a_usar = secciones if secciones else _DEFAULT_SECCIONES
-    secciones_finales = plantilla_secciones if plantilla_secciones else secciones_a_usar
+    secciones_finales = secciones if secciones else _DEFAULT_SECCIONES
     lista = "\n".join(f"- {s}" for s in secciones_finales)
     secciones_block = f"\n\n## SECCIONES REQUERIDAS\n{lista}"
 
