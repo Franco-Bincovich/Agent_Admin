@@ -58,15 +58,20 @@ def generate_docx(
 
         if plantilla_bytes:
             doc = Document(BytesIO(plantilla_bytes))
+            # Limpia el contenido visible (p, tbl, sdt) preservando sectPr y demás config
+            body = doc.element.body
+            for child in list(body):
+                tag = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+                if tag in ('p', 'tbl', 'sdt'):
+                    body.remove(child)
         else:
             doc = _new_doc_with_defaults(margin)
 
         if logo_bytes:
             _insert_logo(doc, logo_bytes)
 
-        if not plantilla_bytes:
-            p_titulo = doc.add_paragraph()
-            _style_run(p_titulo.add_run(outline.get("titulo", "")), 24, c_titulo, bold=True, font=font)
+        p_titulo = doc.add_paragraph()
+        _style_run(p_titulo.add_run(outline.get("titulo", "")), 24, c_titulo, bold=True, font=font)
 
         for sec_idx, seccion in enumerate(outline.get("secciones", [])):
             nombre = seccion.get("nombre", "")
