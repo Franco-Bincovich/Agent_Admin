@@ -122,6 +122,10 @@ export interface ActivityItem {
   gamma_url?: string | null;
   pptx_gamma_url?: string | null;
   slides_count?: number;
+  parametros?: {
+    template?: string;
+    [key: string]: unknown;
+  } | null;
 }
 
 // ── Video agent ───────────────────────────────────────────────────────────────
