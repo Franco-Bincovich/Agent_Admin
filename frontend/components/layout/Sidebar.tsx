@@ -26,6 +26,11 @@ interface NavItem {
   roles?: UserRole[];
 }
 
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Presentaciones', href: '/generator', icon: Sparkles },
@@ -36,7 +41,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Perfil', href: '/profile', icon: UserCircle },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -46,84 +51,98 @@ export default function Sidebar() {
   );
 
   return (
-    <aside
-      className="hidden lg:flex flex-col w-64 min-h-screen flex-shrink-0 border-r"
-      style={{
-        backgroundColor: 'var(--color-surface)',
-        borderColor: 'var(--color-border)',
-      }}
-    >
-      {/* Logo */}
+    <>
+      {/* Mobile overlay — sólo activo en < lg cuando isOpen */}
       <div
-        className="flex items-center gap-2.5 px-6 py-5 border-b"
-        style={{ borderColor: 'var(--color-border)' }}
+        className={`lg:hidden fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col w-64 min-h-screen flex-shrink-0 border-r transition-transform duration-300 ease-in-out ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:static lg:z-auto lg:translate-x-0`}
+        style={{
+          backgroundColor: 'var(--color-surface)',
+          borderColor: 'var(--color-border)',
+        }}
       >
-        <Zap className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
-        <span className="font-semibold text-lg" style={{ color: 'var(--color-text-primary)' }}>
-          Agent Admin
-        </span>
-      </div>
-
-      {/* Nav items */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {visibleItems.map(({ label, href, icon: Icon }) => {
-          const active = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
-                active ? '' : 'hover:bg-[var(--color-nav-hover)]'
-              }`}
-              style={{
-                color: active ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                backgroundColor: active
-                  ? 'color-mix(in srgb, var(--color-primary) 12%, transparent)'
-                  : undefined,
-              }}
-            >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* User info + logout */}
-      <div className="px-3 py-4 border-t space-y-0.5" style={{ borderColor: 'var(--color-border)' }}>
-        {user && (
-          <div className="px-3 py-2 mb-1">
-            <p
-              className="text-sm font-medium truncate"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
-              {user.nombre}
-            </p>
-            <p className="text-xs capitalize" style={{ color: 'var(--color-text-secondary)' }}>
-              {user.rol}
-            </p>
-          </div>
-        )}
-        <button
-          onClick={toggleTheme}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] hover:bg-[var(--color-nav-hover)]"
-          style={{ color: 'var(--color-text-secondary)' }}
-          aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+        {/* Logo */}
+        <div
+          className="flex items-center gap-2.5 px-6 py-5 border-b"
+          style={{ borderColor: 'var(--color-border)' }}
         >
-          {theme === 'dark'
-            ? <Sun  className="w-4 h-4 flex-shrink-0" />
-            : <Moon className="w-4 h-4 flex-shrink-0" />}
-          {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
-        </button>
-        <button
-          onClick={logout}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] hover:bg-red-500/10 hover:text-red-400"
-          style={{ color: 'var(--color-text-secondary)' }}
-        >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
-          Cerrar sesión
-        </button>
-      </div>
-    </aside>
+          <Zap className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
+          <span className="font-semibold text-lg" style={{ color: 'var(--color-text-primary)' }}>
+            Agent Admin
+          </span>
+        </div>
+
+        {/* Nav items */}
+        <nav className="flex-1 px-3 py-4 space-y-0.5">
+          {visibleItems.map(({ label, href, icon: Icon }) => {
+            const active = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => onClose?.()}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
+                  active ? '' : 'hover:bg-[var(--color-nav-hover)]'
+                }`}
+                style={{
+                  color: active ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                  backgroundColor: active
+                    ? 'color-mix(in srgb, var(--color-primary) 12%, transparent)'
+                    : undefined,
+                }}
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User info + logout */}
+        <div className="px-3 py-4 border-t space-y-0.5" style={{ borderColor: 'var(--color-border)' }}>
+          {user && (
+            <div className="px-3 py-2 mb-1">
+              <p
+                className="text-sm font-medium truncate"
+                style={{ color: 'var(--color-text-primary)' }}
+              >
+                {user.nombre}
+              </p>
+              <p className="text-xs capitalize" style={{ color: 'var(--color-text-secondary)' }}>
+                {user.rol}
+              </p>
+            </div>
+          )}
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] hover:bg-[var(--color-nav-hover)]"
+            style={{ color: 'var(--color-text-secondary)' }}
+            aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          >
+            {theme === 'dark'
+              ? <Sun  className="w-4 h-4 flex-shrink-0" />
+              : <Moon className="w-4 h-4 flex-shrink-0" />}
+            {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+          </button>
+          <button
+            onClick={logout}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] hover:bg-red-500/10 hover:text-red-400"
+            style={{ color: 'var(--color-text-secondary)' }}
+          >
+            <LogOut className="w-4 h-4 flex-shrink-0" />
+            Cerrar sesión
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }
