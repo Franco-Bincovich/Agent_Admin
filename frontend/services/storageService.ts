@@ -1,6 +1,16 @@
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
+const DIACRITICS_RE = new RegExp('[\\u0300-\\u036f]', 'g');
+
+function sanitizeStorageKey(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(DIACRITICS_RE, '')
+    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Z0-9._-]/g, '');
+}
+
 export async function uploadFileToStorage(
   file: File,
   bucket: string,
@@ -12,7 +22,8 @@ export async function uploadFileToStorage(
     );
   }
 
-  const uniquePath = `${crypto.randomUUID()}-${path}`;
+  const safePath = sanitizeStorageKey(path) || 'archivo';
+  const uniquePath = `${crypto.randomUUID()}-${safePath}`;
   const encoded = encodeURIComponent(uniquePath);
   const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${bucket}/${encoded}`;
 
