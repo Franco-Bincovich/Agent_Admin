@@ -12,7 +12,7 @@ export default function GenerationResult({ generation, onRetry }: Props) {
 
   return (
     <div
-      className="space-y-5 p-6 rounded-lg border text-center"
+      className="space-y-5 p-4 sm:p-6 rounded-lg border text-center"
       style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
     >
       <p
@@ -23,20 +23,20 @@ export default function GenerationResult({ generation, onRetry }: Props) {
       </p>
 
       {isSuccess && (
-        <div className="flex justify-center gap-3 flex-wrap">
+        <div className="flex flex-col sm:flex-row justify-center gap-3 flex-wrap">
           {generation.pptx_gamma_url && (
-            <a href={generation.pptx_gamma_url} download>
-              <Button><Download className="w-4 h-4 mr-2" />Descargar PPTX (Gamma)</Button>
+            <a href={generation.pptx_gamma_url} download className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto"><Download className="w-4 h-4 mr-2" />Descargar PPTX (Gamma)</Button>
             </a>
           )}
           {generation.output_url && (
-            <a href={generation.output_url} download>
-              <Button variant="default"><Download className="w-4 h-4 mr-2" />Descargar PPTX</Button>
+            <a href={generation.output_url} download className="w-full sm:w-auto">
+              <Button variant="default" className="w-full sm:w-auto"><Download className="w-4 h-4 mr-2" />Descargar PPTX</Button>
             </a>
           )}
           {generation.gamma_url && (
-            <a href={generation.gamma_url} target="_blank" rel="noopener noreferrer">
-              <Button variant="ghost">
+            <a href={generation.gamma_url} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+              <Button variant="ghost" className="w-full sm:w-auto">
                 <ExternalLink className="w-4 h-4 mr-2" />Abrir en Gamma
               </Button>
             </a>

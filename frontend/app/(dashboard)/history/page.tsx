@@ -12,6 +12,14 @@ import {
 import { formatDate, truncateText } from '@/utils/formatters';
 import type { ActivityItem } from '@/types';
 
+function sanitizeFilename(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(new RegExp('[\\u0300-\\u036f]', 'g'), '')
+    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Z0-9._-]/g, '');
+}
+
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   procesando: { label: 'Procesando...', className: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
   listo:      { label: 'Listo',         className: 'bg-green-500/20 text-green-400 border-green-500/30' },
@@ -112,7 +120,7 @@ function ItemActions({ item, align }: { item: ActivityItem; align: 'end' | 'stre
         </a>
       )}
       {item.docx_url && (
-        <a href={item.docx_url} download className={aClass}>
+        <a href={item.docx_url} download={`${sanitizeFilename(item.titulo ?? '') || 'documento'}.docx`} className={aClass}>
           <Button variant="ghost" size="sm" className={btnClass} style={{ color: 'var(--color-text-secondary)' }}>
             <Download className="w-3.5 h-3.5" />
             Descargar DOCX

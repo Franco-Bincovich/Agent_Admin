@@ -13,7 +13,7 @@ export default function GeneratorPage() {
       </div>
 
       <div
-        className="rounded-lg border p-6"
+        className="rounded-lg border p-4 sm:p-6"
         style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
       >
         <GeneratorForm />

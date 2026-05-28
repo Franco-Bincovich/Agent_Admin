@@ -32,22 +32,22 @@ export default function DocumentoResult({ documento, onRetry }: Props) {
       <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
         {documento.titulo}
       </p>
-      {documento.estado === 'listo' && documento.docx_url && (
-        <a
-          href={documento.docx_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-white font-medium text-sm hover:opacity-90 transition-opacity"
-        >
-          <Download className="w-4 h-4" />
-          Descargar documento
-        </a>
-      )}
-      <div>
+      <div className="flex flex-col sm:flex-row justify-center gap-3">
+        {documento.estado === 'listo' && documento.docx_url && (
+          <a
+            href={documento.docx_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-primary text-white font-medium text-sm hover:opacity-90 transition-opacity w-full sm:w-auto"
+          >
+            <Download className="w-4 h-4" />
+            Descargar documento
+          </a>
+        )}
         <button
           type="button"
           onClick={onRetry}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-white/40 text-white font-medium text-sm hover:bg-white/10 transition-colors"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md border border-white/40 text-white font-medium text-sm hover:bg-white/10 transition-colors w-full sm:w-auto"
         >
           <RefreshCw className="w-4 h-4" />
           Generar otro documento

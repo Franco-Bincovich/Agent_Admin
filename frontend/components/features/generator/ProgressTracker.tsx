@@ -58,7 +58,7 @@ export default function ProgressTracker({ status, generationId, onComplete }: Pr
     'Generando tu presentación...';
 
   return (
-    <div className="space-y-5 p-6 rounded-lg border" style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}>
+    <div className="space-y-5 p-4 sm:p-6 rounded-lg border" style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}>
       <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>{headline}</p>
       <div className="space-y-4">
         {STEPS.map((step, i) => {

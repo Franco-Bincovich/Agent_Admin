@@ -63,7 +63,7 @@ export default function FuenteUploadSection({
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        className="rounded-lg border-2 border-dashed p-8 text-center cursor-pointer transition-colors"
+        className="rounded-lg border-2 border-dashed p-6 sm:p-8 text-center cursor-pointer transition-colors"
         style={{
           borderColor:     isDragging ? 'var(--color-primary)' : 'var(--color-border)',
           backgroundColor: isDragging ? 'color-mix(in srgb, var(--color-primary) 5%, transparent)' : 'transparent',
