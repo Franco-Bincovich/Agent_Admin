@@ -11,6 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     if (isLoading) return;
@@ -39,7 +40,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       className="flex h-screen overflow-hidden"
       style={{ backgroundColor: 'var(--color-background)' }}
     >
-      <Sidebar isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      <Sidebar
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+      />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header
           className="lg:hidden flex items-center justify-between px-4 py-3 border-b"

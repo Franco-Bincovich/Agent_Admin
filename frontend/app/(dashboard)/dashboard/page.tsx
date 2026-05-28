@@ -69,7 +69,7 @@ export default function DashboardPage() {
       return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
     }).length,
   };
-  const recent = activity;
+  const recent = activity.slice(0, 5);
 
   const cards: MetricCardProps[] = [
     { label: isAdmin ? 'Total de actividad' : 'Mi actividad', value: metrics.total,   icon: BarChart3,    color: 'var(--color-primary)' },
@@ -89,7 +89,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((card) => <MetricCard key={card.label} {...card} />)}
       </div>
 
@@ -97,7 +97,45 @@ export default function DashboardPage() {
         <h2 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>
           Actividad reciente
         </h2>
-        <div className="rounded-lg border overflow-hidden overflow-x-auto" style={{ borderColor: 'var(--color-border)' }}>
+
+        {/* Mobile: cards apiladas */}
+        <div className="lg:hidden space-y-3">
+          {recent.length === 0 ? (
+            <Card style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}>
+              <CardContent className="py-8 text-center text-sm" style={{ color: 'var(--color-text-disabled)' }}>
+                No hay actividad reciente todavía.
+              </CardContent>
+            </Card>
+          ) : (
+            recent.map((item) => {
+              const statusBadge = STATUS_BADGE[item.estado] ?? STATUS_BADGE['procesando'];
+              const typeBadge = TYPE_BADGE[item.tipo];
+              const label = item.objetivo ?? item.titulo ?? '';
+              return (
+                <Card
+                  key={item.id}
+                  style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+                >
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className={typeBadge.className}>{typeBadge.label}</Badge>
+                      <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                        {formatDate(item.creado_en)}
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                      {truncateText(label, 60)}
+                    </p>
+                    <Badge variant="outline" className={statusBadge.className}>{statusBadge.label}</Badge>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop: tabla */}
+        <div className="hidden lg:block rounded-lg border overflow-hidden overflow-x-auto" style={{ borderColor: 'var(--color-border)' }}>
           <Table>
             <TableHeader>
               <TableRow style={{ borderColor: 'var(--color-border)' }}>
@@ -114,7 +152,7 @@ export default function DashboardPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                recent.slice(0, 5).map((item) => {
+                recent.map((item) => {
                   const statusBadge = STATUS_BADGE[item.estado] ?? STATUS_BADGE['procesando'];
                   const typeBadge = TYPE_BADGE[item.tipo];
                   const label = item.objetivo ?? item.titulo ?? '';

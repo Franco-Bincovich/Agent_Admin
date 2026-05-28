@@ -14,6 +14,8 @@ import {
   LogOut,
   Sun,
   Moon,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
@@ -29,6 +31,8 @@ interface NavItem {
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -41,7 +45,12 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Perfil', href: '/profile', icon: UserCircle },
 ];
 
-export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
+export default function Sidebar({
+  isOpen = false,
+  onClose,
+  isCollapsed = false,
+  onToggleCollapse,
+}: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -49,6 +58,10 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const visibleItems = NAV_ITEMS.filter(
     (item) => !item.roles || (user?.rol && item.roles.includes(user.rol)),
   );
+
+  // El collapse sólo aplica en lg+; en mobile (drawer) el sidebar siempre va expandido
+  const collapseRow = isCollapsed ? 'lg:justify-center lg:gap-0 lg:px-2' : '';
+  const collapseHide = isCollapsed ? 'lg:hidden' : '';
 
   return (
     <>
@@ -62,9 +75,9 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col w-64 min-h-screen flex-shrink-0 border-r transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col w-64 min-h-screen flex-shrink-0 border-r transition-all duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:static lg:z-auto lg:translate-x-0`}
+        } lg:static lg:z-auto lg:translate-x-0 ${isCollapsed ? 'lg:w-16' : 'lg:w-64'}`}
         style={{
           backgroundColor: 'var(--color-surface)',
           borderColor: 'var(--color-border)',
@@ -72,11 +85,16 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       >
         {/* Logo */}
         <div
-          className="flex items-center gap-2.5 px-6 py-5 border-b"
+          className={`flex items-center gap-2.5 px-6 py-5 border-b ${
+            isCollapsed ? 'lg:justify-center lg:px-0' : ''
+          }`}
           style={{ borderColor: 'var(--color-border)' }}
         >
           <Zap className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
-          <span className="font-semibold text-lg" style={{ color: 'var(--color-text-primary)' }}>
+          <span
+            className={`font-semibold text-lg ${collapseHide}`}
+            style={{ color: 'var(--color-text-primary)' }}
+          >
             Agent Admin
           </span>
         </div>
@@ -90,7 +108,8 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                 key={href}
                 href={href}
                 onClick={() => onClose?.()}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
+                aria-label={label}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${collapseRow} ${
                   active ? '' : 'hover:bg-[var(--color-nav-hover)]'
                 }`}
                 style={{
@@ -101,16 +120,30 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                 }}
               >
                 <Icon className="w-4 h-4 flex-shrink-0" />
-                {label}
+                <span className={collapseHide}>{label}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* User info + logout */}
+        {/* Toggle collapse — sólo desktop, arriba del footer */}
+        <div className="hidden lg:block px-3 pb-2">
+          <button
+            onClick={onToggleCollapse}
+            className="flex items-center justify-center w-full px-3 py-2 rounded-lg transition-colors hover:bg-[var(--color-nav-hover)]"
+            style={{ color: 'var(--color-text-secondary)' }}
+            aria-label={isCollapsed ? 'Expandir menú' : 'Colapsar menú'}
+          >
+            {isCollapsed
+              ? <ChevronRight className="w-4 h-4" />
+              : <ChevronLeft  className="w-4 h-4" />}
+          </button>
+        </div>
+
+        {/* Footer: user info + theme + logout */}
         <div className="px-3 py-4 border-t space-y-0.5" style={{ borderColor: 'var(--color-border)' }}>
           {user && (
-            <div className="px-3 py-2 mb-1">
+            <div className={`px-3 py-2 mb-1 ${collapseHide}`}>
               <p
                 className="text-sm font-medium truncate"
                 style={{ color: 'var(--color-text-primary)' }}
@@ -124,22 +157,25 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           )}
           <button
             onClick={toggleTheme}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] hover:bg-[var(--color-nav-hover)]"
+            className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] hover:bg-[var(--color-nav-hover)] ${collapseRow}`}
             style={{ color: 'var(--color-text-secondary)' }}
             aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           >
             {theme === 'dark'
               ? <Sun  className="w-4 h-4 flex-shrink-0" />
               : <Moon className="w-4 h-4 flex-shrink-0" />}
-            {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            <span className={collapseHide}>
+              {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            </span>
           </button>
           <button
             onClick={logout}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] hover:bg-red-500/10 hover:text-red-400"
+            className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] hover:bg-red-500/10 hover:text-red-400 ${collapseRow}`}
             style={{ color: 'var(--color-text-secondary)' }}
+            aria-label="Cerrar sesión"
           >
             <LogOut className="w-4 h-4 flex-shrink-0" />
-            Cerrar sesión
+            <span className={collapseHide}>Cerrar sesión</span>
           </button>
         </div>
       </aside>
