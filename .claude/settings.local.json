@@ -36,7 +36,16 @@
       "Bash(Get-ChildItem -Path \"backend\" -Recurse -Filter \"*.py\")",
       "Bash(Select-Object FullName)",
       "Bash(dir \"C:\\\\Users\\\\Franco Bincovich\\\\Desktop\\\\Visual Code\\\\Agent-Admin\" /b /a-d)",
-      "Bash(awk -F'::' '{print $1}')"
+      "Bash(awk -F'::' '{print $1}')",
+      "Bash(xargs wc -l)",
+      "Bash(Select-String -NotMatch \"DeprecationWarning|utcnow|warnings.warn|gotrue|PytestUnknownMark|pytest.mark.video|per-request cookies\")",
+      "Bash(xargs grep -l \"creado_en\\\\|actualizado_en\\\\|updated_at\\\\|created_at\")",
+      "Bash(xargs -I {} sh -c 'echo \"$\\(wc -l < \"{}\"\\) {}\"')",
+      "PowerShell(Set-Content *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Franco Bincovich\\\\Desktop\\\\Visual Code\\\\Agent-Admin\" -Recurse -Force)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Franco Bincovich\\\\Desktop\\\\Visual Code\\\\Agent-Admin\\\\backend\" -Recurse -Force)",
+      "Bash(Sort-Object FullName)"
     ]
   }
 }

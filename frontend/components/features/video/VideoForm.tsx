@@ -1,12 +1,13 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Plus, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import VideoUploadArea from './VideoUploadArea';
 import BrandConfigFields from './BrandConfigFields';
 import VarianteConfig, { type VarianteValues } from './VarianteConfig';
+import VideoFormSuccess from './VideoFormSuccess';
+import VariantesSection from './VariantesSection';
 import { createVideoJob } from '@/services/videoService';
 import type { BrandConfigValues, VideoJob, ApiError } from '@/types';
 
@@ -92,30 +93,7 @@ export default function VideoForm() {
   }
 
   if (status === 'success' && createdJob) {
-    return (
-      <div className="flex flex-col items-center gap-4 py-10 text-center">
-        <CheckCircle className="w-12 h-12" style={{ color: 'var(--color-primary)' }} />
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-            Tu video está en cola
-          </h2>
-          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-            Job ID:{' '}
-            <span className="font-mono text-xs" style={{ color: 'var(--color-text-primary)' }}>
-              {createdJob.id}
-            </span>
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handleReset}
-          className="text-sm underline underline-offset-2"
-          style={{ color: 'var(--color-primary)' }}
-        >
-          Crear otro job
-        </button>
-      </div>
-    );
+    return <VideoFormSuccess job={createdJob} onReset={handleReset} />;
   }
 
   return (
@@ -139,43 +117,12 @@ export default function VideoForm() {
 
       <hr style={{ borderColor: 'var(--color-border)' }} />
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-              Variantes de edición
-            </h3>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-disabled)' }}>
-              {variantes.length}/5 · Completá todos los campos de cada variante
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={addVariante}
-            disabled={variantes.length >= 5}
-            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40"
-            style={{
-              borderColor: 'var(--color-border)',
-              color: variantes.length >= 5 ? 'var(--color-text-disabled)' : 'var(--color-primary)',
-            }}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Agregar variante
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          {variantes.map((item, i) => (
-            <VarianteConfig
-              key={item.id}
-              index={i}
-              data={item.values}
-              onChange={(values) => updateVariante(item.id, values)}
-              onRemove={() => removeVariante(item.id)}
-            />
-          ))}
-        </div>
-      </div>
+      <VariantesSection
+        variantes={variantes}
+        onAdd={addVariante}
+        onChange={updateVariante}
+        onRemove={removeVariante}
+      />
 
       <Button
         type="submit"

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import asyncio
+from datetime import datetime, timedelta, timezone
+
 from integrations.supabase_client import get_supabase
 from utils.logger import log
 
@@ -10,10 +13,10 @@ def _db():
     return get_supabase().table(_TABLE)
 
 
-def create(usuario_id: str, objetivo: str, archivos: list, parametros: dict, titulo: str = "") -> dict:
+async def create(usuario_id: str, objetivo: str, archivos: list, parametros: dict, titulo: str = "") -> dict:
     """Inserta generación con estado='procesando' y retorna el registro completo."""
-    response = (
-        _db()
+    response = await asyncio.to_thread(
+        lambda: _db()
         .insert({
             "usuario_id": str(usuario_id),
             "titulo": titulo,
@@ -27,7 +30,7 @@ def create(usuario_id: str, objetivo: str, archivos: list, parametros: dict, tit
     return response.data[0]
 
 
-def update_resultado(
+async def update_resultado(
     generation_id: str,
     pptx_url: str | None,
     gamma_url: str | None,
@@ -37,8 +40,8 @@ def update_resultado(
     gamma_warning: str | None = None,
 ) -> dict:
     """Actualiza a estado='listo' y persiste pptx_url, gamma_url, pptx_gamma_url, slides_count, outline y gamma_warning."""
-    response = (
-        _db()
+    response = await asyncio.to_thread(
+        lambda: _db()
         .update({
             "estado": "listo",
             "pptx_url": pptx_url,
@@ -54,25 +57,29 @@ def update_resultado(
     return response.data[0]
 
 
-def update_error(generation_id: str) -> None:
+async def update_error(generation_id: str) -> None:
     """Actualiza la generación a estado='error'."""
-    _db().update({"estado": "error"}).eq("id", str(generation_id)).execute()
+    await asyncio.to_thread(
+        lambda: _db().update({"estado": "error"}).eq("id", str(generation_id)).execute()
+    )
 
 
-def find_by_id(generation_id: str) -> dict | None:
+async def find_by_id(generation_id: str) -> dict | None:
     """Retorna la generación por ID, o None si no existe."""
-    response = _db().select("*").eq("id", str(generation_id)).execute()
+    response = await asyncio.to_thread(
+        lambda: _db().select("*").eq("id", str(generation_id)).execute()
+    )
     return response.data[0] if response.data else None
 
 
-def find_by_user(usuario_id: str, limit: int = 20) -> list[dict]:
+async def find_by_user(usuario_id: str, limit: int = 20) -> list[dict]:
     """
     Retorna las generaciones del usuario ordenadas por creado_en DESC.
     Máximo `limit` registros (default 20).
     """
     log.info("find_by_user query", extra={"usuario_id": str(usuario_id)})
-    response = (
-        _db()
+    response = await asyncio.to_thread(
+        lambda: _db()
         .select("*")
         .eq("usuario_id", str(usuario_id))
         .order("creado_en", desc=True)
@@ -82,16 +89,34 @@ def find_by_user(usuario_id: str, limit: int = 20) -> list[dict]:
     return response.data
 
 
-def find_all(limit: int = 50) -> list[dict]:
+async def find_all(limit: int = 50) -> list[dict]:
     """
     Retorna todas las generaciones del sistema ordenadas por creado_en DESC.
     Solo para administradores. Máximo `limit` registros (default 50).
     """
-    response = (
-        _db()
+    response = await asyncio.to_thread(
+        lambda: _db()
         .select("*")
         .order("creado_en", desc=True)
         .limit(limit)
         .execute()
     )
     return response.data
+
+
+async def find_stalled(older_than_minutes: int = 30) -> dict:
+    """
+    Devuelve generaciones en estado 'procesando' con más de
+    older_than_minutes minutos sin actualización.
+    """
+    cutoff = (
+        datetime.now(timezone.utc)
+        - timedelta(minutes=older_than_minutes)
+    ).isoformat()
+    return await asyncio.to_thread(
+        lambda: _db()
+        .select("*")
+        .eq("estado", "procesando")
+        .lt("creado_en", cutoff)
+        .execute()
+    )

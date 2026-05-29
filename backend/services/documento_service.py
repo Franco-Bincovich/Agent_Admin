@@ -1,70 +1,14 @@
 from __future__ import annotations
 
-from urllib.parse import unquote, urlparse
+import asyncio
 
-import httpx
-
-from integrations.supabase_client import get_supabase
 from repositories import documento_mutations_repo, documento_repo
 from services.documento_ai_service import _DEFAULT_SECCIONES, build_documento_prompt, generate_documento_outline
+from services.documento_storage import _validate_storage_url, _download_file, _upload_docx
 from services.docx_service import generate_docx
 from services.extraction_service import extract_text_from_file
 from services.image_extraction_service import extract_images_from_file
-from utils.errors import AppError
 from utils.logger import log
-
-_DOCX_BUCKET = "docx-generados"
-
-
-async def _download_file(url: str) -> tuple[str, bytes]:
-    """
-    Descarga un archivo desde una URL de Supabase Storage.
-
-    Args:
-        url: URL pública (o firmada) del archivo a descargar.
-
-    Returns:
-        Tupla (nombre_archivo, bytes). El nombre se deriva del último
-        segmento del path de la URL.
-
-    Raises:
-        AppError DOWNLOAD_FAILED (502) si la descarga falla.
-    """
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(url)
-            response.raise_for_status()
-    except httpx.HTTPError as exc:
-        raise AppError(
-            f"No se pudo descargar el archivo desde Storage: {exc}",
-            "DOWNLOAD_FAILED",
-            502,
-        ) from exc
-    nombre = unquote(urlparse(url).path.rsplit("/", 1)[-1]) or "archivo"
-    return nombre, response.content
-
-
-def _upload_docx(documento_id: str, docx_bytes: bytes) -> str:
-    """
-    Sube los bytes del DOCX al bucket de Supabase Storage y retorna la URL pública.
-
-    Args:
-        documento_id: UUID usado como nombre de archivo ({documento_id}.docx).
-        docx_bytes: Contenido binario del archivo DOCX.
-
-    Returns:
-        URL pública del archivo en Supabase Storage.
-    """
-    path = f"{documento_id}.docx"
-    storage = get_supabase().storage.from_(_DOCX_BUCKET)
-    storage.upload(
-        path=path,
-        file=docx_bytes,
-        file_options={
-            "content-type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        },
-    )
-    return storage.get_public_url(path)
 
 
 async def run_document_generation(
@@ -140,16 +84,21 @@ async def run_document_generation(
             indicaciones, opciones,
         )
         imagenes_bytes = [img for _, img in imagenes] if imagenes else None
-        outline = generate_documento_outline(
+        outline = await generate_documento_outline(
             prompt,
             imagenes=imagenes_bytes if imagenes_bytes else None,
         )
         usar_imagenes = bool(opciones.get("usar_imagenes"))
-        docx_bytes = generate_docx(outline, imagenes, usar_imagenes, plantilla_bytes, logo_bytes)
-        docx_url = _upload_docx(documento_id, docx_bytes)
-        documento_mutations_repo.update_resultado(documento_id, docx_url)
+        docx_bytes = await asyncio.to_thread(
+            generate_docx, outline, imagenes, usar_imagenes,
+            plantilla_bytes, logo_bytes
+        )
+        docx_url = await asyncio.to_thread(
+            _upload_docx, documento_id, docx_bytes
+        )
+        await documento_mutations_repo.update_resultado(documento_id, docx_url)
         log.info(f"documento.completed | id={documento_id}")
 
     except Exception as exc:
-        documento_mutations_repo.update_error(documento_id)
+        await documento_mutations_repo.update_error(documento_id)
         log.error(f"documento.failed | id={documento_id} | error={exc}")

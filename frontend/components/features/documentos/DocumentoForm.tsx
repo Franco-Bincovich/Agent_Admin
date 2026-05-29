@@ -9,7 +9,7 @@ import OpcionesSection from './OpcionesSection';
 import DocumentoProgressTracker from './DocumentoProgressTracker';
 import DocumentoResult from './DocumentoResult';
 import { createDocumento } from '@/services/documentoService';
-import type { Documento, DocumentoSeccion, DocumentoOpciones, ApiError } from '@/types';
+import type { Documento, DocumentoOutcome, DocumentoSeccion, DocumentoOpciones, ApiError } from '@/types';
 
 const DEFAULT_OPCIONES: DocumentoOpciones = {
   homogeneizar:  false,
@@ -61,9 +61,9 @@ export default function DocumentoForm() {
     }
   }
 
-  function handleComplete(doc: Documento) {
+  function handleComplete(doc: DocumentoOutcome) {
     if (doc.estado === 'error') toast.error('Hubo un error al generar el documento. Intentá de nuevo.');
-    setDocumento(doc);
+    setDocumento(doc as Documento);
   }
 
   function handleRetry() {

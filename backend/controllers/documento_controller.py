@@ -40,7 +40,7 @@ async def create_documento(
     archivos_nombres = [_filename_from_url(u) for u in archivos_urls]
     plantilla_nombre = _filename_from_url(plantilla_url) if plantilla_url else None
 
-    doc = create_documento_record(
+    doc = await create_documento_record(
         current_user["sub"],
         titulo,
         archivos_nombres,
@@ -58,20 +58,20 @@ async def create_documento(
     return DocumentoResponse(**doc)
 
 
-def get_documentos(current_user: dict) -> list[DocumentoResponse]:
+async def get_documentos(current_user: dict) -> list[DocumentoResponse]:
     """Retorna el historial de documentos según el rol del usuario."""
     if current_user.get("role") == "administrador":
-        records = list_all_documentos()
+        records = await list_all_documentos()
     else:
-        records = list_user_documentos(current_user["sub"])
+        records = await list_user_documentos(current_user["sub"])
     return [DocumentoResponse(**r) for r in records]
 
 
-def get_documento(documento_id: str, current_user: dict) -> DocumentoResponse:
+async def get_documento(documento_id: str, current_user: dict) -> DocumentoResponse:
     """
     Retorna un documento verificando ownership. Devuelve 404 si no existe
     o si el usuario no es propietario — nunca 403 (SEGURIDAD 2.4).
     """
     is_admin = current_user.get("role") == "administrador"
-    doc = get_documento_by_id(documento_id, current_user["sub"], is_admin)
+    doc = await get_documento_by_id(documento_id, current_user["sub"], is_admin)
     return DocumentoResponse(**doc)

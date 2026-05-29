@@ -76,13 +76,13 @@ async def create_job(
     video_input_url = _upload_video(video_bytes, video.filename or "video", content_type)
 
     parametros = {"variantes": [v.model_dump() for v in variantes]}
-    job = create_video_job(current_user["sub"], titulo, video_input_url, parametros)
+    job = await create_video_job(current_user["sub"], titulo, video_input_url, parametros)
 
     background_tasks.add_task(run_video_job, job["id"])
     return VideoJobResponse(**job)
 
 
-def list_jobs(current_user: dict) -> list[VideoJobResponse]:
+async def list_jobs(current_user: dict) -> list[VideoJobResponse]:
     """
     Retorna el historial de video jobs del usuario autenticado.
 
@@ -92,10 +92,10 @@ def list_jobs(current_user: dict) -> list[VideoJobResponse]:
     Returns:
         Lista de VideoJobResponse ordenada por creado_en DESC.
     """
-    return [VideoJobResponse(**j) for j in list_video_jobs(current_user["sub"])]
+    return [VideoJobResponse(**j) for j in await list_video_jobs(current_user["sub"])]
 
 
-def get_job(job_id: str, current_user: dict) -> VideoJobResponse:
+async def get_job(job_id: str, current_user: dict) -> VideoJobResponse:
     """
     Retorna un video job verificando ownership. Devuelve 404 si no existe
     o si el job no pertenece al usuario — nunca 403 (SEGURIDAD 2.4).
@@ -110,4 +110,4 @@ def get_job(job_id: str, current_user: dict) -> VideoJobResponse:
     Raises:
         AppError: NOT_FOUND (404) si no existe o el usuario no tiene acceso.
     """
-    return VideoJobResponse(**get_video_job(job_id, current_user["sub"]))
+    return VideoJobResponse(**await get_video_job(job_id, current_user["sub"]))

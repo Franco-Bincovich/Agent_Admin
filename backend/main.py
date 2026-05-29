@@ -1,19 +1,19 @@
 from contextlib import asynccontextmanager
+import asyncio
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
-from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 
 from config.settings import get_settings
 from middleware.auth import register_auth_middleware
 from middleware.error_handler import register_error_handlers
 from routers import activity, auth, documentos, generations, profile, users, video
-
-limiter = Limiter(key_func=get_remote_address)
+from utils.limiter import limiter
+from utils.logger import log
+from repositories import generation_repo, documento_repo, documento_mutations_repo
 
 settings = get_settings()
 
@@ -35,11 +35,46 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 MAX_PAYLOAD_BYTES = 50 * 1024 * 1024  # 50 MB
 
 
+async def _reap_stalled() -> None:
+    """Marca como error los registros procesando por más de 30 minutos."""
+    try:
+        stalled_gens = await generation_repo.find_stalled(older_than_minutes=30)
+        for gen in (stalled_gens.data or []):
+            await generation_repo.update_error(gen["id"])
+            log.warning(
+                "Generación colgada marcada como error",
+                extra={"generation_id": gen["id"]}
+            )
+
+        stalled_docs = await documento_repo.find_stalled(older_than_minutes=30)
+        for doc in (stalled_docs.data or []):
+            await documento_mutations_repo.update_error(doc["id"])
+            log.warning(
+                "Documento colgado marcado como error",
+                extra={"documento_id": doc["id"]}
+            )
+    except Exception as e:
+        log.error("Error en reaper", extra={"error": str(e)})
+
+
+async def _reaper_loop() -> None:
+    """Corre el reaper cada 10 minutos."""
+    while True:
+        await asyncio.sleep(600)
+        await _reap_stalled()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    # Startup: lanzar reaper en background
+    reaper_task = asyncio.create_task(_reaper_loop())
     yield
-    # Shutdown
+    # Shutdown: cancelar reaper limpiamente
+    reaper_task.cancel()
+    try:
+        await reaper_task
+    except asyncio.CancelledError:
+        pass
 
 
 def create_app() -> FastAPI:
@@ -49,7 +84,7 @@ def create_app() -> FastAPI:
         docs_url="/docs" if not settings.is_production else None,
         redoc_url=None,
         lifespan=lifespan,
-        redirect_slashes=False,
+        redirect_slashes=True,
     )
 
     @app.middleware("http")
@@ -108,3 +143,8 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

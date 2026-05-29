@@ -57,7 +57,7 @@ def verify_token(token: str) -> dict:
         raise AppError("No autorizado", ErrorCode.UNAUTHORIZED, 401)
 
 
-def register_user(payload: RegisterRequest) -> dict:
+async def register_user(payload: RegisterRequest) -> dict:
     """
     Registra un usuario nuevo verificando unicidad de email.
 
@@ -73,20 +73,23 @@ def register_user(payload: RegisterRequest) -> dict:
     Raises:
         AppError: code 'USER_ALREADY_EXISTS', status 409 si el email ya existe.
     """
-    if find_by_email(payload.email):
+    if await find_by_email(payload.email):
         raise AppError("El email ya está registrado.", ErrorCode.USER_ALREADY_EXISTS, 409)
-    user = create_user_record(
+    # SEGURIDAD: el rol NUNCA debe venir del cliente en el registro público.
+    # Se fuerza a "editor"; la creación de usuarios con otro rol es exclusiva
+    # del endpoint admin POST /users (require_admin).
+    user = await create_user_record(
         username=payload.username,
         email=payload.email,
         nombre=payload.nombre,
         password_hash=hash_password(payload.password),
-        rol=payload.rol,
+        rol="editor",
     )
     log.info("Usuario registrado", extra={"user_id": str(user["id"])})
     return user
 
 
-def authenticate_user(username: str, password: str) -> dict:
+async def authenticate_user(username: str, password: str) -> dict:
     """
     Verifica credenciales y retorna el usuario si son válidas.
 
@@ -104,7 +107,7 @@ def authenticate_user(username: str, password: str) -> dict:
         AppError: code 'UNAUTHORIZED', status 401 ante cualquier fallo de auth.
     """
     _INVALID = AppError("No autorizado.", ErrorCode.UNAUTHORIZED, 401)
-    user = find_by_username(username)
+    user = await find_by_username(username)
     if not user:
         log.warning("Intento de login fallido", extra={"username": username})
         raise _INVALID
@@ -118,7 +121,7 @@ def authenticate_user(username: str, password: str) -> dict:
     return user
 
 
-def get_user_profile(user_id: str) -> dict:
+async def get_user_profile(user_id: str) -> dict:
     """
     Retorna el perfil del usuario autenticado.
 
@@ -131,7 +134,7 @@ def get_user_profile(user_id: str) -> dict:
     Raises:
         AppError: code 'UNAUTHORIZED', status 401 si el usuario no existe.
     """
-    user = find_by_id(user_id)
+    user = await find_by_id(user_id)
     if not user:
         raise AppError("No autorizado.", ErrorCode.UNAUTHORIZED, 401)
     return user

@@ -46,7 +46,7 @@ async def test_refresh_with_valid_token_rotates(client):
     # Construyo un refresh token real y su hash para que el lookup en DB matchee.
     with patch("repositories.token_repo.save",
                return_value={"id": "tok-1", "user_id": _USER_ID}):
-        refresh = create_refresh_token(_USER_ID)
+        refresh = await create_refresh_token(_USER_ID)
     token_hash = bcrypt.hashpw(refresh.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     stored = {"id": "tok-1", "user_id": _USER_ID, "token_hash": token_hash}
 

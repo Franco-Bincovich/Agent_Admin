@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Zap,
@@ -10,22 +9,13 @@ import {
   History,
   Users,
   UserCircle,
-  LogOut,
-  Sun,
-  Moon,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
-import type { UserRole } from '@/types';
-
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ElementType;
-  roles?: UserRole[];
-}
+import NavList, { type NavItem } from './NavList';
+import SidebarFooter from './SidebarFooter';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -35,12 +25,12 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Presentaciones', href: '/generator', icon: Sparkles },
-  { label: 'Documentos', href: '/documentos', icon: FileText },
-  { label: 'Historial', href: '/history', icon: History },
-  { label: 'Usuarios', href: '/users', icon: Users, roles: ['administrador'] },
-  { label: 'Perfil', href: '/profile', icon: UserCircle },
+  { label: 'Dashboard',      href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Presentaciones', href: '/generator',  icon: Sparkles },
+  { label: 'Documentos',     href: '/documentos', icon: FileText },
+  { label: 'Historial',      href: '/history',    icon: History },
+  { label: 'Usuarios',       href: '/users',      icon: Users, roles: ['administrador'] },
+  { label: 'Perfil',         href: '/profile',    icon: UserCircle },
 ];
 
 export default function Sidebar({
@@ -57,8 +47,6 @@ export default function Sidebar({
     (item) => !item.roles || (user?.rol && item.roles.includes(user.rol)),
   );
 
-  // El collapse sólo aplica en lg+; en mobile (drawer) el sidebar siempre va expandido
-  const collapseRow = isCollapsed ? 'lg:justify-center lg:gap-0 lg:px-2' : '';
   const collapseHide = isCollapsed ? 'lg:hidden' : '';
 
   return (
@@ -97,32 +85,12 @@ export default function Sidebar({
           </span>
         </div>
 
-        {/* Nav items */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5">
-          {visibleItems.map(({ label, href, icon: Icon }) => {
-            const active = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => onClose?.()}
-                aria-label={label}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${collapseRow} ${
-                  active ? '' : 'hover:bg-[var(--color-nav-hover)]'
-                }`}
-                style={{
-                  color: active ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                  backgroundColor: active
-                    ? 'color-mix(in srgb, var(--color-primary) 12%, transparent)'
-                    : undefined,
-                }}
-              >
-                <Icon className="w-4 h-4 flex-shrink-0" />
-                <span className={collapseHide}>{label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+        <NavList
+          items={visibleItems}
+          pathname={pathname}
+          isCollapsed={isCollapsed}
+          onClose={onClose}
+        />
 
         {/* Toggle collapse — sólo desktop, arriba del footer */}
         <div className="hidden lg:block px-3 pb-2">
@@ -138,44 +106,13 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* Footer: user info + theme + logout */}
-        <div className="px-3 py-4 border-t space-y-0.5" style={{ borderColor: 'var(--color-border)' }}>
-          {user && (
-            <div className={`px-3 py-2 mb-1 ${collapseHide}`}>
-              <p
-                className="text-sm font-medium truncate"
-                style={{ color: 'var(--color-text-primary)' }}
-              >
-                {user.nombre}
-              </p>
-              <p className="text-xs capitalize" style={{ color: 'var(--color-text-secondary)' }}>
-                {user.rol}
-              </p>
-            </div>
-          )}
-          <button
-            onClick={toggleTheme}
-            className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] hover:bg-[var(--color-nav-hover)] ${collapseRow}`}
-            style={{ color: 'var(--color-text-secondary)' }}
-            aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-          >
-            {theme === 'dark'
-              ? <Sun  className="w-4 h-4 flex-shrink-0" />
-              : <Moon className="w-4 h-4 flex-shrink-0" />}
-            <span className={collapseHide}>
-              {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
-            </span>
-          </button>
-          <button
-            onClick={logout}
-            className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] hover:bg-red-500/10 hover:text-red-400 ${collapseRow}`}
-            style={{ color: 'var(--color-text-secondary)' }}
-            aria-label="Cerrar sesión"
-          >
-            <LogOut className="w-4 h-4 flex-shrink-0" />
-            <span className={collapseHide}>Cerrar sesión</span>
-          </button>
-        </div>
+        <SidebarFooter
+          user={user}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onLogout={logout}
+          isCollapsed={isCollapsed}
+        />
       </aside>
     </>
   );

@@ -15,35 +15,35 @@ class ActivePayload(BaseModel):
 
 
 @router.post("", response_model=UserResponse, status_code=201)
-def create_user(
+async def create_user(
     payload: CreateUserRequest,
     current_user: dict = Depends(get_current_user),
 ) -> UserResponse:
     require_admin(current_user)
-    return user_controller.create_user(payload)
+    return await user_controller.create_user(payload)
 
 
 @router.get("", response_model=list[UserResponse])
-def list_users(
+async def list_users(
     current_user: dict = Depends(get_current_user),
 ) -> list[UserResponse]:
     require_admin(current_user)
-    return user_controller.get_all_users()
+    return await user_controller.get_all_users()
 
 
 @router.get("/{user_id}", response_model=UserResponse)
-def get_user(
+async def get_user(
     user_id: UUID,
     current_user: dict = Depends(get_current_user),
 ) -> UserResponse:
-    return user_controller.get_user(str(user_id), current_user)
+    return await user_controller.get_user(str(user_id), current_user)
 
 
 @router.patch("/{user_id}/active", response_model=UserResponse)
-def update_active(
+async def update_active(
     user_id: UUID,
     payload: ActivePayload,
     current_user: dict = Depends(get_current_user),
 ) -> UserResponse:
     require_admin(current_user)
-    return user_controller.update_user_active(str(user_id), payload.activo, current_user)
+    return await user_controller.update_user_active(str(user_id), payload.activo, current_user)

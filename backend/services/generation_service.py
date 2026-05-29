@@ -1,40 +1,18 @@
 from __future__ import annotations
 
+import asyncio
+
 from services.gamma_service import publish_presentation, resolve_user_folder
-from integrations.supabase_client import get_supabase
 from repositories import generation_repo
 from services.ai_service import generate_outline
+from services.generation_storage import _upload_pptx
 from services.prompt_builder import build_prompt
 from services.image_extraction_service import extract_images_from_file
 from services.pptx_service import generate_pptx
 from utils.errors import AppError, ErrorCode
 from utils.logger import log
 
-_PPTX_BUCKET = "pptx-generados"
 _VALID_OUTPUTS = {"pptx", "gamma", "ambos"}
-
-
-def _upload_pptx(generation_id: str, pptx_bytes: bytes) -> str:
-    """
-    Sube los bytes del PPTX al bucket de Supabase Storage y retorna la URL pública.
-
-    Args:
-        generation_id: UUID usado como nombre de archivo ({generation_id}.pptx).
-        pptx_bytes: Contenido binario del archivo PPTX.
-
-    Returns:
-        URL pública del archivo en Supabase Storage.
-    """
-    path = f"{generation_id}.pptx"
-    storage = get_supabase().storage.from_(_PPTX_BUCKET)
-    storage.upload(
-        path=path,
-        file=pptx_bytes,
-        file_options={
-            "content-type": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-        },
-    )
-    return storage.get_public_url(path)
 
 
 async def run_generation(
@@ -131,15 +109,19 @@ async def run_generation(
             template, tono, audiencia,
             cantidad_slides=cantidad_slides,
         )
-        outline = generate_outline(
+        outline = await generate_outline(
             prompt,
             imagenes=imagenes if imagenes else None,
         )
 
         pptx_url: str | None = None
         if output in ("pptx", "ambos"):
-            pptx_bytes = generate_pptx(outline, template, logo_bytes, imagenes)
-            pptx_url = _upload_pptx(generation_id, pptx_bytes)
+            pptx_bytes = await asyncio.to_thread(
+                generate_pptx, outline, template, logo_bytes, imagenes
+            )
+            pptx_url = await asyncio.to_thread(
+                _upload_pptx, generation_id, pptx_bytes
+            )
 
         gamma_url: str | None = None
         pptx_gamma_url: str | None = None
@@ -158,11 +140,11 @@ async def run_generation(
             except AppError as exc:
                 log.warning(f"gamma.skipped | id={generation_id} | error={exc}")
 
-        generation_repo.update_resultado(
+        await generation_repo.update_resultado(
             generation_id, pptx_url, gamma_url, pptx_gamma_url,
             len(outline["slides"]), outline, gamma_warning,
         )
         log.info(f"generation.completed | id={generation_id}")
     except Exception as exc:
-        generation_repo.update_error(generation_id)
+        await generation_repo.update_error(generation_id)
         log.error(f"generation.failed | id={generation_id} | error={exc}")

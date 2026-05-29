@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 from integrations.supabase_client import get_supabase
 
 _TABLE = "documentos"
@@ -9,7 +11,7 @@ def _db():
     return get_supabase().table(_TABLE)
 
 
-def create(
+async def create(
     usuario_id: str,
     titulo: str,
     archivos: list,
@@ -19,8 +21,8 @@ def create(
     opciones: dict,
 ) -> dict:
     """Inserta un documento con estado='procesando' y retorna el registro completo."""
-    response = (
-        _db()
+    response = await asyncio.to_thread(
+        lambda: _db()
         .insert({
             "usuario_id": str(usuario_id),
             "titulo": titulo,
@@ -36,10 +38,10 @@ def create(
     return response.data[0]
 
 
-def update_resultado(documento_id: str, docx_url: str) -> dict:
+async def update_resultado(documento_id: str, docx_url: str) -> dict:
     """Actualiza el documento a estado='listo' y persiste la URL del DOCX generado."""
-    response = (
-        _db()
+    response = await asyncio.to_thread(
+        lambda: _db()
         .update({"estado": "listo", "docx_url": docx_url})
         .eq("id", str(documento_id))
         .execute()
@@ -47,6 +49,8 @@ def update_resultado(documento_id: str, docx_url: str) -> dict:
     return response.data[0]
 
 
-def update_error(documento_id: str) -> None:
+async def update_error(documento_id: str) -> None:
     """Actualiza el documento a estado='error'."""
-    _db().update({"estado": "error"}).eq("id", str(documento_id)).execute()
+    await asyncio.to_thread(
+        lambda: _db().update({"estado": "error"}).eq("id", str(documento_id)).execute()
+    )

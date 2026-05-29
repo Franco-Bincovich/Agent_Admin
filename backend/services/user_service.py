@@ -4,7 +4,7 @@ from services.auth_service import hash_password
 from utils.errors import AppError, ErrorCode
 
 
-def create_user(payload: CreateUserRequest) -> UserResponse:
+async def create_user(payload: CreateUserRequest) -> UserResponse:
     """
     Crea un usuario nuevo desde el panel de administración.
     Verifica unicidad de email y username antes de insertar.
@@ -18,11 +18,11 @@ def create_user(payload: CreateUserRequest) -> UserResponse:
     Raises:
         AppError: USER_ALREADY_EXISTS 409 si el email o username ya existen.
     """
-    if user_repo.find_by_email(payload.email):
+    if await user_repo.find_by_email(payload.email):
         raise AppError("El email ya está en uso.", ErrorCode.USER_ALREADY_EXISTS, 409)
-    if user_repo.find_by_username(payload.username):
+    if await user_repo.find_by_username(payload.username):
         raise AppError("El nombre de usuario ya está en uso.", ErrorCode.USER_ALREADY_EXISTS, 409)
-    user = user_mutations_repo.create_full(
+    user = await user_mutations_repo.create_full(
         email=payload.email,
         nombre=payload.nombre,
         username=payload.username,
@@ -32,7 +32,7 @@ def create_user(payload: CreateUserRequest) -> UserResponse:
     return UserResponse(**user)
 
 
-def get_all_users() -> list[UserResponse]:
+async def get_all_users() -> list[UserResponse]:
     """
     Retorna todos los usuarios del sistema.
     Solo debe invocarse desde endpoints de administrador.
@@ -40,10 +40,10 @@ def get_all_users() -> list[UserResponse]:
     Returns:
         Lista de UserResponse con todos los usuarios, ordenados por creado_en DESC.
     """
-    return [UserResponse(**u) for u in user_repo.find_all()]
+    return [UserResponse(**u) for u in await user_repo.find_all()]
 
 
-def get_user(user_id: str, requester_id: str, is_admin: bool = False) -> UserResponse:
+async def get_user(user_id: str, requester_id: str, is_admin: bool = False) -> UserResponse:
     """
     Retorna el perfil de un usuario verificando ownership.
     Editor y viewer solo pueden ver su propio perfil.
@@ -60,7 +60,7 @@ def get_user(user_id: str, requester_id: str, is_admin: bool = False) -> UserRes
     Raises:
         AppError: code NOT_FOUND (404) si el usuario no existe o no tiene acceso.
     """
-    user = user_repo.find_by_id(user_id)
+    user = await user_repo.find_by_id(user_id)
     if not user:
         raise AppError("No encontrado", ErrorCode.NOT_FOUND, 404)
     if not is_admin and user["id"] != requester_id:
@@ -68,7 +68,7 @@ def get_user(user_id: str, requester_id: str, is_admin: bool = False) -> UserRes
     return UserResponse(**user)
 
 
-def update_user_active(user_id: str, activo: bool, requester_id: str) -> UserResponse:
+async def update_user_active(user_id: str, activo: bool, requester_id: str) -> UserResponse:
     """
     Activa o desactiva un usuario. Solo debe invocarse para administradores.
     Un administrador no puede desactivarse a sí mismo.
@@ -91,5 +91,5 @@ def update_user_active(user_id: str, activo: bool, requester_id: str) -> UserRes
             ErrorCode.FORBIDDEN,
             403,
         )
-    updated = user_mutations_repo.update_active(user_id, activo)
+    updated = await user_mutations_repo.update_active(user_id, activo)
     return UserResponse(**updated)

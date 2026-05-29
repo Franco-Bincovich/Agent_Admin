@@ -6,14 +6,13 @@ from schemas.generation import (
     AudienceEnum, EstiloImagenEnum, GenerationResponse, OutputEnum,
     TemplateEnum, TemaVisualEnum, ToneEnum,
 )
-from services.extraction_service import extract_text_from_file
-from repositories.user_repo import find_by_id as find_user_by_id
 from utils.logger import log
 from services.generation_record_service import (
     create_generation_record,
     get_generation_by_id,
     list_all_generations,
     list_user_generations,
+    prepare_generation_params,
 )
 from services.generation_service import run_generation
 
@@ -43,60 +42,44 @@ async def start_generation(
     Returns:
         GenerationResponse con estado='procesando'.
     """
-    textos, archivo_bytes = [], []
-    for archivo in archivos:
-        contenido = await archivo.read()
-        textos.append(extract_text_from_file(archivo.filename or "", contenido))
-        archivo_bytes.append((archivo.filename or "", contenido))
-    texto_extraido = "\n\n".join(textos)
-
-    logo_bytes: bytes | None = None
-    if logo:
-        logo_bytes = await logo.read()
-
-    user = find_user_by_id(current_user["sub"]) or {}
-    user_email: str = user.get("email", "")
-    gamma_folder_id: str | None = user.get("gamma_folder_id")
-
-    parametros = {
-        "template": template, "tono": tono, "audiencia": audiencia,
-        "output": output, "informacion_adicional": informacion_adicional,
-        "usar_imagenes_documento": usar_imagenes_documento,
-        "tema_visual": tema_visual, "estilo_imagen": estilo_imagen,
-        "paleta_colores": paleta_colores, "cantidad_slides": cantidad_slides,
-    }
-    gen = create_generation_record(
+    params = await prepare_generation_params(
+        archivos, logo, objetivo, informacion_adicional,
+        template, tono, audiencia, output, usar_imagenes_documento,
+        tema_visual, estilo_imagen, paleta_colores,
+        cantidad_slides, titulo, current_user
+    )
+    gen = await create_generation_record(
         current_user["sub"], objetivo,
-        [f.filename for f in archivos], parametros,
+        [f.filename for f in archivos], params["parametros"],
         titulo,
     )
     background_tasks.add_task(
         run_generation,
-        gen["id"], texto_extraido, objetivo, informacion_adicional,
-        template, tono, audiencia, logo_bytes, output,
-        usar_imagenes_documento, archivo_bytes,
+        gen["id"], params["texto_extraido"], objetivo, informacion_adicional,
+        template, tono, audiencia, params["logo_bytes"], output,
+        usar_imagenes_documento, params["archivo_bytes"],
         tema_visual, estilo_imagen, paleta_colores, cantidad_slides,
         titulo,
-        current_user["sub"], user_email, gamma_folder_id,
+        current_user["sub"], params["user_email"], params["gamma_folder_id"],
     )
     return GenerationResponse(**gen)
 
 
-def list_generations(current_user: dict) -> list[GenerationResponse]:
+async def list_generations(current_user: dict) -> list[GenerationResponse]:
     """Retorna el historial de generaciones según el rol del usuario."""
     log.info("list_generations llamado", extra={"current_user": str(current_user)})
     if current_user.get("role") == "administrador":
-        records = list_all_generations()
+        records = await list_all_generations()
     else:
-        records = list_user_generations(current_user["sub"])
+        records = await list_user_generations(current_user["sub"])
     return [GenerationResponse(**r) for r in records]
 
 
-def get_generation(generation_id: str, current_user: dict) -> GenerationResponse:
+async def get_generation(generation_id: str, current_user: dict) -> GenerationResponse:
     """
     Retorna una generación verificando ownership. Devuelve 404 si no existe
     o si el usuario no es propietario — nunca 403 (SEGURIDAD 2.4).
     """
     is_admin = current_user.get("role") == "administrador"
-    gen = get_generation_by_id(generation_id, current_user["sub"], is_admin)
+    gen = await get_generation_by_id(generation_id, current_user["sub"], is_admin)
     return GenerationResponse(**gen)

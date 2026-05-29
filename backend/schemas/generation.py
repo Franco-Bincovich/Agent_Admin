@@ -105,3 +105,4 @@ class GenerationResponse(BaseModel):
     slides_count: int | None = None
     gamma_warning: str | None = None
     creado_en: str
+    actualizado_en: str | None = None

@@ -76,3 +76,4 @@ class DocumentoResponse(BaseModel):
     estado: str
     docx_url: str | None = None
     creado_en: str
+    actualizado_en: str | None = None

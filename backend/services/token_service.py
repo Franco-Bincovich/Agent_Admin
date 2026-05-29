@@ -18,7 +18,7 @@ def hash_token(token: str) -> str:
     ).decode("utf-8")
 
 
-def create_refresh_token(user_id: str) -> str:
+async def create_refresh_token(user_id: str) -> str:
     """Genera un JWT de refresco, hashea con bcrypt y persiste el hash en DB. El texto plano nunca se almacena (SEGURIDAD-PENTEST 2.5)."""
     settings = get_settings()
     expire = datetime.now(timezone.utc) + timedelta(
@@ -31,11 +31,11 @@ def create_refresh_token(user_id: str) -> str:
         "type": "refresh",
     }
     token = jwt.encode(payload, settings.jwt_secret, algorithm=ALGORITHM)
-    token_repo.save(user_id, hash_token(token), expire)
+    await token_repo.save(user_id, hash_token(token), expire)
     return token
 
 
-def refresh_access_token(refresh_token: str) -> dict:
+async def refresh_access_token(refresh_token: str) -> dict:
     """Verifica un refresh token, rota el par y retorna nuevos tokens. Implementa SEGURIDAD-PENTEST 2.5."""
     _INVALID = AppError("No autorizado", ErrorCode.UNAUTHORIZED, 401)
 
@@ -44,7 +44,7 @@ def refresh_access_token(refresh_token: str) -> dict:
         raise _INVALID
 
     user_id = payload["sub"]
-    stored = token_repo.find_by_user(user_id)
+    stored = await token_repo.find_by_user(user_id)
     try:
         token_valid = bcrypt.checkpw(
             refresh_token.encode("utf-8"),
@@ -56,18 +56,18 @@ def refresh_access_token(refresh_token: str) -> dict:
         raise _INVALID
 
     # Rotar: eliminar el viejo antes de generar el nuevo
-    token_repo.delete(stored["id"])
+    await token_repo.delete(stored["id"])
 
-    user = _find_user(user_id)
+    user = await _find_user(user_id)
     if not user:
         raise _INVALID
 
     new_access = create_access_token(user["id"], user["rol"])
-    new_refresh = create_refresh_token(user["id"])  # persiste en DB internamente
+    new_refresh = await create_refresh_token(user["id"])  # persiste en DB internamente
 
     return {"access_token": new_access, "refresh_token": new_refresh}
 
 
-def revoke_refresh_token(user_id: str) -> None:
+async def revoke_refresh_token(user_id: str) -> None:
     """Revoca todos los refresh tokens del usuario en DB. Llamar en logout (SEGURIDAD-PENTEST 2.5)."""
-    token_repo.delete_all_by_user(user_id)
+    await token_repo.delete_all_by_user(user_id)

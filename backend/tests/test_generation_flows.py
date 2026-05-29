@@ -3,7 +3,7 @@ Tests de generación — pipeline PPTX, archivo inválido, ownership.
 """
 import uuid
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -62,7 +62,7 @@ _FAKE_GEN_LISTO = {
 @pytest.fixture
 async def client():
     """Cliente httpx que habla directamente con la app FastAPI sin red real."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", follow_redirects=True) as ac:
         yield ac
 
 
@@ -81,13 +81,14 @@ async def test_create_generation_unauthorized(client):
 async def test_generation_pptx_success(client):
     token = create_access_token(_USER_ID, "editor")
 
-    with patch("controllers.generation_controller.extract_text_from_file",
+    with patch("services.generation_record_service.extract_text_from_file",
                return_value="Texto de prueba con contenido suficiente para la validación del pipeline."), \
+         patch("services.generation_record_service.find_user_by_id", return_value=_USER), \
          patch("services.generation_record_service.generation_repo.create",
                return_value=_FAKE_GEN_PROCESANDO), \
-         patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+         patch("services.generation_service.generate_outline", new_callable=AsyncMock, return_value=_FAKE_OUTLINE), \
          patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
-         patch("services.generation_service.get_supabase") as mock_supabase, \
+         patch("services.generation_storage.get_supabase") as mock_supabase, \
          patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
          patch("services.generation_service.generation_repo.update_error"):
 
@@ -148,7 +149,7 @@ async def test_download_output_as_owner(client):
         )
     assert resp.status_code == 200
     body = resp.json()
-    assert body["pptx_url"] == _PPTX_URL
+    assert body["output_url"] == _PPTX_URL
 
 
 # ── 12. Otro usuario obtiene 404 — nunca 403 ────────────────────────────────

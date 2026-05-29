@@ -4,7 +4,7 @@ from repositories import documento_repo, generation_repo
 from utils.logger import log
 
 
-def get_user_activity(user_id: str) -> list[dict]:
+async def get_user_activity(user_id: str) -> list[dict]:
     """
     Retorna la actividad unificada del usuario: generaciones + documentos,
     ordenados por creado_en DESC.
@@ -16,8 +16,8 @@ def get_user_activity(user_id: str) -> list[dict]:
         Lista de dicts con campo adicional 'tipo': 'presentacion' | 'documento'.
     """
     log.info("get_user_activity", extra={"user_id": str(user_id)})
-    generaciones = generation_repo.find_by_user(user_id)
-    documentos = documento_repo.find_by_user(user_id)
+    generaciones = await generation_repo.find_by_user(user_id)
+    documentos = await documento_repo.find_by_user(user_id)
 
     gen_items = []
     for g in generaciones:

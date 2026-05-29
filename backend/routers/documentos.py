@@ -2,16 +2,14 @@ import json
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from controllers import documento_controller
 from middleware.auth import get_current_user
 from schemas.documento import CreateDocumentoRequestV2, DocumentoResponse
 from utils.errors import AppError, ErrorCode
+from utils.limiter import limiter
 
 router = APIRouter()
-limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("", response_model=DocumentoResponse, status_code=202)
@@ -42,7 +40,7 @@ async def create_documento(
 
 
 @router.get("", response_model=list[DocumentoResponse])
-def list_documentos(
+async def list_documentos(
     current_user: dict = Depends(get_current_user),
 ) -> list[DocumentoResponse]:
     """
@@ -51,11 +49,13 @@ def list_documentos(
     Raises:
         401: Token inválido o ausente (UNAUTHORIZED)
     """
-    return documento_controller.get_documentos(current_user)
+    return await documento_controller.get_documentos(current_user)
 
 
 @router.get("/{documento_id}", response_model=DocumentoResponse)
-def get_documento(
+@limiter.limit("120/minute")
+async def get_documento(
+    request: Request,
     documento_id: UUID,
     current_user: dict = Depends(get_current_user),
 ) -> DocumentoResponse:
@@ -66,4 +66,4 @@ def get_documento(
         401: Token inválido o ausente (UNAUTHORIZED)
         404: Documento no encontrado o sin acceso (NOT_FOUND)
     """
-    return documento_controller.get_documento(str(documento_id), current_user)
+    return await documento_controller.get_documento(str(documento_id), current_user)

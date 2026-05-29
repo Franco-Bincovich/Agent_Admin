@@ -2,7 +2,7 @@ from schemas.auth import TokenResponse
 from services.token_service import refresh_access_token, revoke_refresh_token
 
 
-def refresh_tokens(refresh_token: str) -> TokenResponse:
+async def refresh_tokens(refresh_token: str) -> TokenResponse:
     """
     Rota el par de tokens a partir de un refresh token válido.
 
@@ -18,14 +18,14 @@ def refresh_tokens(refresh_token: str) -> TokenResponse:
     Raises:
         AppError: UNAUTHORIZED 401 si el token es inválido o no existe en DB.
     """
-    result = refresh_access_token(refresh_token)
+    result = await refresh_access_token(refresh_token)
     return TokenResponse(
         access_token=result["access_token"],
         refresh_token=result["refresh_token"],
     )
 
 
-def logout(user_id: str) -> dict:
+async def logout(user_id: str) -> dict:
     """
     Revoca todos los refresh tokens del usuario y confirma el cierre de sesión.
 
@@ -38,5 +38,5 @@ def logout(user_id: str) -> dict:
     Returns:
         Dict con mensaje de confirmación.
     """
-    revoke_refresh_token(user_id)
+    await revoke_refresh_token(user_id)
     return {"message": "Sesión cerrada correctamente."}

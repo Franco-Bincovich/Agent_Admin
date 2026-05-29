@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 import base64
 import json
 import re
+
+import anthropic as anthropic_sdk
 
 from config.settings import get_settings
 from integrations.anthropic_client import get_anthropic_client
@@ -30,7 +33,7 @@ _SYSTEM_PROMPT = (
 )
 
 
-def _call_claude_for_json(
+async def _call_claude_for_json(
     user_message: str,
     imagenes: list[bytes] | None = None,
 ) -> str:
@@ -81,16 +84,33 @@ def _call_claude_for_json(
 
     content.append({"type": "text", "text": user_message})
 
-    response = get_anthropic_client().messages.create(
-        model=get_settings().anthropic_model,
-        max_tokens=MAX_TOKENS,
-        system=_SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": content}],
-    )
-    return response.content[0].text
+    max_retries = 3
+    base_delay = 5.0
+    for attempt in range(max_retries):
+        try:
+            response = await get_anthropic_client().messages.create(
+                model=get_settings().anthropic_model,
+                max_tokens=MAX_TOKENS,
+                system=_SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": content}],
+            )
+            return response.content[0].text
+        except anthropic_sdk.RateLimitError:
+            if attempt == max_retries - 1:
+                raise AppError(
+                    "Límite de uso de IA alcanzado. Intentá en unos minutos.",
+                    "RATE_LIMIT_EXCEEDED",
+                    429,
+                )
+            wait = base_delay * (2 ** attempt)
+            log.warning(
+                "Rate limit de Anthropic, reintentando",
+                extra={"attempt": attempt + 1, "wait_seconds": wait},
+            )
+            await asyncio.sleep(wait)
 
 
-def generate_outline(
+async def generate_outline(
     prompt: str,
     imagenes: list[bytes] | None = None,
 ) -> dict:
@@ -115,7 +135,7 @@ def generate_outline(
     """
     for attempt in range(2):
         try:
-            raw = _call_claude_for_json(prompt, imagenes)
+            raw = await _call_claude_for_json(prompt, imagenes)
             log.info(f"outline.raw | id_len={len(raw)} | full={raw}")
             if _SYSTEM_PROMPT[:40] in raw:
                 log.error("outline.security | system prompt detectado en output")

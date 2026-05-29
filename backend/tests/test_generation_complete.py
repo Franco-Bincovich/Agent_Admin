@@ -3,7 +3,7 @@ Tests del pipeline completo de generación: outputs, fallos, listado y get por I
 """
 import uuid
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -71,7 +71,7 @@ _BASE_DATA = {
 @pytest.fixture
 async def client():
     """Cliente httpx que habla directamente con la app FastAPI sin red real."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", follow_redirects=True) as ac:
         yield ac
 
 
@@ -81,14 +81,14 @@ async def client():
 async def test_output_pptx_returns_pptx_url(client):
     """Output 'pptx' debe disparar update_resultado con la pptx_url en posición 1."""
     token = create_access_token(_USER_ID, "editor")
-    with patch("controllers.generation_controller.extract_text_from_file",
+    with patch("services.generation_record_service.extract_text_from_file",
                return_value="Texto largo y suficiente para satisfacer el mínimo del extractor."), \
-         patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+         patch("services.generation_record_service.find_user_by_id", return_value=_USER), \
          patch("services.generation_record_service.generation_repo.create",
                return_value=_FAKE_GEN_PROCESANDO), \
-         patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+         patch("services.generation_service.generate_outline", new_callable=AsyncMock, return_value=_FAKE_OUTLINE), \
          patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
-         patch("services.generation_service.get_supabase") as mock_supabase, \
+         patch("services.generation_storage.get_supabase") as mock_supabase, \
          patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
          patch("services.generation_service.generation_repo.update_error"):
         mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
@@ -108,12 +108,12 @@ async def test_output_pptx_returns_pptx_url(client):
 async def test_output_gamma_returns_gamma_url(client):
     """Output 'gamma' debe disparar update_resultado con gamma_url y sin pptx_url."""
     token = create_access_token(_USER_ID, "editor")
-    with patch("controllers.generation_controller.extract_text_from_file",
+    with patch("services.generation_record_service.extract_text_from_file",
                return_value="Texto largo y suficiente para satisfacer el mínimo del extractor."), \
-         patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+         patch("services.generation_record_service.find_user_by_id", return_value=_USER), \
          patch("services.generation_record_service.generation_repo.create",
                return_value=_FAKE_GEN_PROCESANDO), \
-         patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+         patch("services.generation_service.generate_outline", new_callable=AsyncMock, return_value=_FAKE_OUTLINE), \
          patch("services.generation_service.resolve_user_folder",
                return_value=("folder-1", None)), \
          patch("services.generation_service.publish_presentation",
@@ -135,14 +135,14 @@ async def test_output_gamma_returns_gamma_url(client):
 async def test_output_ambos_returns_pptx_and_gamma(client):
     """Output 'ambos' debe disparar update_resultado con pptx_url, gamma_url y pptx_gamma_url."""
     token = create_access_token(_USER_ID, "editor")
-    with patch("controllers.generation_controller.extract_text_from_file",
+    with patch("services.generation_record_service.extract_text_from_file",
                return_value="Texto largo y suficiente para satisfacer el mínimo del extractor."), \
-         patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+         patch("services.generation_record_service.find_user_by_id", return_value=_USER), \
          patch("services.generation_record_service.generation_repo.create",
                return_value=_FAKE_GEN_PROCESANDO), \
-         patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+         patch("services.generation_service.generate_outline", new_callable=AsyncMock, return_value=_FAKE_OUTLINE), \
          patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
-         patch("services.generation_service.get_supabase") as mock_supabase, \
+         patch("services.generation_storage.get_supabase") as mock_supabase, \
          patch("services.generation_service.resolve_user_folder",
                return_value=("folder-1", None)), \
          patch("services.generation_service.publish_presentation",
@@ -166,16 +166,16 @@ async def test_output_ambos_returns_pptx_and_gamma(client):
 async def test_generation_with_image_attachment(client):
     """Generación con imagen adjunta (usar_imagenes_documento=True) debe procesarse sin error."""
     token = create_access_token(_USER_ID, "editor")
-    with patch("controllers.generation_controller.extract_text_from_file",
+    with patch("services.generation_record_service.extract_text_from_file",
                return_value="Texto largo y suficiente para satisfacer el mínimo del extractor."), \
-         patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+         patch("services.generation_record_service.find_user_by_id", return_value=_USER), \
          patch("services.generation_record_service.generation_repo.create",
                return_value=_FAKE_GEN_PROCESANDO), \
-         patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+         patch("services.generation_service.generate_outline", new_callable=AsyncMock, return_value=_FAKE_OUTLINE), \
          patch("services.generation_service.extract_images_from_file",
                return_value=[b"\x89PNG fake"]), \
          patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
-         patch("services.generation_service.get_supabase") as mock_supabase, \
+         patch("services.generation_storage.get_supabase") as mock_supabase, \
          patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
          patch("services.generation_service.generation_repo.update_error"):
         mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
@@ -195,13 +195,13 @@ async def test_generation_with_image_attachment(client):
 async def test_claude_failure_sets_error_state(client):
     """Si generate_outline lanza excepción, update_error debe llamarse."""
     token = create_access_token(_USER_ID, "editor")
-    with patch("controllers.generation_controller.extract_text_from_file",
+    with patch("services.generation_record_service.extract_text_from_file",
                return_value="Texto largo y suficiente para satisfacer el mínimo del extractor."), \
-         patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+         patch("services.generation_record_service.find_user_by_id", return_value=_USER), \
          patch("services.generation_record_service.generation_repo.create",
                return_value=_FAKE_GEN_PROCESANDO), \
          patch("services.generation_service.generate_outline",
-               side_effect=Exception("Anthropic API down")), \
+               new_callable=AsyncMock, side_effect=Exception("Anthropic API down")), \
          patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
          patch("services.generation_service.generation_repo.update_error") as mock_error:
         resp = await client.post(
@@ -218,14 +218,14 @@ async def test_claude_failure_sets_error_state(client):
 async def test_supabase_upload_failure_sets_error_state(client):
     """Si Supabase storage falla al subir el PPTX, update_error debe llamarse."""
     token = create_access_token(_USER_ID, "editor")
-    with patch("controllers.generation_controller.extract_text_from_file",
+    with patch("services.generation_record_service.extract_text_from_file",
                return_value="Texto largo y suficiente para satisfacer el mínimo del extractor."), \
-         patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+         patch("services.generation_record_service.find_user_by_id", return_value=_USER), \
          patch("services.generation_record_service.generation_repo.create",
                return_value=_FAKE_GEN_PROCESANDO), \
-         patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+         patch("services.generation_service.generate_outline", new_callable=AsyncMock, return_value=_FAKE_OUTLINE), \
          patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
-         patch("services.generation_service.get_supabase") as mock_supabase, \
+         patch("services.generation_storage.get_supabase") as mock_supabase, \
          patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
          patch("services.generation_service.generation_repo.update_error") as mock_error:
         mock_supabase.return_value.storage.from_.return_value.upload.side_effect = Exception("storage error")
@@ -244,14 +244,14 @@ async def test_gamma_failure_does_not_break_generation(client):
     """Si Gamma falla con AppError, la generación PPTX se completa con gamma_url=None."""
     from utils.errors import AppError, ErrorCode
     token = create_access_token(_USER_ID, "editor")
-    with patch("controllers.generation_controller.extract_text_from_file",
+    with patch("services.generation_record_service.extract_text_from_file",
                return_value="Texto largo y suficiente para satisfacer el mínimo del extractor."), \
-         patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+         patch("services.generation_record_service.find_user_by_id", return_value=_USER), \
          patch("services.generation_record_service.generation_repo.create",
                return_value=_FAKE_GEN_PROCESANDO), \
-         patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+         patch("services.generation_service.generate_outline", new_callable=AsyncMock, return_value=_FAKE_OUTLINE), \
          patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
-         patch("services.generation_service.get_supabase") as mock_supabase, \
+         patch("services.generation_storage.get_supabase") as mock_supabase, \
          patch("services.generation_service.resolve_user_folder",
                return_value=("folder-1", None)), \
          patch("services.generation_service.publish_presentation",
@@ -302,14 +302,14 @@ async def test_objetivo_too_long_rejected(client):
 async def test_estado_listo_after_successful_generation(client):
     """Tras un éxito en background, update_resultado se invoca (lo que persiste estado='listo')."""
     token = create_access_token(_USER_ID, "editor")
-    with patch("controllers.generation_controller.extract_text_from_file",
+    with patch("services.generation_record_service.extract_text_from_file",
                return_value="Texto largo y suficiente para satisfacer el mínimo del extractor."), \
-         patch("controllers.generation_controller.find_user_by_id", return_value=_USER), \
+         patch("services.generation_record_service.find_user_by_id", return_value=_USER), \
          patch("services.generation_record_service.generation_repo.create",
                return_value=_FAKE_GEN_PROCESANDO), \
-         patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE), \
+         patch("services.generation_service.generate_outline", new_callable=AsyncMock, return_value=_FAKE_OUTLINE), \
          patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"), \
-         patch("services.generation_service.get_supabase") as mock_supabase, \
+         patch("services.generation_storage.get_supabase") as mock_supabase, \
          patch("services.generation_service.generation_repo.update_resultado") as mock_update, \
          patch("services.generation_service.generation_repo.update_error") as mock_error:
         mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL

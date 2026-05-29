@@ -63,7 +63,7 @@ async def resolve_user_folder(email: str, user_id: str) -> tuple[str | None, str
         for folder in folders:
             if folder.get("name", "").lower() == email.lower():
                 folder_id: str = folder["id"]
-                update_gamma_folder_id(user_id, folder_id)
+                await update_gamma_folder_id(user_id, folder_id)
                 log.info(f"gamma.folder_found | user={email} folder_id={folder_id}")
                 return folder_id, None
         log.info(f"gamma.folder_not_found | user={email}")

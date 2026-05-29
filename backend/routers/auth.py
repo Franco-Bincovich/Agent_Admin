@@ -1,17 +1,15 @@
 from fastapi import APIRouter, Depends, Request, Response
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from controllers.auth_controller import get_me, login, register
 from controllers.token_controller import logout, refresh_tokens
 from middleware.auth import get_current_user
 from schemas.auth import LoginRequest, RegisterRequest
 from utils.errors import AppError
+from utils.limiter import limiter
 from schemas.auth import TokenResponse as _TokenResponse
 from schemas.user import UserResponse
 
 router = APIRouter()
-limiter = Limiter(key_func=get_remote_address)
 
 _ACCESS_MAX_AGE = 3600
 _REFRESH_MAX_AGE = 60 * 60 * 24 * 30
@@ -29,21 +27,26 @@ def _set_auth_cookies(response: Response, tokens: _TokenResponse) -> None:
 
 
 @router.post("/register", status_code=201)
-async def register_endpoint(payload: RegisterRequest, response: Response):
-    _set_auth_cookies(response, register(payload))
+@limiter.limit("10/minute")
+async def register_endpoint(
+    request: Request,
+    payload: RegisterRequest,
+    response: Response,
+):
+    _set_auth_cookies(response, await register(payload))
     return {"ok": True}
 
 
 @router.post("/login")
 @limiter.limit("5/minute")
 async def login_endpoint(request: Request, payload: LoginRequest, response: Response):
-    _set_auth_cookies(response, login(payload))
+    _set_auth_cookies(response, await login(payload))
     return {"ok": True}
 
 
 @router.get("/me", response_model=UserResponse)
 async def me_endpoint(current_user: dict = Depends(get_current_user)):
-    return get_me(current_user["sub"])
+    return await get_me(current_user["sub"])
 
 
 @router.post("/refresh")
@@ -52,13 +55,13 @@ async def refresh_endpoint(request: Request, response: Response):
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         raise AppError("Refresh token no encontrado", "UNAUTHORIZED", 401)
-    _set_auth_cookies(response, refresh_tokens(refresh_token))
+    _set_auth_cookies(response, await refresh_tokens(refresh_token))
     return {"ok": True}
 
 
 @router.post("/logout", status_code=200)
 async def logout_endpoint(response: Response, current_user: dict = Depends(get_current_user)):
-    result = logout(current_user["sub"])
+    result = await logout(current_user["sub"])
     response.delete_cookie(key="access_token", httponly=True, secure=True, samesite="none")
     response.delete_cookie(key="refresh_token", httponly=True, secure=True, samesite="none")
     return result

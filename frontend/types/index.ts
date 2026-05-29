@@ -72,6 +72,13 @@ export interface Generation {
   parametros?: GenerationParametros;
 }
 
+export interface GenerationTimeoutError {
+  estado: 'error';
+  error: string;
+}
+
+export type GenerationOutcome = Generation | GenerationTimeoutError;
+
 export interface TokenResponse {
   access_token: string;
   refresh_token: string;
@@ -109,6 +116,13 @@ export interface Documento {
   docx_url?: string;
   creado_en: string;
 }
+
+export interface DocumentoTimeoutError {
+  estado: 'error';
+  error: string;
+}
+
+export type DocumentoOutcome = Documento | DocumentoTimeoutError;
 
 export interface ActivityItem {
   id: string;

@@ -2,8 +2,6 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Request, UploadFile
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from controllers import generation_controller
 from middleware.auth import get_current_user
@@ -11,9 +9,9 @@ from schemas.generation import (
     AudienceEnum, EstiloImagenEnum, GenerationResponse, OutputEnum,
     TemplateEnum, TemaVisualEnum, ToneEnum,
 )
+from utils.limiter import limiter
 
 router = APIRouter()
-limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("", response_model=GenerationResponse, status_code=202)
@@ -54,7 +52,7 @@ async def create_generation(
 
 
 @router.get("", response_model=list[GenerationResponse])
-def list_generations(
+async def list_generations(
     current_user: dict = Depends(get_current_user),
 ) -> list[GenerationResponse]:
     """
@@ -63,11 +61,13 @@ def list_generations(
     Raises:
         401: Token inválido o ausente (UNAUTHORIZED)
     """
-    return generation_controller.list_generations(current_user)
+    return await generation_controller.list_generations(current_user)
 
 
 @router.get("/{generation_id}", response_model=GenerationResponse)
-def get_generation(
+@limiter.limit("120/minute")
+async def get_generation(
+    request: Request,
     generation_id: UUID,
     current_user: dict = Depends(get_current_user),
 ) -> GenerationResponse:
@@ -78,4 +78,4 @@ def get_generation(
         401: Token inválido o ausente (UNAUTHORIZED)
         404: Generación no encontrada o sin acceso (NOT_FOUND)
     """
-    return generation_controller.get_generation(str(generation_id), current_user)
+    return await generation_controller.get_generation(str(generation_id), current_user)

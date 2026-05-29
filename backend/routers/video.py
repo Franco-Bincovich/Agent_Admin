@@ -1,13 +1,11 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Request, UploadFile
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from controllers import video_controller
 from middleware.auth import get_current_user
 from schemas.video import VideoJobResponse
+from utils.limiter import limiter
 
 router = APIRouter()
-limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/jobs", response_model=VideoJobResponse, status_code=202)
@@ -34,7 +32,7 @@ async def create_job(
 
 
 @router.get("/jobs", response_model=list[VideoJobResponse])
-def list_jobs(
+async def list_jobs(
     current_user: dict = Depends(get_current_user),
 ) -> list[VideoJobResponse]:
     """
@@ -43,11 +41,11 @@ def list_jobs(
     Raises:
         401: Token inválido o ausente (UNAUTHORIZED)
     """
-    return video_controller.list_jobs(current_user)
+    return await video_controller.list_jobs(current_user)
 
 
 @router.get("/jobs/{job_id}", response_model=VideoJobResponse)
-def get_job(
+async def get_job(
     job_id: str,
     current_user: dict = Depends(get_current_user),
 ) -> VideoJobResponse:
@@ -58,4 +56,4 @@ def get_job(
         401: Token inválido o ausente (UNAUTHORIZED)
         404: Job no encontrado o sin acceso (NOT_FOUND)
     """
-    return video_controller.get_job(job_id, current_user)
+    return await video_controller.get_job(job_id, current_user)

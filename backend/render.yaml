@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: agent-admin-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    # NOTA: con múltiples workers, slowapi rate limiting es in-memory por
+    # proceso. Límites efectivos = límite_configurado × workers.
+    # Para rate limiting exacto en producción, configurar Redis backend.
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 4
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GAMMA_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false

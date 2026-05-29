@@ -9,7 +9,7 @@ from services.auth_service import (
 from services.token_service import create_refresh_token
 
 
-def register(payload: RegisterRequest) -> TokenResponse:
+async def register(payload: RegisterRequest) -> TokenResponse:
     """
     Registra un usuario nuevo y devuelve sus tokens de acceso.
 
@@ -22,14 +22,14 @@ def register(payload: RegisterRequest) -> TokenResponse:
     Returns:
         TokenResponse con access_token y refresh_token.
     """
-    user = register_user(payload)
+    user = await register_user(payload)
     return TokenResponse(
         access_token=create_access_token(user["id"], user["rol"]),
-        refresh_token=create_refresh_token(user["id"]),
+        refresh_token=await create_refresh_token(user["id"]),
     )
 
 
-def login(payload: LoginRequest) -> TokenResponse:
+async def login(payload: LoginRequest) -> TokenResponse:
     """
     Autentica un usuario y devuelve sus tokens de acceso.
 
@@ -42,14 +42,14 @@ def login(payload: LoginRequest) -> TokenResponse:
     Returns:
         TokenResponse con access_token y refresh_token.
     """
-    user = authenticate_user(payload.username, payload.password)
+    user = await authenticate_user(payload.username, payload.password)
     return TokenResponse(
         access_token=create_access_token(user["id"], user["rol"]),
-        refresh_token=create_refresh_token(user["id"]),
+        refresh_token=await create_refresh_token(user["id"]),
     )
 
 
-def get_me(user_id: str) -> UserResponse:
+async def get_me(user_id: str) -> UserResponse:
     """
     Retorna el perfil completo del usuario autenticado.
 
@@ -59,7 +59,7 @@ def get_me(user_id: str) -> UserResponse:
     Returns:
         UserResponse con los datos actuales del usuario en DB.
     """
-    user = get_user_profile(user_id)
+    user = await get_user_profile(user_id)
     return UserResponse(
         id=str(user["id"]),
         nombre=user["nombre"],

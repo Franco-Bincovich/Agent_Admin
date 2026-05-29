@@ -50,10 +50,10 @@ async def test_register_success(client):
          patch("services.auth_service.create_user_record", return_value=_USER), \
          patch("repositories.token_repo.save", return_value={"id": "tok-1", "user_id": _USER_ID}):
         resp = await client.post("/api/v1/auth/register", json={
+            "username": "testuser",
             "email": _EMAIL,
             "password": _PASSWORD,
             "nombre": "Test User",
-            "rol": "editor",
         })
     assert resp.status_code == 201
     assert resp.json() == {"ok": True}
@@ -67,10 +67,10 @@ async def test_register_success(client):
 async def test_register_duplicate_email(client):
     with patch("services.auth_service.find_by_email", return_value=_USER):
         resp = await client.post("/api/v1/auth/register", json={
+            "username": "testuser2",
             "email": _EMAIL,
             "password": _PASSWORD,
             "nombre": "Otro User",
-            "rol": "editor",
         })
     assert resp.status_code == 409
     body = resp.json()

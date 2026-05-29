@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, Loader2 } from 'lucide-react';
 import { getDocumento } from '@/services/documentoService';
-import type { Documento, DocumentoEstado } from '@/types';
+import type { DocumentoOutcome } from '@/types';
 
 interface Props {
   documentoId: string;
-  onComplete: (documento: Documento) => void;
+  onComplete: (documento: DocumentoOutcome) => void;
 }
 
 const STEPS = [
@@ -30,20 +30,40 @@ export default function DocumentoProgressTracker({ documentoId, onComplete }: Pr
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
   useEffect(() => {
+    const MAX_ATTEMPTS = 60;
+    const BASE_INTERVAL = 3000;
+    const MAX_INTERVAL = 15000;
+
     let step = 0;
-    const id = setInterval(async () => {
+    let attempts = 0;
+    let currentInterval = BASE_INTERVAL;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const poll = async () => {
+      if (attempts >= MAX_ATTEMPTS) {
+        onCompleteRef.current({ estado: 'error', error: 'Tiempo de espera agotado' });
+        return;
+      }
+
       try {
         const doc = await getDocumento(documentoId);
         if (doc.estado !== 'procesando') {
-          clearInterval(id);
           onCompleteRef.current(doc);
           return;
         }
         step = Math.min(step + 1, STEPS.length - 1);
         setActiveStep(step);
-      } catch { /* keep polling on network error */ }
-    }, 3000);
-    return () => clearInterval(id);
+      } catch {
+        // continúa en error de red, el backoff lo maneja
+      }
+
+      attempts += 1;
+      currentInterval = Math.min(currentInterval * 1.5, MAX_INTERVAL);
+      timeoutId = setTimeout(poll, currentInterval);
+    };
+
+    timeoutId = setTimeout(poll, currentInterval);
+    return () => clearTimeout(timeoutId);
   }, [documentoId]);
 
   const getState = (i: number): StepState =>

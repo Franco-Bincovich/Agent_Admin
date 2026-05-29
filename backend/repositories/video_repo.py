@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import asyncio
+from datetime import datetime, timezone
+
 from integrations.supabase_client import get_supabase
 
 _TABLE = "video_jobs"
@@ -9,7 +12,7 @@ def _db():
     return get_supabase().table(_TABLE)
 
 
-def create(
+async def create(
     usuario_id: str,
     titulo: str,
     video_input_url: str,
@@ -27,8 +30,8 @@ def create(
     Returns:
         Dict con todos los campos del registro recién insertado.
     """
-    response = (
-        _db()
+    response = await asyncio.to_thread(
+        lambda: _db()
         .insert({
             "usuario_id": str(usuario_id),
             "titulo": titulo,
@@ -41,7 +44,7 @@ def create(
     return response.data[0]
 
 
-def find_by_id(job_id: str) -> dict | None:
+async def find_by_id(job_id: str) -> dict | None:
     """
     Retorna el video job por ID, o None si no existe.
 
@@ -51,11 +54,13 @@ def find_by_id(job_id: str) -> dict | None:
     Returns:
         Dict con el registro, o None si no se encuentra.
     """
-    response = _db().select("*").eq("id", str(job_id)).execute()
+    response = await asyncio.to_thread(
+        lambda: _db().select("*").eq("id", str(job_id)).execute()
+    )
     return response.data[0] if response.data else None
 
 
-def find_by_user(usuario_id: str, limit: int = 20) -> list[dict]:
+async def find_by_user(usuario_id: str, limit: int = 20) -> list[dict]:
     """
     Retorna los video jobs del usuario ordenados por creado_en DESC.
 
@@ -66,8 +71,8 @@ def find_by_user(usuario_id: str, limit: int = 20) -> list[dict]:
     Returns:
         Lista de dicts ordenada por fecha de creación descendente.
     """
-    response = (
-        _db()
+    response = await asyncio.to_thread(
+        lambda: _db()
         .select("*")
         .eq("usuario_id", str(usuario_id))
         .order("creado_en", desc=True)
@@ -77,7 +82,7 @@ def find_by_user(usuario_id: str, limit: int = 20) -> list[dict]:
     return response.data
 
 
-def update_estado(
+async def update_estado(
     job_id: str,
     estado: str,
     output_url: str | None = None,
@@ -96,9 +101,11 @@ def update_estado(
         output_url: URL del video resultado en Storage. None si no aplica.
         error_message: Mensaje de error del pipeline. None si no aplica.
     """
-    payload: dict = {"estado": estado, "actualizado_en": "now()"}
+    payload: dict = {"estado": estado, "actualizado_en": datetime.now(timezone.utc).isoformat()}
     if output_url is not None:
         payload["output_url"] = output_url
     if error_message is not None:
         payload["error_message"] = error_message
-    _db().update(payload).eq("id", str(job_id)).execute()
+    await asyncio.to_thread(
+        lambda: _db().update(payload).eq("id", str(job_id)).execute()
+    )

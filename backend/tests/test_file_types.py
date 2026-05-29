@@ -4,7 +4,7 @@ Cubre extensiones soportadas, no soportadas, archivos vacíos y nombres especial
 """
 import uuid
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -64,19 +64,19 @@ _BASE_DATA = {
 @pytest.fixture
 async def client():
     """Cliente httpx que habla directamente con la app FastAPI sin red real."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", follow_redirects=True) as ac:
         yield ac
 
 
 def _accept_mocks():
     """Helper: agrupa los patches necesarios para que el pipeline acepte un archivo."""
     return [
-        patch("controllers.generation_controller.extract_text_from_file",
+        patch("services.generation_record_service.extract_text_from_file",
               return_value="Texto de prueba con contenido suficiente para validar el pipeline completo."),
-        patch("controllers.generation_controller.find_user_by_id", return_value=_USER),
+        patch("services.generation_record_service.find_user_by_id", return_value=_USER),
         patch("services.generation_record_service.generation_repo.create",
               return_value=_FAKE_GEN_PROCESANDO),
-        patch("services.generation_service.generate_outline", return_value=_FAKE_OUTLINE),
+        patch("services.generation_service.generate_outline", new_callable=AsyncMock, return_value=_FAKE_OUTLINE),
         patch("services.generation_service.generate_pptx", return_value=b"fake-pptx"),
         patch("services.generation_service.generation_repo.update_resultado"),
         patch("services.generation_service.generation_repo.update_error"),
@@ -100,7 +100,7 @@ async def test_accept_txt_file(client):
     """Archivo .txt debe aceptarse y retornar 202."""
     mocks = _accept_mocks()
     with mocks[0], mocks[1], mocks[2], mocks[3], mocks[4], mocks[5], mocks[6], \
-         patch("services.generation_service.get_supabase") as mock_supabase:
+         patch("services.generation_storage.get_supabase") as mock_supabase:
         mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
         resp = await _post_with_file(client, "informe.txt", b"texto plano", "text/plain")
     assert resp.status_code == 202
@@ -110,7 +110,7 @@ async def test_accept_pdf_file(client):
     """Archivo .pdf debe aceptarse y retornar 202."""
     mocks = _accept_mocks()
     with mocks[0], mocks[1], mocks[2], mocks[3], mocks[4], mocks[5], mocks[6], \
-         patch("services.generation_service.get_supabase") as mock_supabase:
+         patch("services.generation_storage.get_supabase") as mock_supabase:
         mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
         resp = await _post_with_file(client, "informe.pdf", b"%PDF-1.4 fake", "application/pdf")
     assert resp.status_code == 202
@@ -120,7 +120,7 @@ async def test_accept_docx_file(client):
     """Archivo .docx debe aceptarse y retornar 202."""
     mocks = _accept_mocks()
     with mocks[0], mocks[1], mocks[2], mocks[3], mocks[4], mocks[5], mocks[6], \
-         patch("services.generation_service.get_supabase") as mock_supabase:
+         patch("services.generation_storage.get_supabase") as mock_supabase:
         mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
         resp = await _post_with_file(client, "informe.docx", b"PK fake docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
     assert resp.status_code == 202
@@ -130,7 +130,7 @@ async def test_accept_pptx_file(client):
     """Archivo .pptx debe aceptarse y retornar 202 (con mock del extractor PPTX)."""
     mocks = _accept_mocks()
     with mocks[0], mocks[1], mocks[2], mocks[3], mocks[4], mocks[5], mocks[6], \
-         patch("services.generation_service.get_supabase") as mock_supabase:
+         patch("services.generation_storage.get_supabase") as mock_supabase:
         mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
         resp = await _post_with_file(client, "deck.pptx", b"PK fake pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation")
     assert resp.status_code == 202
@@ -140,7 +140,7 @@ async def test_accept_xlsx_file(client):
     """Archivo .xlsx debe aceptarse y retornar 202."""
     mocks = _accept_mocks()
     with mocks[0], mocks[1], mocks[2], mocks[3], mocks[4], mocks[5], mocks[6], \
-         patch("services.generation_service.get_supabase") as mock_supabase:
+         patch("services.generation_storage.get_supabase") as mock_supabase:
         mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
         resp = await _post_with_file(client, "datos.xlsx", b"PK fake xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     assert resp.status_code == 202
@@ -224,7 +224,7 @@ async def test_accept_multiple_files_in_request(client):
     token = create_access_token(_USER_ID, "editor")
     mocks = _accept_mocks()
     with mocks[0], mocks[1], mocks[2], mocks[3], mocks[4], mocks[5], mocks[6], \
-         patch("services.generation_service.get_supabase") as mock_supabase:
+         patch("services.generation_storage.get_supabase") as mock_supabase:
         mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
         resp = await client.post(
             "/api/v1/generations/",
@@ -242,7 +242,7 @@ async def test_accept_filename_with_special_chars(client):
     """Archivo con caracteres especiales en el nombre debe aceptarse limpiamente (sin 500)."""
     mocks = _accept_mocks()
     with mocks[0], mocks[1], mocks[2], mocks[3], mocks[4], mocks[5], mocks[6], \
-         patch("services.generation_service.get_supabase") as mock_supabase:
+         patch("services.generation_storage.get_supabase") as mock_supabase:
         mock_supabase.return_value.storage.from_.return_value.get_public_url.return_value = _PPTX_URL
         resp = await _post_with_file(
             client, "informe ñoño & cía (2024).txt", b"texto", "text/plain",

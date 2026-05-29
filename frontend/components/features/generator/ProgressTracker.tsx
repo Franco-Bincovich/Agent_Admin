@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, Loader2 } from 'lucide-react';
 import { getGeneration } from '@/services/generationService';
-import type { Generation, GenerationStatus } from '@/types';
+import type { GenerationOutcome, GenerationStatus } from '@/types';
 
 interface Props {
   status: GenerationStatus;
   generationId: string | null;
-  onComplete: (generation: Generation) => void;
+  onComplete: (generation: GenerationOutcome) => void;
 }
 
 const STEPS = [
@@ -33,20 +33,41 @@ export default function ProgressTracker({ status, generationId, onComplete }: Pr
 
   useEffect(() => {
     if (!generationId || status !== 'procesando') return;
+
+    const MAX_ATTEMPTS = 60;
+    const BASE_INTERVAL = 3000;
+    const MAX_INTERVAL = 15000;
+
     let step = 0;
-    const id = setInterval(async () => {
+    let attempts = 0;
+    let currentInterval = BASE_INTERVAL;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const poll = async () => {
+      if (attempts >= MAX_ATTEMPTS) {
+        onCompleteRef.current({ estado: 'error', error: 'Tiempo de espera agotado' });
+        return;
+      }
+
       try {
         const gen = await getGeneration(generationId);
         if (gen.estado !== 'procesando') {
-          clearInterval(id);
           onCompleteRef.current(gen);
           return;
         }
         step = Math.min(step + 1, STEPS.length - 1);
         setActiveStep(step);
-      } catch { /* keep polling on network error */ }
-    }, 3000);
-    return () => clearInterval(id);
+      } catch {
+        // continúa en error de red, el backoff lo maneja
+      }
+
+      attempts += 1;
+      currentInterval = Math.min(currentInterval * 1.5, MAX_INTERVAL);
+      timeoutId = setTimeout(poll, currentInterval);
+    };
+
+    timeoutId = setTimeout(poll, currentInterval);
+    return () => clearTimeout(timeoutId);
   }, [generationId, status]);
 
   const getState = (i: number): StepState =>

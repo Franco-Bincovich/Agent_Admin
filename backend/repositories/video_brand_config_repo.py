@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 from integrations.supabase_client import get_supabase
 
 _TABLE = "video_brand_config"
@@ -9,7 +11,7 @@ def _db():
     return get_supabase().table(_TABLE)
 
 
-def get_by_user(usuario_id: str) -> dict | None:
+async def get_by_user(usuario_id: str) -> dict | None:
     """
     Retorna la configuración de marca del usuario, o None si todavía no la configuró.
 
@@ -19,11 +21,13 @@ def get_by_user(usuario_id: str) -> dict | None:
     Returns:
         Dict con el registro de brand config, o None si no existe.
     """
-    response = _db().select("*").eq("usuario_id", str(usuario_id)).execute()
+    response = await asyncio.to_thread(
+        lambda: _db().select("*").eq("usuario_id", str(usuario_id)).execute()
+    )
     return response.data[0] if response.data else None
 
 
-def upsert(
+async def upsert(
     usuario_id: str,
     logo_url: str | None = None,
     color_primario: str | None = None,
@@ -47,8 +51,8 @@ def upsert(
     Returns:
         Dict con el registro completo después del upsert.
     """
-    response = (
-        _db()
+    response = await asyncio.to_thread(
+        lambda: _db()
         .upsert(
             {
                 "usuario_id": str(usuario_id),
