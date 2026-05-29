@@ -14,14 +14,20 @@ const SECCIONES: DocumentoSeccion[] = [
 
 interface Props {
   secciones: DocumentoSeccion[];
-  onToggleSeccion: (s: DocumentoSeccion) => void;
+  setSecciones: (updater: (prev: DocumentoSeccion[]) => DocumentoSeccion[]) => void;
   indicaciones: string;
-  onIndicacionesChange: (value: string) => void;
+  setIndicaciones: (value: string) => void;
+  isDisabled?: boolean;
 }
 
 export default function EstructuraSection({
-  secciones, onToggleSeccion, indicaciones, onIndicacionesChange,
+  secciones, setSecciones, indicaciones, setIndicaciones, isDisabled = false,
 }: Props) {
+  function toggleSeccion(s: DocumentoSeccion) {
+    if (isDisabled) return;
+    setSecciones((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
+  }
+
   return (
     <section className="space-y-4">
       <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
@@ -40,8 +46,9 @@ export default function EstructuraSection({
             <button
               key={s}
               type="button"
-              onClick={() => onToggleSeccion(s)}
-              className="px-3 py-1.5 rounded-full text-sm font-medium border transition-colors"
+              onClick={() => toggleSeccion(s)}
+              disabled={isDisabled}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors${isDisabled ? ' opacity-50 cursor-not-allowed' : ''}`}
               style={{
                 backgroundColor: selected
                   ? 'color-mix(in srgb, var(--color-primary) 15%, transparent)'
@@ -56,6 +63,13 @@ export default function EstructuraSection({
         })}
       </div>
 
+      {isDisabled && (
+        <p className="text-xs" style={{ color: 'var(--color-text-disabled)' }}>
+          Las secciones están fijadas por la estructura seleccionada.
+          Para modificarlas, quitá la estructura del selector.
+        </p>
+      )}
+
       <div className="space-y-1.5">
         <label className="block text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
           Indicaciones adicionales{' '}
@@ -63,7 +77,7 @@ export default function EstructuraSection({
         </label>
         <textarea
           value={indicaciones}
-          onChange={(e) => onIndicacionesChange(e.target.value.slice(0, 1000))}
+          onChange={(e) => setIndicaciones(e.target.value.slice(0, 1000))}
           placeholder="Instrucciones especiales, tono deseado, secciones a priorizar..."
           rows={3}
           maxLength={1000}

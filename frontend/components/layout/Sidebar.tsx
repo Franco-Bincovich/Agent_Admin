@@ -11,6 +11,7 @@ import {
   UserCircle,
   ChevronLeft,
   ChevronRight,
+  LayoutTemplate,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
@@ -28,6 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard',      href: '/dashboard', icon: LayoutDashboard },
   { label: 'Presentaciones', href: '/generator',  icon: Sparkles },
   { label: 'Documentos',     href: '/documentos', icon: FileText },
+  { label: 'Estructuras',    href: '/plantillas', icon: LayoutTemplate },
   { label: 'Historial',      href: '/history',    icon: History },
   { label: 'Usuarios',       href: '/users',      icon: Users, roles: ['administrador'] },
   { label: 'Perfil',         href: '/profile',    icon: UserCircle },

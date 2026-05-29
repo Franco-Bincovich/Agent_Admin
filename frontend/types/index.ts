@@ -142,6 +142,29 @@ export interface ActivityItem {
   } | null;
 }
 
+// ── Document templates ────────────────────────────────────────────────────────
+
+export interface DocumentTemplate {
+  id: string
+  usuario_id: string
+  nombre: string
+  secciones: DocumentoSeccion[]
+  is_default: boolean
+  creado_en: string
+  actualizado_en: string
+}
+
+export interface CreateTemplatePayload {
+  nombre: string
+  secciones: DocumentoSeccion[]
+}
+
+export interface UpdateTemplatePayload {
+  nombre: string
+  secciones: DocumentoSeccion[]
+  is_default: boolean
+}
+
 // ── Video agent ───────────────────────────────────────────────────────────────
 
 export type VideoJobStatus = 'pending' | 'processing' | 'completed' | 'failed';

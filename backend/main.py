@@ -10,7 +10,7 @@ from slowapi.errors import RateLimitExceeded
 from config.settings import get_settings
 from middleware.auth import register_auth_middleware
 from middleware.error_handler import register_error_handlers
-from routers import activity, auth, documentos, generations, profile, users, video
+from routers import activity, auth, document_templates, documentos, generations, profile, users, video
 from utils.limiter import limiter
 from utils.logger import log
 from repositories import generation_repo, documento_repo, documento_mutations_repo
@@ -134,6 +134,7 @@ def create_app() -> FastAPI:
     app.include_router(profile.router, prefix="/api/v1/profile", tags=["profile"])
     app.include_router(activity.router, prefix="/api/v1/activity", tags=["activity"])
     app.include_router(video.router, prefix="/api/v1/video", tags=["video"])
+    app.include_router(document_templates.router)
 
     @app.get("/health", include_in_schema=False)
     async def health():

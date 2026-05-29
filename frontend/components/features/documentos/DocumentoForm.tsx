@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import FuenteUploadSection from './FuenteUploadSection';
@@ -9,7 +9,8 @@ import OpcionesSection from './OpcionesSection';
 import DocumentoProgressTracker from './DocumentoProgressTracker';
 import DocumentoResult from './DocumentoResult';
 import { createDocumento } from '@/services/documentoService';
-import type { Documento, DocumentoOutcome, DocumentoSeccion, DocumentoOpciones, ApiError } from '@/types';
+import { getMyTemplates } from '@/services/documentTemplateService';
+import type { Documento, DocumentoOutcome, DocumentoSeccion, DocumentoOpciones, ApiError, DocumentTemplate } from '@/types';
 
 const DEFAULT_OPCIONES: DocumentoOpciones = {
   homogeneizar:  false,
@@ -28,11 +29,20 @@ export default function DocumentoForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [documentoId,  setDocumentoId]  = useState<string | null>(null);
   const [documento,    setDocumento]    = useState<Documento | null>(null);
+  const [templates,          setTemplates]          = useState<DocumentTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+
+  useEffect(() => {
+    getMyTemplates().then(setTemplates).catch(() => {})
+  }, [])
 
   const isFormValid = archivos.length > 0 && titulo.trim().length >= 3;
 
-  function toggleSeccion(s: DocumentoSeccion) {
-    setSecciones((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
+  function handleSelectTemplate(templateId: string) {
+    const template = templates.find(t => t.id === templateId)
+    if (!template) return
+    setSelectedTemplateId(templateId)
+    setSecciones(template.secciones)
   }
 
   function toggleOpcion(key: keyof DocumentoOpciones) {
@@ -89,11 +99,44 @@ export default function DocumentoForm() {
         onTituloChange={setTitulo}
       />
       <hr style={{ borderColor: 'var(--color-border)' }} />
+      {templates.length > 0 && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">
+            Usar estructura pre-guardada
+          </label>
+          <select
+            value={selectedTemplateId ?? ''}
+            onChange={(e) => {
+              if (e.target.value) handleSelectTemplate(e.target.value)
+              else {
+                setSelectedTemplateId(null)
+                setSecciones([])
+              }
+            }}
+            className="w-full border rounded-md px-3 py-2 text-sm
+                       bg-background text-foreground
+                       focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">— Seleccionar estructura —</option>
+            {templates.map(t => (
+              <option key={t.id} value={t.id}>
+                {t.nombre}{t.is_default ? ' (por defecto)' : ''}
+              </option>
+            ))}
+          </select>
+          {selectedTemplateId && (
+            <p className="text-xs text-muted-foreground">
+              Las secciones se cargaron desde la estructura seleccionada.
+            </p>
+          )}
+        </div>
+      )}
       <EstructuraSection
         secciones={secciones}
-        onToggleSeccion={toggleSeccion}
+        setSecciones={setSecciones}
         indicaciones={indicaciones}
-        onIndicacionesChange={setIndicaciones}
+        setIndicaciones={setIndicaciones}
+        isDisabled={selectedTemplateId !== null}
       />
       <hr style={{ borderColor: 'var(--color-border)' }} />
       <OpcionesSection opciones={opciones} onToggleOpcion={toggleOpcion} />
