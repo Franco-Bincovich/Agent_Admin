@@ -49,7 +49,17 @@ def build_documento_prompt(
     docs_block = "\n\n".join(bloques_docs)
 
     secciones_finales = secciones if secciones else _DEFAULT_SECCIONES
-    lista = "\n".join(f"- {s}" for s in secciones_finales)
+
+    def _format_seccion(s) -> str:
+        if isinstance(s, dict):
+            nombre = s.get("nombre", str(s))
+            descripcion = s.get("descripcion", "")
+            if descripcion:
+                return f"- {nombre}: {descripcion}"
+            return f"- {nombre}"
+        return f"- {s}"
+
+    lista = "\n".join(_format_seccion(s) for s in secciones_finales)
     secciones_block = f"\n\n## SECCIONES REQUERIDAS\n{lista}"
 
     instrucciones = []

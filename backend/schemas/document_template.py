@@ -7,9 +7,29 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
 
+class SeccionItemSchema(BaseModel):
+    id: str = Field(min_length=1, max_length=50)
+    nombre: str = Field(min_length=1, max_length=100)
+    descripcion: str | None = Field(default=None, max_length=500)
+
+    @field_validator("nombre")
+    @classmethod
+    def sanitize_nombre(cls, v: str) -> str:
+        v = re.sub(r'[<>"\']', '', v)
+        return v.strip()
+
+    @field_validator("descripcion")
+    @classmethod
+    def sanitize_descripcion(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        v = re.sub(r'[<>"\']', '', v)
+        return v.strip() or None
+
+
 class CreateTemplateRequest(BaseModel):
     nombre: str = Field(min_length=1, max_length=100)
-    secciones: list[str] = Field(min_length=1)
+    secciones: list[SeccionItemSchema] = Field(min_length=1)
 
     @field_validator("nombre")
     @classmethod
@@ -19,15 +39,16 @@ class CreateTemplateRequest(BaseModel):
 
     @field_validator("secciones")
     @classmethod
-    def validate_secciones(cls, v: list[str]) -> list[str]:
-        if not v:
+    def validate_secciones(cls, v: list[SeccionItemSchema]) -> list[SeccionItemSchema]:
+        filtered = [s for s in v if s.nombre.strip()]
+        if not filtered:
             raise ValueError("Debe incluir al menos una sección")
-        return [s.strip() for s in v if s.strip()]
+        return filtered
 
 
 class UpdateTemplateRequest(BaseModel):
     nombre: str = Field(min_length=1, max_length=100)
-    secciones: list[str] = Field(min_length=1)
+    secciones: list[SeccionItemSchema] = Field(min_length=1)
     is_default: bool = False
 
     @field_validator("nombre")
@@ -36,12 +57,20 @@ class UpdateTemplateRequest(BaseModel):
         v = re.sub(r'[<>"\']', '', v)
         return v.strip()
 
+    @field_validator("secciones")
+    @classmethod
+    def validate_secciones(cls, v: list[SeccionItemSchema]) -> list[SeccionItemSchema]:
+        filtered = [s for s in v if s.nombre.strip()]
+        if not filtered:
+            raise ValueError("Debe incluir al menos una sección")
+        return filtered
+
 
 class TemplateResponse(BaseModel):
     id: UUID
     usuario_id: UUID
     nombre: str
-    secciones: list[str]
+    secciones: list[dict]
     is_default: bool
     creado_en: datetime
     actualizado_en: datetime

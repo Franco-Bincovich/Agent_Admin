@@ -32,7 +32,11 @@ _FAKE_TEMPLATE = {
     "id": _TEMPLATE_ID,
     "usuario_id": _USER_ID,
     "nombre": "Plantilla de prueba",
-    "secciones": ["introduccion", "desarrollo", "conclusiones"],
+    "secciones": [
+        {"id": "1", "nombre": "introduccion"},
+        {"id": "2", "nombre": "desarrollo"},
+        {"id": "3", "nombre": "conclusiones"},
+    ],
     "is_default": False,
     "creado_en": _NOW,
     "actualizado_en": _NOW,
@@ -71,14 +75,22 @@ async def test_create_template_success(client):
             headers={"Authorization": f"Bearer {token}"},
             json={
                 "nombre": "Plantilla de prueba",
-                "secciones": ["introduccion", "desarrollo", "conclusiones"],
+                "secciones": [
+                    {"id": "1", "nombre": "introduccion"},
+                    {"id": "2", "nombre": "desarrollo"},
+                    {"id": "3", "nombre": "conclusiones"},
+                ],
             },
         )
     assert resp.status_code == 201
     body = resp.json()
     assert body["id"] == _TEMPLATE_ID
     assert body["nombre"] == "Plantilla de prueba"
-    assert body["secciones"] == ["introduccion", "desarrollo", "conclusiones"]
+    assert body["secciones"] == [
+        {"id": "1", "nombre": "introduccion"},
+        {"id": "2", "nombre": "desarrollo"},
+        {"id": "3", "nombre": "conclusiones"},
+    ]
     assert body["is_default"] is False
 
 
@@ -91,7 +103,11 @@ async def test_create_first_template_is_default(client):
             headers={"Authorization": f"Bearer {token}"},
             json={
                 "nombre": "Plantilla de prueba",
-                "secciones": ["introduccion", "desarrollo", "conclusiones"],
+                "secciones": [
+                    {"id": "1", "nombre": "introduccion"},
+                    {"id": "2", "nombre": "desarrollo"},
+                    {"id": "3", "nombre": "conclusiones"},
+                ],
             },
         )
     assert resp.status_code == 201
@@ -163,7 +179,10 @@ async def test_update_template_success(client):
     updated = {
         **_FAKE_TEMPLATE,
         "nombre": "Plantilla actualizada",
-        "secciones": ["introduccion", "cierre"],
+        "secciones": [
+            {"id": "1", "nombre": "introduccion"},
+            {"id": "2", "nombre": "cierre"},
+        ],
     }
     with patch(f"{_SVC}.update_template", new_callable=AsyncMock, return_value=updated):
         resp = await client.put(
@@ -171,14 +190,20 @@ async def test_update_template_success(client):
             headers={"Authorization": f"Bearer {token}"},
             json={
                 "nombre": "Plantilla actualizada",
-                "secciones": ["introduccion", "cierre"],
+                "secciones": [
+                    {"id": "1", "nombre": "introduccion"},
+                    {"id": "2", "nombre": "cierre"},
+                ],
                 "is_default": False,
             },
         )
     assert resp.status_code == 200
     body = resp.json()
     assert body["nombre"] == "Plantilla actualizada"
-    assert body["secciones"] == ["introduccion", "cierre"]
+    assert body["secciones"] == [
+        {"id": "1", "nombre": "introduccion"},
+        {"id": "2", "nombre": "cierre"},
+    ]
 
 
 # ── Marcar como default ──────────────────────────────────────────────────────
@@ -237,6 +262,6 @@ async def test_create_template_without_token_returns_401(client):
     """POST /document-templates sin token de autenticación devuelve 401."""
     resp = await client.post(
         _BASE_URL,
-        json={"nombre": "Sin auth", "secciones": ["intro"]},
+        json={"nombre": "Sin auth", "secciones": [{"id": "1", "nombre": "intro"}]},
     )
     assert resp.status_code == 401

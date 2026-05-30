@@ -40,7 +40,7 @@ export default function PlantillaCard({ template, onEdit, onDelete, onSetDefault
           <div className="flex flex-wrap gap-1.5">
             {template.secciones.map((s) => (
               <span
-                key={s}
+                key={s.id}
                 className="px-2.5 py-1 rounded-full text-xs font-medium border"
                 style={{
                   backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
@@ -48,7 +48,15 @@ export default function PlantillaCard({ template, onEdit, onDelete, onSetDefault
                   color: 'var(--color-primary)',
                 }}
               >
-                {s}
+                {s.nombre}
+                {s.descripcion && (
+                  <span
+                    className="block text-xs font-normal mt-0.5"
+                    style={{ color: 'var(--color-text-disabled)' }}
+                  >
+                    {s.descripcion}
+                  </span>
+                )}
               </span>
             ))}
           </div>

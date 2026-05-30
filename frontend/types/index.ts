@@ -93,14 +93,13 @@ export interface ApiError {
 
 export type DocumentoEstado = 'procesando' | 'listo' | 'error';
 
-export type DocumentoSeccion =
-  | 'Resumen ejecutivo'
-  | 'Introducción'
-  | 'Contexto'
-  | 'Objetivos'
-  | 'Desarrollo'
-  | 'Conclusiones'
-  | 'Recomendaciones';
+export interface SeccionItem {
+  id: string
+  nombre: string
+  descripcion?: string
+}
+
+export type DocumentoSeccion = SeccionItem
 
 export interface DocumentoOpciones {
   homogeneizar: boolean;
@@ -148,7 +147,7 @@ export interface DocumentTemplate {
   id: string
   usuario_id: string
   nombre: string
-  secciones: DocumentoSeccion[]
+  secciones: SeccionItem[]
   is_default: boolean
   creado_en: string
   actualizado_en: string
@@ -156,12 +155,12 @@ export interface DocumentTemplate {
 
 export interface CreateTemplatePayload {
   nombre: string
-  secciones: DocumentoSeccion[]
+  secciones: SeccionItem[]
 }
 
 export interface UpdateTemplatePayload {
   nombre: string
-  secciones: DocumentoSeccion[]
+  secciones: SeccionItem[]
   is_default: boolean
 }
 

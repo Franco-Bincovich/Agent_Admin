@@ -10,7 +10,7 @@ import DocumentoProgressTracker from './DocumentoProgressTracker';
 import DocumentoResult from './DocumentoResult';
 import { createDocumento } from '@/services/documentoService';
 import { getMyTemplates } from '@/services/documentTemplateService';
-import type { Documento, DocumentoOutcome, DocumentoSeccion, DocumentoOpciones, ApiError, DocumentTemplate } from '@/types';
+import type { Documento, DocumentoOutcome, SeccionItem, DocumentoOpciones, ApiError, DocumentTemplate } from '@/types';
 
 const DEFAULT_OPCIONES: DocumentoOpciones = {
   homogeneizar:  false,
@@ -23,7 +23,7 @@ export default function DocumentoForm() {
   const [plantilla,    setPlantilla]    = useState<File | null>(null);
   const [logo,         setLogo]         = useState<File | null>(null);
   const [titulo,       setTitulo]       = useState('');
-  const [secciones,    setSecciones]    = useState<DocumentoSeccion[]>([]);
+  const [secciones,    setSecciones]    = useState<SeccionItem[]>([]);
   const [indicaciones, setIndicaciones] = useState('');
   const [opciones,     setOpciones]     = useState<DocumentoOpciones>(DEFAULT_OPCIONES);
   const [isSubmitting, setIsSubmitting] = useState(false);
