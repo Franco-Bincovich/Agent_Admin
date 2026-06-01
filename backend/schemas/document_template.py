@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json as _json
 import re
 from datetime import datetime
 from uuid import UUID
@@ -66,6 +67,17 @@ class UpdateTemplateRequest(BaseModel):
         return filtered
 
 
+def _parse_secciones(raw) -> list:
+    if isinstance(raw, list):
+        return raw
+    if isinstance(raw, str):
+        try:
+            return _json.loads(raw)
+        except Exception:
+            return []
+    return []
+
+
 class TemplateResponse(BaseModel):
     id: UUID
     usuario_id: UUID
@@ -81,7 +93,7 @@ class TemplateResponse(BaseModel):
             id=data["id"],
             usuario_id=data["usuario_id"],
             nombre=data["nombre"],
-            secciones=data["secciones"] if isinstance(data["secciones"], list) else [],
+            secciones=_parse_secciones(data.get("secciones", [])),
             is_default=data.get("is_default", False),
             creado_en=data["creado_en"],
             actualizado_en=data["actualizado_en"],

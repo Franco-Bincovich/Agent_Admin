@@ -31,7 +31,14 @@ async def find_by_user(usuario_id: str) -> list[dict]:
         .order("creado_en", desc=True)
         .execute()
     )
-    return response.data
+    items = response.data or []
+    for item in items:
+        if isinstance(item.get("secciones"), str):
+            try:
+                item["secciones"] = json.loads(item["secciones"])
+            except Exception:
+                item["secciones"] = []
+    return items
 
 
 async def find_by_id(template_id: str, usuario_id: str) -> dict | None:
@@ -52,13 +59,19 @@ async def find_by_id(template_id: str, usuario_id: str) -> dict | None:
         .eq("usuario_id", str(usuario_id))
         .execute()
     )
-    return response.data[0] if response.data else None
+    data = response.data[0] if response.data else None
+    if data and isinstance(data.get("secciones"), str):
+        try:
+            data["secciones"] = json.loads(data["secciones"])
+        except Exception:
+            data["secciones"] = []
+    return data
 
 
 async def create(
     usuario_id: str,
     nombre: str,
-    secciones: list[str],
+    secciones: list,
     is_default: bool = False,
 ) -> dict:
     """
@@ -93,7 +106,7 @@ async def update(
     template_id: str,
     usuario_id: str,
     nombre: str,
-    secciones: list[str],
+    secciones: list,
     is_default: bool,
 ) -> dict | None:
     """
