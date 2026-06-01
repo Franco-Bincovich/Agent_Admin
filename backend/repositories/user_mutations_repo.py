@@ -76,3 +76,15 @@ async def update_gamma_folder_id(user_id: str, folder_id: str) -> None:
     await asyncio.to_thread(
         lambda: get_supabase().table(_TABLE).update({"gamma_folder_id": folder_id}).eq("id", user_id).execute()
     )
+
+
+async def delete(user_id: str) -> None:
+    """
+    Elimina un usuario permanentemente por ID.
+
+    Args:
+        user_id: ID del usuario a eliminar.
+    """
+    await asyncio.to_thread(
+        lambda: get_supabase().table(_TABLE).delete().eq("id", user_id).execute()
+    )

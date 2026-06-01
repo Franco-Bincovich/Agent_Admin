@@ -47,3 +47,12 @@ async def update_active(
 ) -> UserResponse:
     require_admin(current_user)
     return await user_controller.update_user_active(str(user_id), payload.activo, current_user)
+
+
+@router.delete("/{user_id}", status_code=204)
+async def delete_user(
+    user_id: UUID,
+    current_user: dict = Depends(get_current_user),
+) -> None:
+    require_admin(current_user)
+    await user_controller.delete_user(str(user_id), current_user)

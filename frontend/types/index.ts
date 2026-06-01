@@ -7,6 +7,7 @@ export interface User {
   rol: UserRole;
   activo: boolean;
   creado_en: string;
+  total_generaciones?: number;
 }
 
 export interface Profile {

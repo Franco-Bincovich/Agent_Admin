@@ -21,6 +21,7 @@ class UserResponse(BaseModel):
     rol: UserRole
     activo: bool
     creado_en: str
+    total_generaciones: int = 0
 
 
 class ProfileResponse(BaseModel):

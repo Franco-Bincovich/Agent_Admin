@@ -21,3 +21,8 @@ async def get_user(user_id: str, current_user: dict) -> UserResponse:
 async def update_user_active(user_id: str, activo: bool, requester: dict) -> UserResponse:
     """Activa o desactiva un usuario. Un admin no puede desactivarse a sí mismo."""
     return await user_service.update_user_active(user_id, activo, requester["sub"])
+
+
+async def delete_user(user_id: str, current_user: dict) -> None:
+    """Elimina un usuario permanentemente. Un admin no puede eliminarse a sí mismo."""
+    await user_service.delete_user(user_id, current_user["sub"])

@@ -1,4 +1,8 @@
+import asyncio
+
 from repositories import user_mutations_repo, user_repo
+from repositories.generation_repo import find_by_user as find_generaciones
+from repositories.documento_repo import find_by_user as find_documentos
 from schemas.user import CreateUserRequest, UserResponse
 from services.auth_service import hash_password
 from utils.errors import AppError, ErrorCode
@@ -34,13 +38,22 @@ async def create_user(payload: CreateUserRequest) -> UserResponse:
 
 async def get_all_users() -> list[UserResponse]:
     """
-    Retorna todos los usuarios del sistema.
+    Retorna todos los usuarios del sistema con su conteo de generaciones.
     Solo debe invocarse desde endpoints de administrador.
 
     Returns:
         Lista de UserResponse con todos los usuarios, ordenados por creado_en DESC.
+        Cada usuario incluye total_generaciones (presentaciones + documentos).
     """
-    return [UserResponse(**u) for u in await user_repo.find_all()]
+    users = await user_repo.find_all()
+    result = []
+    for u in users:
+        gen, doc = await asyncio.gather(
+            find_generaciones(u["id"], limit=9999),
+            find_documentos(u["id"], limit=9999),
+        )
+        result.append(UserResponse(**u, total_generaciones=len(gen) + len(doc)))
+    return result
 
 
 async def get_user(user_id: str, requester_id: str, is_admin: bool = False) -> UserResponse:
@@ -93,3 +106,24 @@ async def update_user_active(user_id: str, activo: bool, requester_id: str) -> U
         )
     updated = await user_mutations_repo.update_active(user_id, activo)
     return UserResponse(**updated)
+
+
+async def delete_user(user_id: str, requester_id: str) -> None:
+    """
+    Elimina un usuario permanentemente (hard delete).
+    No permite que un admin se elimine a sí mismo.
+
+    Args:
+        user_id: ID del usuario a eliminar.
+        requester_id: ID del admin que ejecuta la acción.
+
+    Raises:
+        AppError FORBIDDEN 403 si intenta eliminarse a sí mismo.
+        AppError NOT_FOUND 404 si el usuario no existe.
+    """
+    if user_id == requester_id:
+        raise AppError("No podés eliminar tu propia cuenta", ErrorCode.FORBIDDEN, 403)
+    user = await user_repo.find_by_id(user_id)
+    if not user:
+        raise AppError("Usuario no encontrado", ErrorCode.NOT_FOUND, 404)
+    await user_mutations_repo.delete(user_id)

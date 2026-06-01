@@ -1,4 +1,4 @@
-import { get, patch, post } from '@/services/api';
+import { del, get, patch, post } from '@/services/api';
 import type { User } from '@/types';
 
 export interface CreateUserPayload {
@@ -19,4 +19,8 @@ export async function createUser(payload: CreateUserPayload): Promise<User> {
 
 export async function toggleUserActive(userId: string, activo: boolean): Promise<User> {
   return patch<User>(`/api/v1/users/${userId}/active`, { activo });
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  return del<void>(`/api/v1/users/${id}`);
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { UserPlus } from 'lucide-react';
@@ -18,25 +18,27 @@ export default function UsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const loadUsers = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await getUsers();
+      setUsers(data);
+    } catch (err) {
+      const apiErr = err as ApiError;
+      toast.error(apiErr?.message ?? 'No pudimos cargar los usuarios.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     if (user.rol !== 'administrador') {
       router.replace('/dashboard');
       return;
     }
-    async function load() {
-      try {
-        const data = await getUsers();
-        setUsers(data);
-      } catch (err) {
-        const apiErr = err as ApiError;
-        toast.error(apiErr?.message ?? 'No pudimos cargar los usuarios.');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    load();
-  }, [user, router]);
+    loadUsers();
+  }, [user, router, loadUsers]);
 
   async function handleToggleActive(userId: string, activo: boolean) {
     try {
@@ -78,6 +80,7 @@ export default function UsersPage() {
         isLoading={isLoading}
         currentUserId={user?.id ?? ''}
         onToggleActive={handleToggleActive}
+        onRefresh={loadUsers}
       />
 
       <CreateUserModal

@@ -1,16 +1,20 @@
+import { useState } from 'react';
 import { ToggleLeft, ToggleRight } from 'lucide-react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import type { User, UserRole } from '@/types';
+import { deleteUser } from '@/services/userService';
 
 interface Props {
   users: User[];
   isLoading: boolean;
   currentUserId: string;
   onToggleActive: (userId: string, activo: boolean) => void;
+  onRefresh: () => void;
 }
 
 const ROL_BADGE: Record<UserRole, string> = {
@@ -39,7 +43,20 @@ function SkeletonRow() {
   );
 }
 
-export default function UserTable({ users, isLoading, currentUserId, onToggleActive }: Props) {
+export default function UserTable({ users, isLoading, currentUserId, onToggleActive, onRefresh }: Props) {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function handleDelete(userId: string) {
+    try {
+      await deleteUser(userId);
+      setDeletingId(null);
+      onRefresh();
+    } catch {
+      toast.error('No se pudo eliminar el usuario.');
+      setDeletingId(null);
+    }
+  }
+
   return (
     <div className="rounded-lg border overflow-hidden overflow-x-auto" style={{ borderColor: 'var(--color-border)' }}>
       <Table>
@@ -87,27 +104,59 @@ export default function UserTable({ users, isLoading, currentUserId, onToggleAct
                   </Badge>
                 </TableCell>
                 <TableCell style={{ color: 'var(--color-text-secondary)' }}>
-                  —
+                  {user.total_generaciones ?? 0}
                 </TableCell>
                 <TableCell className="text-right">
                   {user.id !== currentUserId && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => {
-                        const confirmed = window.confirm(
-                          `¿Seguro que querés ${user.activo ? 'desactivar' : 'activar'} a ${user.nombre}?`
-                        );
-                        if (!confirmed) return;
-                        onToggleActive(user.id, !user.activo);
-                      }}
-                      aria-label={user.activo ? `Desactivar ${user.nombre}` : `Activar ${user.nombre}`}
-                    >
-                      {user.activo
-                        ? <ToggleRight className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
-                        : <ToggleLeft  className="w-5 h-5" style={{ color: 'var(--color-text-disabled)' }} />}
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => {
+                          const confirmed = window.confirm(
+                            `¿Seguro que querés ${user.activo ? 'desactivar' : 'activar'} a ${user.nombre}?`
+                          );
+                          if (!confirmed) return;
+                          onToggleActive(user.id, !user.activo);
+                        }}
+                        aria-label={user.activo ? `Desactivar ${user.nombre}` : `Activar ${user.nombre}`}
+                      >
+                        {user.activo
+                          ? <ToggleRight className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
+                          : <ToggleLeft  className="w-5 h-5" style={{ color: 'var(--color-text-disabled)' }} />}
+                      </Button>
+
+                      {deletingId === user.id ? (
+                        <>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="h-8 px-2 text-xs"
+                            onClick={() => handleDelete(user.id)}
+                          >
+                            Confirmar
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 text-xs"
+                            onClick={() => setDeletingId(null)}
+                          >
+                            Cancelar
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2 text-xs text-red-400 border-red-500/30 hover:bg-red-500/10"
+                          onClick={() => setDeletingId(user.id)}
+                        >
+                          Eliminar
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </TableCell>
               </TableRow>

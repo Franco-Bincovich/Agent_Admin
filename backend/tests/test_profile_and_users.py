@@ -137,9 +137,11 @@ async def test_list_users_as_editor_forbidden(client):
 
 
 async def test_list_users_as_admin_success(client):
-    """GET /users con rol administrador devuelve lista de usuarios."""
+    """GET /users con rol administrador devuelve lista de usuarios con total_generaciones."""
     token = create_access_token(_ADMIN_ID, "administrador")
-    with patch("services.user_service.user_repo.find_all", return_value=[_ADMIN_USER, _USER]):
+    with patch("services.user_service.user_repo.find_all", return_value=[_ADMIN_USER, _USER]), \
+         patch("services.user_service.find_generaciones", return_value=[]), \
+         patch("services.user_service.find_documentos", return_value=[]):
         resp = await client.get(
             "/api/v1/users",
             headers={"Authorization": f"Bearer {token}"},
@@ -148,6 +150,7 @@ async def test_list_users_as_admin_success(client):
     body = resp.json()
     assert isinstance(body, list)
     assert len(body) == 2
+    assert body[0]["total_generaciones"] == 0
 
 
 async def test_create_user_as_editor_forbidden(client):
@@ -253,23 +256,24 @@ async def test_editor_cannot_view_other_user_profile(client):
     assert body["code"] == "NOT_FOUND"
 
 
-@pytest.mark.skip(reason="Endpoint DELETE /users/{id} no existe — el sistema usa PATCH /active")
 async def test_delete_user_as_editor_forbidden(client):
-    """DELETE /users/{id} con rol editor → 403. Endpoint no implementado."""
+    """DELETE /users/{id} con rol editor → 403."""
     token = create_access_token(_USER_ID, "editor")
     resp = await client.delete(
         f"/api/v1/users/{_OTHER_USER_ID}",
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 403
+    assert resp.json()["code"] == "FORBIDDEN"
 
 
-@pytest.mark.skip(reason="Endpoint DELETE /users/{id} no existe — el sistema usa PATCH /active")
 async def test_delete_user_as_admin_success(client):
-    """DELETE /users/{id} con rol admin → éxito. Endpoint no implementado."""
+    """DELETE /users/{id} con rol admin → 204."""
     token = create_access_token(_ADMIN_ID, "administrador")
-    resp = await client.delete(
-        f"/api/v1/users/{_USER_ID}",
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert resp.status_code in (200, 204)
+    with patch("services.user_service.user_repo.find_by_id", return_value=_USER), \
+         patch("services.user_service.user_mutations_repo.delete", return_value=None):
+        resp = await client.delete(
+            f"/api/v1/users/{_USER_ID}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+    assert resp.status_code == 204
