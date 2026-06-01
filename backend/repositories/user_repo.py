@@ -18,7 +18,7 @@ async def find_by_email(email: str) -> dict | None:
 async def find_by_username(username: str) -> dict | None:
     """Busca un usuario por su username. Retorna None si no existe."""
     response = await asyncio.to_thread(
-        lambda: get_supabase().table(_TABLE).select("*").eq("username", username).execute()
+        lambda: get_supabase().table(_TABLE).select("*").ilike("username", username.lower()).execute()
     )
     return response.data[0] if response.data else None
 

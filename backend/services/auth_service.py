@@ -4,7 +4,7 @@ import bcrypt
 from jose import JWTError, jwt
 
 from config.settings import get_settings
-from repositories.user_mutations_repo import create as create_user_record
+from repositories.user_mutations_repo import create_full as create_user_record
 from repositories.user_repo import find_by_email, find_by_id, find_by_username
 from schemas.auth import RegisterRequest
 from utils.errors import AppError, ErrorCode
@@ -79,7 +79,7 @@ async def register_user(payload: RegisterRequest) -> dict:
     # Se fuerza a "editor"; la creación de usuarios con otro rol es exclusiva
     # del endpoint admin POST /users (require_admin).
     user = await create_user_record(
-        username=payload.username,
+        username=payload.username.lower().strip(),
         email=payload.email,
         nombre=payload.nombre,
         password_hash=hash_password(payload.password),
