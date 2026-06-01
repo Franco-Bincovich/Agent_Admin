@@ -81,7 +81,7 @@ async def create(
         .insert({
             "usuario_id": str(usuario_id),
             "nombre": nombre,
-            "secciones": json.dumps(secciones),
+            "secciones": json.dumps([s.model_dump() if hasattr(s, "model_dump") else s for s in secciones]),
             "is_default": is_default,
         })
         .execute()
@@ -113,7 +113,7 @@ async def update(
         lambda: _db()
         .update({
             "nombre": nombre,
-            "secciones": json.dumps(secciones),
+            "secciones": json.dumps([s.model_dump() if hasattr(s, "model_dump") else s for s in secciones]),
             "is_default": is_default,
         })
         .eq("id", str(template_id))
