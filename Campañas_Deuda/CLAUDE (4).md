@@ -225,8 +225,10 @@ Una tarea acotada por sesión (Base V3). Marcar el estado a medida que se avanza
 
 ## Estado actual del proyecto
 
-- **Implementado**: Sesión 1 — cáscara completa del backend (estructura, fundación y stubs).
-- **En desarrollo**: Sesión 2 — Auth (JWT, refresh con rotación, tests).
+- **Implementado**:
+  - Sesión 1 — cáscara completa del backend (estructura, fundación, stubs, migraciones SQL 001–008).
+  - Sesión 1B — cáscara visual del frontend (Next.js 14, design system, 5 pantallas con mock data).
+- **En desarrollo**: Sesión 2 — Auth completo (JWT, refresh con rotación, middleware, tests).
 - **Base de datos**: migraciones 001–008 escritas como archivos SQL en `backend/migrations/`; **sin aplicar y sin conexión a Supabase** por ahora.
 - **Deuda técnica conocida**:
   - La riqueza de los datos agregados de la cartera está **sin definir** — faltan las columnas

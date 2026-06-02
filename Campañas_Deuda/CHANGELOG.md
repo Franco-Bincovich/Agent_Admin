@@ -1,5 +1,34 @@
 # Changelog — Campañas de Deuda
 
+## [0.2.0] — 2026-06-02 · Sesión 1B — Cáscara visual del frontend
+
+### Implementado
+
+- **Next.js 14 + App Router** con TypeScript estricto + Tailwind 3 + Sonner
+- **`styles/design-system.ts`**: tokens del producto (paleta ejecutiva azul navy + dorado)
+- **`tailwind.config.ts`**: integración de tokens en clases de Tailwind
+- **UI base**: `Button` (variantes + loading + disabled + touch 44px), `Input` (label/error/helper),
+  `EmptyState`, `ErrorState`, `Skeleton`, `ConfirmDialog`, `Badge`
+- **Layout**: `Sidebar` (desktop + hamburger mobile), `PageLayout`, `UserMenu`
+- **Mock auth**: `authStore` con Zustand — login simula latencia, "error@test.com" dispara error
+- **`lib/mockData.ts`**: datos realistas de Berazategui para todas las pantallas
+- **Pantalla 1 — Login**: estados normal / cargando / error, accesibilidad completa
+- **Pantalla 2 — Inicio**: 4 StatCards + 3 corridas recientes con link a detalle
+- **Pantalla 3 — Nueva campaña**: FileUpload (drag&drop + 5 estados) + 3 DimensionSelectors
+  (selección única por radio), validación antes de habilitar el submit
+- **Pantalla 4 — Ejecuciones**: lista con los 4 estados (loading/empty/error/data),
+  variable `MOCK_STATE` para previsualizar cada estado
+- **Pantalla 5 — Detalle de ejecución**: timeline, downloads Word/PDF (disabled si no listo),
+  destinatarios CC, botón envío por email
+- **Pantalla 6 — Configuración**: placeholder para sesiones futuras
+- `npm run build` pasa · ESLint ✓ · Prettier ✓
+
+### Próxima sesión
+
+- **Sesión 2**: Auth completo (JWT, refresh con rotación, middleware, tests)
+
+---
+
 ## [0.1.0] — 2026-06-02 · Sesión 1 — Cáscara y fundación
 
 ### Implementado (funciona en esta versión)
