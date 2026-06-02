@@ -23,7 +23,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { SeccionItem } from '@/types';
 
 const SECCIONES_PREDEFINIDAS = [
-  'Resumen ejecutivo', 'Introducción', 'Contexto',
+  'Introducción', 'Contexto',
   'Objetivos', 'Desarrollo', 'Conclusiones', 'Recomendaciones',
 ];
 

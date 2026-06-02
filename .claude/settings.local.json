@@ -47,7 +47,8 @@
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Franco Bincovich\\\\Desktop\\\\Visual Code\\\\Agent-Admin\\\\backend\" -Recurse -Force)",
       "Bash(Sort-Object FullName)",
       "Bash(powershell -command \"\\(Get-Content types/index.ts | Measure-Object -Line\\).Lines; \\(Get-Content services/userService.ts | Measure-Object -Line\\).Lines; \\(Get-Content components/features/users/UserTable.tsx | Measure-Object -Line\\).Lines; \\(Get-Content app/\\(dashboard\\)/users/page.tsx | Measure-Object -Line\\).Lines\")",
-      "Bash(powershell -command \"\\(Get-Content 'app/\\(dashboard\\)/users/page.tsx' | Measure-Object -Line\\).Lines\")"
+      "Bash(powershell -command \"\\(Get-Content 'app/\\(dashboard\\)/users/page.tsx' | Measure-Object -Line\\).Lines\")",
+      "Bash(Get-ChildItem -Path .\\\\backend -Recurse -Directory)"
     ]
   }
 }
