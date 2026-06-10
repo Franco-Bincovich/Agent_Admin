@@ -3,7 +3,9 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta, timezone
 
-from integrations.supabase_client import get_supabase
+import httpx
+
+from integrations.supabase_client import get_supabase, recreate_supabase_client
 
 _TABLE = "documentos"
 
@@ -14,10 +16,18 @@ def _db():
 
 async def find_by_id(documento_id: str) -> dict | None:
     """Retorna el documento por ID, o None si no existe."""
-    response = await asyncio.to_thread(
-        lambda: _db().select("*").eq("id", str(documento_id)).execute()
-    )
-    return response.data[0] if response.data else None
+    for attempt in range(2):
+        try:
+            response = await asyncio.to_thread(
+                lambda: _db().select("*").eq("id", str(documento_id)).execute()
+            )
+            return response.data[0] if response.data else None
+        except httpx.RemoteProtocolError:
+            if attempt == 0:
+                recreate_supabase_client()
+                continue
+            raise
+    return None
 
 
 async def find_by_user(usuario_id: str, limit: int = 20) -> list[dict]:
