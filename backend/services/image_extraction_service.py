@@ -106,3 +106,15 @@ def _extract_images_from_xlsx(file_bytes: bytes) -> list[bytes]:
                 if len(img) >= _MIN_IMAGE_BYTES:
                     images.append(img)
     return images
+
+
+def extract_docx_pages_as_images(file_bytes: bytes) -> list[bytes]:
+    """
+    Rasteriza las páginas del DOCX completo a PNG.
+
+    Uso exclusivo para que Claude Vision lea el contenido visual
+    (tablas, gráficos embebidos como EMF/WMF) como fuente de datos,
+    no como ilustraciones. Distinto de extract_images_from_file(),
+    que extrae imágenes inline para usar como decoración en slides.
+    """
+    return _extract_pages_from_docx_as_images(file_bytes)

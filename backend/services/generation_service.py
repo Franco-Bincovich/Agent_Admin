@@ -7,7 +7,7 @@ from repositories import generation_repo
 from services.ai_service import generate_outline
 from services.generation_storage import _upload_pptx
 from services.prompt_builder import build_prompt
-from services.image_extraction_service import extract_images_from_file
+from services.image_extraction_service import extract_images_from_file, extract_docx_pages_as_images
 from services.pptx_service import generate_pptx
 from utils.errors import AppError, ErrorCode
 from utils.logger import log
@@ -104,6 +104,18 @@ async def run_generation(
                 f"img.total | cantidad={len(imagenes)} | id={generation_id}"
             )
 
+        paginas_docx: list[bytes] = []
+        if archivo_bytes:
+            for nombre, contenido in archivo_bytes:
+                if nombre.lower().endswith(".docx"):
+                    pages = extract_docx_pages_as_images(contenido)
+                    paginas_docx.extend(pages)
+                    if pages:
+                        log.info(
+                            f"docx.pages | archivo={nombre} | "
+                            f"paginas={len(pages)} | id={generation_id}"
+                        )
+
         prompt = build_prompt(
             texto_extraido, objetivo, informacion_adicional,
             template, tono, audiencia,
@@ -112,6 +124,7 @@ async def run_generation(
         outline = await generate_outline(
             prompt,
             imagenes=imagenes if imagenes else None,
+            imagenes_contenido=paginas_docx if paginas_docx else None,
         )
 
         pptx_url: str | None = None

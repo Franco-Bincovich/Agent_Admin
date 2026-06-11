@@ -42,17 +42,47 @@ _SYSTEM_PROMPT = (
 async def _call_claude_for_json(
     user_message: str,
     imagenes: list[bytes] | None = None,
+    imagenes_contenido: list[bytes] | None = None,
 ) -> str:
     """
     Envía el prompt a Claude y retorna el texto raw de la respuesta.
 
     Args:
         user_message: Mensaje construido por build_prompt().
+        imagenes: Imágenes inline extraídas del documento para usar como
+            ilustraciones en slides (se asignan via imagen_idx).
+        imagenes_contenido: Páginas rasterizadas del DOCX fuente para que
+            Claude lea su contenido visual (tablas, datos). No se usan
+            como ilustraciones — son fuente de datos adicional.
 
     Returns:
         Texto raw retornado por Claude.
     """
     content: list[dict] = []
+
+    if imagenes_contenido:
+        content.append({
+            "type": "text",
+            "text": (
+                "Las siguientes imágenes son páginas del documento fuente. "
+                "Leé su contenido completo — incluyen tablas y datos que no "
+                "están en el texto extraído. Usá esta información para generar "
+                "los slides correspondientes."
+            )
+        })
+        for img_bytes in imagenes_contenido:
+            try:
+                media_type = "image/jpeg" if img_bytes[:3] == b"\xff\xd8\xff" else "image/png"
+                content.append({
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": media_type,
+                        "data": base64.standard_b64encode(img_bytes).decode("utf-8"),
+                    }
+                })
+            except Exception:
+                pass
 
     if imagenes:
         content.append({
@@ -119,6 +149,7 @@ async def _call_claude_for_json(
 async def generate_outline(
     prompt: str,
     imagenes: list[bytes] | None = None,
+    imagenes_contenido: list[bytes] | None = None,
 ) -> dict:
     """
     Llama a Claude con el prompt y retorna el outline como dict JSON.
@@ -129,9 +160,11 @@ async def generate_outline(
 
     Args:
         prompt: Prompt de usuario construido por build_prompt().
-        imagenes: Lista de bytes de imágenes a enviar
-            a Claude para asignación visual de imagen_idx.
-            None omite el análisis visual.
+        imagenes: Imágenes inline para asignación visual via imagen_idx.
+            None omite el análisis visual de ilustraciones.
+        imagenes_contenido: Páginas rasterizadas del DOCX fuente para lectura
+            de contenido visual (tablas, datos). Se envían antes del prompt
+            como contexto de datos, no como ilustraciones.
 
     Returns:
         Dict con estructura {titulo_presentacion: str, slides: list}.
@@ -141,7 +174,7 @@ async def generate_outline(
     """
     for attempt in range(2):
         try:
-            raw = await _call_claude_for_json(prompt, imagenes)
+            raw = await _call_claude_for_json(prompt, imagenes, imagenes_contenido)
             log.info(f"outline.raw | id_len={len(raw)} | full={raw}")
             if _SYSTEM_PROMPT[:40] in raw:
                 log.error("outline.security | system prompt detectado en output")
@@ -158,7 +191,8 @@ async def generate_outline(
             log.info(
                 f"outline.generated | slides={len(result.get('slides', []))} | "
                 f"con_imagen_idx={len(slides_con_imagen)} | "
-                f"indices={slides_con_imagen}"
+                f"indices={slides_con_imagen} | "
+                f"paginas_contenido={len(imagenes_contenido) if imagenes_contenido else 0}"
             )
             return result
         except AppError:
