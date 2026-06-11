@@ -16,7 +16,8 @@ def extract_images_from_file(filename: str, file_bytes: bytes) -> list[bytes]:
 
     Soporta los siguientes formatos:
     - .pdf  → PyMuPDF: extrae imágenes página por página usando get_images().
-    - .docx → recorre el zip interno y extrae archivos de word/media/.
+    - .docx → rasteriza páginas completas con PyMuPDF (captura EMF/WMF embebidos)
+              más imágenes inline de word/media/.
     - .xlsx → no soporta imágenes; retorna [] sin error.
 
     Si ocurre cualquier fallo durante la extracción, retorna [] para no
@@ -50,47 +51,48 @@ def _extract_images_from_pdf(file_bytes: bytes) -> list[bytes]:
     return images
 
 
-def _emf_to_png(emf_bytes: bytes) -> bytes | None:
+def _extract_pages_from_docx_as_images(file_bytes: bytes) -> list[bytes]:
     """
-    Convierte imagen EMF o WMF a PNG usando PyMuPDF.
-    Devuelve los bytes PNG, o None si la conversión falla.
+    Abre el DOCX con PyMuPDF y rasteriza cada página a PNG.
+    Captura el contenido visual completo incluyendo tablas como imágenes
+    vectoriales (EMF/WMF) que no son accesibles por extracción de texto.
+    Devuelve lista de PNG bytes. Retorna lista vacía si falla.
     """
     try:
-        doc = fitz.open(stream=emf_bytes, filetype="emf")
-        page = doc[0]
-        mat = fitz.Matrix(150 / 72, 150 / 72)
-        pix = page.get_pixmap(matrix=mat)
-        png_bytes = pix.tobytes("png")
+        doc = fitz.open(stream=file_bytes, filetype="docx")
+        images = []
+        for page in doc:
+            mat = fitz.Matrix(150 / 72, 150 / 72)  # 150 DPI
+            pix = page.get_pixmap(matrix=mat)
+            images.append(pix.tobytes("png"))
         doc.close()
-        return png_bytes
+        return images
     except Exception:
-        return None
+        return []
 
 
 def _extract_images_from_docx(file_bytes: bytes) -> list[bytes]:
     """
-    Extrae imágenes del directorio word/media/ dentro del ZIP de un DOCX.
-    Convierte EMF/WMF a PNG con PyMuPDF antes de incluirlos.
-    Descarta formatos no soportados por la API de Anthropic.
+    Combina dos fuentes de imágenes de un DOCX:
+    1. Páginas rasterizadas completas via PyMuPDF (captura tablas EMF/WMF embebidas).
+    2. Imágenes inline de word/media/ (.png/.jpg/.jpeg/.gif).
+    Las páginas se entregan primero para que Claude Vision lea tablas antes que
+    las imágenes sueltas.
     """
     _SUPPORTED = {".png", ".jpg", ".jpeg", ".gif"}
-    _CONVERT = {".emf", ".wmf"}
-    images: list[bytes] = []
+    pages = _extract_pages_from_docx_as_images(file_bytes)
+    inline: list[bytes] = []
     with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
         for name in zf.namelist():
             if not name.startswith("word/media/"):
                 continue
             ext = os.path.splitext(name)[1].lower()
-            img = zf.read(name)
-            if len(img) < _MIN_IMAGE_BYTES:
+            if ext not in _SUPPORTED:
                 continue
-            if ext in _SUPPORTED:
-                images.append(img)
-            elif ext in _CONVERT:
-                png = _emf_to_png(img)
-                if png:
-                    images.append(png)
-    return images
+            img = zf.read(name)
+            if len(img) >= _MIN_IMAGE_BYTES:
+                inline.append(img)
+    return pages + inline
 
 
 def _extract_images_from_xlsx(file_bytes: bytes) -> list[bytes]:
