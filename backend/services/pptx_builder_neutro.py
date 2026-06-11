@@ -29,20 +29,23 @@ def build_contenido(slide, data: dict, tpl, imagen=None) -> None:
     set_slide_background(slide, T["background_color"])
     add_rect(slide, Inches(0), Inches(0), _W, L["header_height"], T["header_color"])
     add_rect(slide, Inches(0), L["header_height"], _W, L["acento_height"], T["accent_color"])
-    add_textbox(slide, L["titulo"], data["titulo"], T["font_title"], T["font_size_title_slide"], "FFFFFF", bold=True)
+    add_textbox(slide, L["titulo"], data["titulo"], T["font_title"], T["font_size_title_slide"], "FFFFFF", bold=True, auto_size=True)
     bullets = data["contenido"] if isinstance(data["contenido"], list) else [str(data["contenido"])]
     cbw = L["card_borde_width"]
-    ch = L["card_height"]
     card_width = Inches(6.8) if imagen else Inches(12.3)
     bullet_width = Inches(6.2) if imagen else Inches(11.5)
+    bullets_start = L["bullets_start_y"]
+    n = len(bullets[:5])
+    bullet_h = max(Inches(0.8), (_H - bullets_start - Inches(0.3)) / n)
     for i, bullet in enumerate(bullets[:5]):
-        top = L["bullets_start_y"] + i * L["bullet_height"]
-        add_rect(slide, Inches(0.5), top, card_width, ch, T["card_color"])
-        add_rect(slide, Inches(0.5), top, cbw, ch, T["accent_color"])
+        top = bullets_start + i * bullet_h
+        add_rect(slide, Inches(0.5), top, card_width, bullet_h, T["card_color"])
+        add_rect(slide, Inches(0.5), top, cbw, bullet_h, T["accent_color"])
         add_textbox(
             slide,
-            {"left": Inches(0.5) + cbw + Inches(0.15), "top": top, "width": bullet_width, "height": ch},
+            {"left": Inches(0.5) + cbw + Inches(0.15), "top": top, "width": bullet_width, "height": bullet_h},
             bullet, T["font_body"], T["font_size_body"], T["text_color"],
+            auto_size=True,
         )
     if imagen:
         _insert_image(slide, imagen)

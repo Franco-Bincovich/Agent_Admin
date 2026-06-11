@@ -31,19 +31,23 @@ def build_contenido(slide, data: dict, tpl, imagen=None) -> None:
     T, L = tpl.TEMPLATE, tpl.LAYOUTS["contenido"]
     set_slide_background(slide, T["background_color"])
     add_rect(slide, Inches(0), Inches(0), _W, L["banda_top_height"], T["accent_color"])
-    add_textbox(slide, L["titulo"], data["titulo"], T["font_title"], T["font_size_title_slide"], T["text_color"], bold=True)
+    add_textbox(slide, L["titulo"], data["titulo"], T["font_title"], T["font_size_title_slide"], T["text_color"], bold=True, auto_size=True)
     lt = L["linea_titulo"]
     add_rect(slide, lt["left"], lt["top"], lt["width"], lt["height"], T["accent_color"])
     bullets = data["contenido"] if isinstance(data["contenido"], list) else [str(data["contenido"])]
     ds = L["bullet_dot_size"]
     bullet_width = Inches(6.5) if imagen else Inches(11.8)
+    bullets_start = L["bullets_start_y"]
+    n = len(bullets[:5])
+    bullet_h = max(Inches(0.8), (_H - bullets_start - Inches(0.3)) / n)
     for i, bullet in enumerate(bullets[:5]):
-        top = L["bullets_start_y"] + i * L["bullet_height"]
+        top = bullets_start + i * bullet_h
         add_rect(slide, Inches(0.6), top + Inches(0.18), ds, ds, T["accent_color"])
         add_textbox(
             slide,
-            {"left": Inches(0.85), "top": top, "width": bullet_width, "height": L["bullet_height"]},
+            {"left": Inches(0.85), "top": top, "width": bullet_width, "height": bullet_h},
             bullet, T["font_body"], T["font_size_body"], T["secondary_text"],
+            auto_size=True,
         )
     if imagen:
         _insert_image(slide, imagen)

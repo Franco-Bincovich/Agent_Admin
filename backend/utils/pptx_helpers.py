@@ -1,5 +1,6 @@
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
+from pptx.enum.text import MSO_AUTO_SIZE
 from pptx.util import Pt
 
 
@@ -11,12 +12,19 @@ def set_slide_background(slide, hex_color: str) -> None:
 
 
 def add_textbox(
-    slide, pos: dict, text: str, font: str, size: int, color: str, bold: bool = False
+    slide, pos: dict, text: str, font: str, size: int, color: str,
+    bold: bool = False, auto_size: bool = False
 ) -> None:
-    """Adds a formatted text box to the slide at the given position dict."""
+    """Adds a formatted text box at the given position dict.
+
+    When auto_size=True the font shrinks to fit if the wrapped text
+    exceeds the box height (MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE).
+    """
     txb = slide.shapes.add_textbox(pos["left"], pos["top"], pos["width"], pos["height"])
     tf = txb.text_frame
     tf.word_wrap = True
+    if auto_size:
+        tf.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
     p = tf.paragraphs[0]
     p.text = text
     if p.runs:

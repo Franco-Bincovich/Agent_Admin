@@ -43,13 +43,13 @@ LAYOUTS = {
         "banda_top_height": Inches(0.08),
         "titulo": {
             "left": Inches(0.6), "top": Inches(0.3),
-            "width": Inches(12.0), "height": Inches(0.8),
+            "width": Inches(12.0), "height": Inches(1.2),
         },
         "linea_titulo": {
-            "left": Inches(0.6), "top": Inches(1.1),
+            "left": Inches(0.6), "top": Inches(1.55),
             "width": Inches(4.0), "height": Inches(0.04),
         },
-        "bullets_start_y": Inches(1.4),
+        "bullets_start_y": Inches(1.75),
         "bullet_height": Inches(1.0),
         "bullet_dot_size": Inches(0.12),
     },
