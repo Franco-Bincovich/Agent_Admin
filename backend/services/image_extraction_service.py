@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import os
 import zipfile
 from pathlib import Path
 
@@ -49,15 +50,46 @@ def _extract_images_from_pdf(file_bytes: bytes) -> list[bytes]:
     return images
 
 
+def _emf_to_png(emf_bytes: bytes) -> bytes | None:
+    """
+    Convierte imagen EMF o WMF a PNG usando PyMuPDF.
+    Devuelve los bytes PNG, o None si la conversión falla.
+    """
+    try:
+        doc = fitz.open(stream=emf_bytes, filetype="emf")
+        page = doc[0]
+        mat = fitz.Matrix(150 / 72, 150 / 72)
+        pix = page.get_pixmap(matrix=mat)
+        png_bytes = pix.tobytes("png")
+        doc.close()
+        return png_bytes
+    except Exception:
+        return None
+
+
 def _extract_images_from_docx(file_bytes: bytes) -> list[bytes]:
-    """Extrae imágenes del directorio word/media/ dentro del ZIP de un DOCX."""
+    """
+    Extrae imágenes del directorio word/media/ dentro del ZIP de un DOCX.
+    Convierte EMF/WMF a PNG con PyMuPDF antes de incluirlos.
+    Descarta formatos no soportados por la API de Anthropic.
+    """
+    _SUPPORTED = {".png", ".jpg", ".jpeg", ".gif"}
+    _CONVERT = {".emf", ".wmf"}
     images: list[bytes] = []
     with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
         for name in zf.namelist():
-            if name.startswith("word/media/"):
-                img = zf.read(name)
-                if len(img) >= _MIN_IMAGE_BYTES:
-                    images.append(img)
+            if not name.startswith("word/media/"):
+                continue
+            ext = os.path.splitext(name)[1].lower()
+            img = zf.read(name)
+            if len(img) < _MIN_IMAGE_BYTES:
+                continue
+            if ext in _SUPPORTED:
+                images.append(img)
+            elif ext in _CONVERT:
+                png = _emf_to_png(img)
+                if png:
+                    images.append(png)
     return images
 
 
