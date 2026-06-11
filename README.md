@@ -1,14 +1,15 @@
-# Agent Admin — Plataforma de Generación de Documentos
+# Agent-Admin
 
-Plataforma web para generar presentaciones PPTX y documentos DOCX a partir de archivos fuente, usando IA (Claude) y plantillas visuales predefinidas.
+Plataforma interna de productividad con IA que genera presentaciones (PPTX + Gamma), documentos Word (DOCX), gestiona plantillas reutilizables y planifica proyectos con vistas Gantt a partir de cronogramas (MPP/XML/Excel), usando Claude como motor de generación.
 
 ## Requisitos
 
 - Python 3.11+
-- Node.js 20+
-- Cuenta en Supabase
-- API key de Anthropic
-- API key de Gamma (opcional)
+- Node.js 20+ (Next.js 16 + React 19)
+- Cuenta en Supabase (PostgreSQL + Storage + Auth)
+- API key de Anthropic (Claude Sonnet)
+- API key de Gamma (opcional — el pipeline PPTX funciona sin Gamma)
+- Cuenta en Vercel para deploy (frontend + backend serverless)
 
 ## Instalación
 
@@ -17,49 +18,28 @@ Plataforma web para generar presentaciones PPTX y documentos DOCX a partir de ar
 git clone <repo-url>
 cd Agent-Admin
 
-# 2. Configurar variables de entorno
-cp backend/.env.example backend/.env
-# Editar backend/.env con las credenciales reales
+# 2. Configurar variables de entorno (ver .env.example de cada lado)
+cp backend/.env.example backend/.env        # credenciales reales
+# frontend/.env.local con NEXT_PUBLIC_API_URL=http://localhost:8000
 
-# 3. Instalar dependencias backend
-cd backend
-pip install -r requirements.txt
+# 3. Instalar dependencias
+cd backend && pip install -r requirements.txt
+cd ../frontend && npm install
 
-# 3a. Instalar dependencias de desarrollo (tests)
-pip install -r requirements-dev.txt
-
-# 4. Instalar dependencias frontend
-cd ../frontend
-npm install
-
-# 5. Ejecutar migraciones en Supabase
-# Aplicar los archivos en backend/migrations/ en orden (001 → 007)
-# desde el SQL editor de Supabase o con la CLI de Supabase
+# 4. Aplicar migraciones en Supabase
+# Ejecutar los SQL de backend/migrations/ en orden (001 → 017)
+# desde el SQL editor de Supabase
 ```
-
-## Base de datos
-
-El schema se construye con migraciones versionadas en `backend/migrations/`. Ejecutar en orden en el SQL Editor de Supabase:
-
-| Archivo | Descripción |
-|---|---|
-| 001_create_usuarios.sql | Tabla base de usuarios: identidad, credenciales y rol |
-| 002_create_generaciones.sql | Tabla de generaciones de presentaciones (pipeline PPTX/Gamma) |
-| 003_create_admin.sql | Seed del primer usuario administrador del sistema |
-| 004_create_documentos.sql | Tabla de historial de documentos DOCX generados |
-| 005_add_username.sql | Agrega columna `username` a usuarios para login sin exponer email |
-| 006_demo_user.sql | Inserta usuario de demo y actualiza credenciales del admin |
-| 007_create_refresh_tokens.sql | Tabla de refresh tokens hasheados para rotación obligatoria |
 
 ## Cómo correr
 
 ```bash
-# Backend (desde backend/)
+# Backend (desde backend/) — http://localhost:8000
 uvicorn main:app --reload
 
-# Frontend (desde frontend/)
+# Frontend (desde frontend/) — http://localhost:3000
 npm run dev
 
-# Tests
+# Tests (desde backend/)
 pytest tests/test_critical_flows.py -v
 ```

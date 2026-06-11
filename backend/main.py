@@ -10,10 +10,10 @@ from slowapi.errors import RateLimitExceeded
 from config.settings import get_settings
 from middleware.auth import register_auth_middleware
 from middleware.error_handler import register_error_handlers
-from routers import activity, auth, document_templates, documentos, generations, profile, users, video
+from routers import activity, auth, document_templates, documentos, generations, planificacion, profile, users, video
 from utils.limiter import limiter
 from utils.logger import log
-from repositories import generation_repo, documento_repo, documento_mutations_repo
+from repositories import generation_repo, documento_repo, documento_mutations_repo, planificacion_repo
 
 settings = get_settings()
 
@@ -52,6 +52,13 @@ async def _reap_stalled() -> None:
             log.warning(
                 "Documento colgado marcado como error",
                 extra={"documento_id": doc["id"]}
+            )
+        stalled_plans = await planificacion_repo.find_stalled(older_than_minutes=30)
+        for plan in (stalled_plans.data or []):
+            await planificacion_repo.update_error(plan["id"])
+            log.warning(
+                "Planificación colgada marcada como error",
+                extra={"proyecto_id": plan["id"]}
             )
     except Exception as e:
         log.error("Error en reaper", extra={"error": str(e)})
@@ -135,6 +142,7 @@ def create_app() -> FastAPI:
     app.include_router(activity.router, prefix="/api/v1/activity", tags=["activity"])
     app.include_router(video.router, prefix="/api/v1/video", tags=["video"])
     app.include_router(document_templates.router)
+    app.include_router(planificacion.router, prefix="/api/v1/planificacion", tags=["planificacion"])
 
     @app.get("/health", include_in_schema=False)
     async def health():

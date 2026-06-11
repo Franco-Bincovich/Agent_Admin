@@ -165,6 +165,61 @@ export interface UpdateTemplatePayload {
   is_default: boolean
 }
 
+// ── Planificación ────────────────────────────────────────────────────────────
+
+export type ProyectoEstado   = 'procesando' | 'listo' | 'error';
+export type ProyectoPrioridad = 'alta' | 'media' | 'baja';
+export type ProyectoOrigen   = 'excel' | 'mpp' | 'pdf';
+
+export interface Proyecto {
+  id: string;
+  usuario_id: string;
+  nombre: string;
+  expediente: string | null;
+  prioridad: ProyectoPrioridad | null;
+  origen: ProyectoOrigen | null;
+  estado: ProyectoEstado;
+  error_detalle: string | null;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+  creado_en: string;
+  actualizado_en: string;
+}
+
+export interface AreaResponse {
+  id: string;
+  nombre: string;
+  cap_wbs: string | null;
+  color: string | null;
+  responsable_nombre: string | null;
+  responsable_telefono: string | null;
+  responsable_email: string | null;
+  disponibilidad_horas: number | null;
+  cantidad_empleados: number | null;
+}
+
+export interface TareaResponse {
+  id: string;
+  wbs: string;
+  nombre: string;
+  nivel: number;
+  es_resumen: boolean;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+  fecha_estimada: boolean;
+  confianza: 'alta' | 'media' | 'baja';
+  predecesoras: string | null;
+  completada: boolean;
+  completada_en: string | null;
+  completada_por: string | null;
+  area_id: string | null;
+}
+
+export interface ProyectoDetalleResponse extends Proyecto {
+  areas: AreaResponse[];
+  tareas: TareaResponse[];
+}
+
 // ── Video agent ───────────────────────────────────────────────────────────────
 
 export type VideoJobStatus = 'pending' | 'processing' | 'completed' | 'failed';
