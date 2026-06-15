@@ -38,8 +38,9 @@ async def update_resultado(
     slides_count: int,
     outline: dict,
     gamma_warning: str | None = None,
+    tabla_warning: str | None = None,
 ) -> dict:
-    """Actualiza a estado='listo' y persiste pptx_url, gamma_url, pptx_gamma_url, slides_count, outline y gamma_warning."""
+    """Actualiza a estado='listo' y persiste urls, slides_count, outline, gamma_warning y tabla_warning."""
     response = await asyncio.to_thread(
         lambda: _db()
         .update({
@@ -50,6 +51,7 @@ async def update_resultado(
             "slides_count": slides_count,
             "outline": outline,
             "gamma_warning": gamma_warning,
+            "tabla_warning": tabla_warning,
         })
         .eq("id", str(generation_id))
         .execute()

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import os
+import unicodedata
 import zipfile
 from pathlib import Path
 
@@ -138,13 +139,14 @@ def _extract_pages_from_docx_as_images(file_bytes: bytes) -> list[bytes]:
 
 def _extract_images_from_docx(file_bytes: bytes) -> list[bytes]:
     """
-    Combines rasterized pages and inline images from a DOCX.
+    Extracts inline images (PNG/JPG/GIF) from a DOCX for use as slide illustrations.
 
-    Pages are returned first so Claude reads table/chart content before
-    decorative inline images. Inline images are filtered to PNG/JPG/JPEG/GIF.
+    Returns only the images embedded in word/media/ — rasterized document pages are
+    intentionally excluded. Pages travel via extract_docx_pages_as_images() →
+    imagenes_contenido and are used solely as vision input for Claude to read tables.
+    Mixing them into this pool caused raw document scans to appear inside slides.
     """
     _SUPPORTED = {".png", ".jpg", ".jpeg", ".gif"}
-    pages = _extract_pages_from_docx_as_images(file_bytes)
     inline: list[bytes] = []
     with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
         for name in zf.namelist():
@@ -156,7 +158,7 @@ def _extract_images_from_docx(file_bytes: bytes) -> list[bytes]:
             img = zf.read(name)
             if len(img) >= _MIN_IMAGE_BYTES:
                 inline.append(img)
-    return pages + inline
+    return inline
 
 
 def _extract_images_from_xlsx(file_bytes: bytes) -> list[bytes]:
@@ -184,3 +186,88 @@ def extract_docx_pages_as_images(file_bytes: bytes) -> list[bytes]:
     for decorative use in slides (assigned via imagen_idx in the outline).
     """
     return _extract_pages_from_docx_as_images(file_bytes)
+
+
+def extract_emf_text_from_docx(file_bytes: bytes) -> str:
+    """
+    Extrae texto de imágenes EMF/WMF embebidas en un DOCX.
+
+    Los EMF almacenan texto en UTF-16-LE. Esta función lee los bytes
+    directamente sin dependencias externas, recuperando el contenido
+    de tablas que no aparecen en la extracción de texto normal (mammoth).
+
+    Returns:
+        Texto extraído de todos los EMF del documento, concatenado.
+        String vacío si no hay EMF o si la extracción falla.
+    """
+    resultado = []
+    try:
+        with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+            emf_files = [
+                name for name in zf.namelist()
+                if name.startswith("word/media/")
+                and name.lower().endswith((".emf", ".wmf"))
+            ]
+            for name in sorted(emf_files):
+                emf_bytes = zf.read(name)
+                texto = _leer_texto_utf16_emf(emf_bytes)
+                if texto.strip():
+                    resultado.append(texto)
+    except Exception:
+        pass
+    return "\n".join(resultado)
+
+
+def _leer_texto_utf16_emf(emf_bytes: bytes) -> str:
+    """
+    Lee texto en codificación UTF-16-LE de un archivo EMF/WMF.
+
+    Decodifica cada par de bytes como code point UTF-16-LE y conserva los
+    caracteres imprimibles (cp >= 0x20, sin controles ni separadores raros),
+    recuperando acentos y ñ además del ASCII. Los bytes de estructura EMF
+    (coordenadas, tamaños) decodifican a símbolos sueltos o runs cortos que
+    se descartan por los guardas anti-ruido: cada run conserva solo si tiene
+    >=3 caracteres, al menos 2 letras latinas y mayoría de letras latinas
+    (ratio >= 0.5). Se cuentan solo letras latinas (no CJK ni símbolos) para
+    que ampliar el rango a Unicode imprimible no deje pasar basura binaria
+    (bytes de estructura EMF que decodifican a ideogramas u otros signos).
+
+    El resultado se emite como UNA celda/run por línea, precedido de un
+    encabezado con el conteo. Son celdas/runs sueltas, NO filas exactas: la
+    grilla original (qué celda pertenece a qué fila) no es recuperable del EMF
+    por este método y queda como deuda futura (parser de grilla real).
+
+    Returns:
+        Bloque '[TABLA: N celdas detectadas ...]' seguido de una celda por
+        línea, o string vacío si no se detecta ninguna celda con texto.
+    """
+    runs: list[str] = []
+    current: list[str] = []
+
+    def _flush() -> None:
+        s = ''.join(current).strip()
+        latinas = sum(
+            unicodedata.name(c, "").startswith("LATIN") for c in s
+        )
+        if len(s) >= 3 and latinas >= 2 and latinas / len(s) >= 0.5:
+            runs.append(s)
+
+    i = 0
+    while i < len(emf_bytes) - 1:
+        cp = int.from_bytes(emf_bytes[i:i + 2], "little")
+        ch = chr(cp)
+        if cp >= 0x20 and ch.isprintable():
+            current.append(ch)
+        else:
+            _flush()
+            current = []
+        i += 2
+    _flush()
+
+    if not runs:
+        return ""
+    encabezado = (
+        f"[TABLA: {len(runs)} celdas detectadas "
+        "(celdas/runs sueltas, no filas exactas)]"
+    )
+    return encabezado + "\n" + "\n".join(runs)

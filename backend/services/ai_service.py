@@ -11,7 +11,7 @@ from config.settings import get_settings
 from integrations.anthropic_client import get_anthropic_client
 from utils.errors import AppError, ErrorCode
 from utils.logger import log
-from utils.outline_validator import validate_outline
+from utils.outline_validator import check_section_coverage, check_table_coverage, validate_outline
 
 MAX_TOKENS = 4000
 
@@ -64,10 +64,20 @@ async def _call_claude_for_json(
         content.append({
             "type": "text",
             "text": (
-                "Las siguientes imágenes son páginas del documento fuente. "
-                "Leé su contenido completo — incluyen tablas y datos que no "
-                "están en el texto extraído. Usá esta información para generar "
-                "los slides correspondientes."
+                "Las siguientes imágenes son páginas escaneadas del documento fuente. "
+                "INSTRUCCIÓN CRÍTICA: estas imágenes contienen tablas con datos reales "
+                "que NO están en el texto extraído. Tenés que:\n"
+                "1. Leer CADA celda de CADA tabla visible en las imágenes\n"
+                "2. Extraer toda la información: nombres, estados, fechas, responsables, "
+                "   próximos pasos y observaciones\n"
+                "3. Generar slides específicos para cada tabla encontrada usando "
+                "   el contenido real de las celdas — no resúmenes genéricos\n"
+                "4. Si una tabla tiene columnas como 'Proyecto/Área', 'Estado Actual', "
+                "   'Próximos Pasos', incluir esos datos concretos en los bullets\n"
+                "5. Preservar nombres propios, fechas exactas y estados específicos "
+                "   tal como aparecen en la tabla\n"
+                "No omitas ninguna tabla visible. Cada tabla es una sección del "
+                "documento que necesita su propio slide."
             )
         })
         for img_bytes in imagenes_contenido:
@@ -150,6 +160,8 @@ async def generate_outline(
     prompt: str,
     imagenes: list[bytes] | None = None,
     imagenes_contenido: list[bytes] | None = None,
+    cantidad_slides: int = 10,
+    emf_text: str | None = None,
 ) -> dict:
     """
     Llama a Claude con el prompt y retorna el outline como dict JSON.
@@ -165,6 +177,11 @@ async def generate_outline(
         imagenes_contenido: Páginas rasterizadas del DOCX fuente para lectura
             de contenido visual (tablas, datos). Se envían antes del prompt
             como contexto de datos, no como ilustraciones.
+        cantidad_slides: Cantidad de slides pedida por el usuario. Se propaga
+            a validate_outline para que el rango aceptado (5 a ceil*1.5)
+            respete el valor real y no el default fijo de 10.
+        emf_text: Texto crudo de tablas EMF (celdas por línea). Si está presente,
+            se mide cobertura de entidades nombradas en modo WARNING.
 
     Returns:
         Dict con estructura {titulo_presentacion: str, slides: list}.
@@ -183,7 +200,23 @@ async def generate_outline(
             if not match:
                 raise ValueError("sin JSON en la respuesta")
             result = json.loads(match.group())
-            validate_outline(result)
+            validate_outline(result, cantidad_slides)
+            # Mejora B (modo observación): mide cobertura de secciones numeradas del
+            # cuerpo. El texto fuente vive embebido en el prompt; lo aíslo del bloque
+            # CONTENIDO FUENTE para no contar las listas numeradas del propio prompt.
+            fuente_match = re.search(
+                r"## CONTENIDO FUENTE\n(.*?)\n\n## OBJETIVO", prompt, re.DOTALL
+            )
+            if fuente_match:
+                faltantes = check_section_coverage(fuente_match.group(1), result)
+                if faltantes:
+                    log.warning(f"outline.coverage | secciones_faltantes={faltantes}")
+            # Mejora B para tablas EMF: cobertura de entidades nombradas (modo
+            # observación). emf_text crudo evita depender del prompt sanitizado.
+            if emf_text:
+                faltantes_tabla = check_table_coverage(emf_text, result)
+                if faltantes_tabla:
+                    log.warning(f"outline.table_coverage | faltantes={faltantes_tabla}")
             slides_con_imagen = [
                 i for i, s in enumerate(result.get("slides", []))
                 if s.get("imagen_idx") is not None

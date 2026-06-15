@@ -1,4 +1,5 @@
 import io
+import zipfile
 from pathlib import Path
 
 import fitz
@@ -7,6 +8,7 @@ import openpyxl
 from pptx import Presentation
 
 from utils.errors import AppError, ErrorCode
+from utils.logger import log
 
 MIN_TEXT_LENGTH = 50
 
@@ -76,6 +78,25 @@ _EXTRACTORS = {
 }
 
 
+def _docx_has_embedded_media(file_bytes: bytes) -> bool:
+    """
+    Indica si un DOCX trae imágenes o EMF/WMF embebidos en word/media/.
+
+    Sirve para distinguir un DOCX EMF-heavy (todo el contenido en imágenes,
+    texto plano escaso) de un archivo realmente vacío. El primero debe seguir
+    al pipeline para entrar por el canal de visión; el segundo no.
+
+    Returns:
+        True si existe al menos un recurso bajo word/media/. False si el ZIP
+        no tiene media o no puede abrirse.
+    """
+    try:
+        with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+            return any(name.startswith("word/media/") for name in zf.namelist())
+    except Exception:
+        return False
+
+
 def extract_text_from_file(filename: str, file_bytes: bytes) -> str:
     """
     Extrae texto plano de un archivo, detectando el tipo por extensión.
@@ -92,7 +113,9 @@ def extract_text_from_file(filename: str, file_bytes: bytes) -> str:
 
     Raises:
         AppError: code 'UNSUPPORTED_FORMAT', status 400 si la extensión no está soportada.
-        AppError: code 'EMPTY_FILE', status 422 si el texto tiene menos de 50 caracteres.
+        AppError: code 'EMPTY_FILE', status 422 si el texto tiene menos de 50 caracteres,
+            salvo que sea un .docx con media embebida (EMF-heavy): en ese caso se deja
+            pasar para que el canal de visión procese las imágenes.
     """
     ext = Path(filename).suffix.lower()
     extractor = _EXTRACTORS.get(ext)
@@ -104,6 +127,12 @@ def extract_text_from_file(filename: str, file_bytes: bytes) -> str:
         )
     text = extractor(file_bytes)
     if len(text.strip()) < MIN_TEXT_LENGTH:
+        if ext == ".docx" and _docx_has_embedded_media(file_bytes):
+            log.info(
+                "extract.docx_emf_heavy | texto plano escaso, sigue por "
+                f"canal de visión | filename={filename} | chars={len(text.strip())}"
+            )
+            return text.strip()
         raise AppError(
             "El archivo no contiene texto suficiente.",
             ErrorCode.EMPTY_FILE,

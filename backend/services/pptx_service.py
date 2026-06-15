@@ -6,12 +6,7 @@ from typing import Optional
 from pptx import Presentation
 from pptx.util import Cm, Inches
 
-from services.pptx_builders import (
-    _build_cierre,
-    _build_contenido,
-    _build_destacado,
-    _build_portada,
-)
+from services.pptx_layouts import BUILDERS
 from templates import corporativo_neutro, ejecutivo_oscuro, profesional_claro
 from utils.errors import AppError, ErrorCode
 
@@ -59,12 +54,6 @@ def generate_pptx(
     if template_name not in TEMPLATES:
         raise AppError("Template no encontrado", ErrorCode.TEMPLATE_NOT_FOUND, 400)
     tpl = TEMPLATES[template_name]
-    _builders = {
-        "portada": _build_portada,
-        "contenido": _build_contenido,
-        "destacado": _build_destacado,
-        "cierre": _build_cierre,
-    }
     _img_slides = {"contenido", "destacado"}
     try:
         prs = Presentation()
@@ -77,7 +66,7 @@ def generate_pptx(
                 img_map[i] = img
         for idx, slide_data in enumerate(outline["slides"]):
             slide = prs.slides.add_slide(blank_layout)
-            builder = _builders.get(slide_data["tipo"])
+            builder = BUILDERS.get(slide_data["tipo"])
             if builder:
                 if slide_data["tipo"] in _img_slides:
                     imagen_para_slide = None

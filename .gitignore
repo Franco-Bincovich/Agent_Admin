@@ -5,3 +5,12 @@ backend/.env
 .next/
 node_modules/
 .claude/settings.local.json
+
+# Artefactos de QA / scratch (no commitear)
+scratch/
+backend/test_*.py
+backend/gen_test_layouts.py
+backend/test_*.pptx
+backend/e2e_*.pptx
+backend/fase*.pptx
+backend/qa_*.pptx

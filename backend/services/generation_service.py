@@ -7,7 +7,7 @@ from repositories import generation_repo
 from services.ai_service import generate_outline
 from services.generation_storage import _upload_pptx
 from services.prompt_builder import build_prompt
-from services.image_extraction_service import extract_images_from_file, extract_docx_pages_as_images
+from services.image_extraction_service import extract_images_from_file, extract_docx_pages_as_images, extract_emf_text_from_docx
 from services.pptx_service import generate_pptx
 from utils.errors import AppError, ErrorCode
 from utils.logger import log
@@ -116,6 +116,21 @@ async def run_generation(
                             f"paginas={len(pages)} | id={generation_id}"
                         )
 
+        # Extraer texto de tablas EMF embebidas en DOCX. Se preserva tal cual
+        # (encabezado de conteo + una celda por línea); sanitize_for_prompt no
+        # toca los newlines, así que la estructura llega intacta al prompt.
+        tablas_emf = ""
+        if archivo_bytes:
+            for nombre, contenido in archivo_bytes:
+                if nombre.lower().endswith(".docx"):
+                    emf_text = extract_emf_text_from_docx(contenido)
+                    if emf_text:
+                        tablas_emf += (("\n\n" if tablas_emf else "") + emf_text)
+                        texto_extraido += f"\n\n[TABLAS DEL DOCUMENTO]\n{emf_text}"
+                        log.info(
+                            f"emf.text | archivo={nombre} | chars={len(emf_text)}"
+                        )
+
         prompt = build_prompt(
             texto_extraido, objetivo, informacion_adicional,
             template, tono, audiencia,
@@ -125,6 +140,8 @@ async def run_generation(
             prompt,
             imagenes=imagenes if imagenes else None,
             imagenes_contenido=paginas_docx if paginas_docx else None,
+            cantidad_slides=cantidad_slides,
+            emf_text=tablas_emf if tablas_emf else None,
         )
 
         pptx_url: str | None = None
@@ -153,9 +170,13 @@ async def run_generation(
             except AppError as exc:
                 log.warning(f"gamma.skipped | id={generation_id} | error={exc}")
 
+        tabla_warning = (
+            "Este documento tenía tablas como imagen; revisá que todas las "
+            "filas estén en la presentación." if tablas_emf else None
+        )
         await generation_repo.update_resultado(
             generation_id, pptx_url, gamma_url, pptx_gamma_url,
-            len(outline["slides"]), outline, gamma_warning,
+            len(outline["slides"]), outline, gamma_warning, tabla_warning,
         )
         log.info(f"generation.completed | id={generation_id}")
     except Exception as exc:
