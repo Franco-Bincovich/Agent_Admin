@@ -4,7 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Request, Re
 
 from controllers import planificacion_controller
 from middleware.auth import get_current_user
-from schemas.planificacion import AreaAsignacionRequest, AreaCreateRequest, AreaResponse, AreaUpdateRequest, MarcarTareaRequest, ProyectoDetalleResponse, ProyectoResponse, TareaResponse
+from schemas.planificacion import ActualizarProgresoRequest, AreaAsignacionRequest, AreaCreateRequest, AreaResponse, AreaUpdateRequest, MarcarTareaRequest, ProyectoDetalleResponse, ProyectoResponse, TareaResponse
 from utils.limiter import limiter
 
 router = APIRouter()
@@ -21,12 +21,8 @@ async def crear_proyecto(
     prioridad: str = Form(default="media"),
     current_user: dict = Depends(get_current_user),
 ) -> ProyectoResponse:
-    """
-    Importa un cronograma y crea un proyecto de planificación en background.
-
-    Raises:
-        400: Formato no soportado · 401: No autenticado · 429: Rate limit
-    """
+    """Importa un cronograma y crea un proyecto de planificación en background.
+    Raises: 400 formato no soportado · 401 no autenticado · 429 rate limit."""
     return await planificacion_controller.crear_proyecto(
         background_tasks, archivo, nombre, expediente, prioridad, current_user
     )
@@ -46,12 +42,8 @@ async def get_proyecto(
     proyecto_id: UUID,
     current_user: dict = Depends(get_current_user),
 ) -> ProyectoResponse:
-    """
-    Retorna el estado de un proyecto. Endpoint de polling hasta estado != 'procesando'.
-
-    Raises:
-        401: No autenticado · 404: No encontrado o sin acceso
-    """
+    """Retorna el estado de un proyecto; endpoint de polling hasta estado != 'procesando'.
+    Raises: 401 no autenticado · 404 no encontrado o sin acceso."""
     proyecto = await planificacion_controller.obtener_proyecto(str(proyecto_id), current_user)
     return ProyectoResponse(**proyecto)
 
@@ -61,12 +53,8 @@ async def get_proyecto_detalle(
     proyecto_id: UUID,
     current_user: dict = Depends(get_current_user),
 ) -> ProyectoDetalleResponse:
-    """
-    Retorna proyecto + áreas + tareas. Endpoint principal para las visuales.
-
-    Raises:
-        401: No autenticado · 404: No encontrado o sin acceso
-    """
+    """Retorna proyecto + áreas + tareas; endpoint principal para las visuales.
+    Raises: 401 no autenticado · 404 no encontrado o sin acceso."""
     return await planificacion_controller.obtener_detalle(str(proyecto_id), current_user)
 
 
@@ -76,12 +64,8 @@ async def crear_area(
     payload: AreaCreateRequest,
     current_user: dict = Depends(get_current_user),
 ) -> AreaResponse:
-    """
-    Crea un área manualmente en un proyecto existente.
-
-    Raises:
-        401: No autenticado · 404: Proyecto no encontrado o sin acceso
-    """
+    """Crea un área manualmente en un proyecto existente.
+    Raises: 401 no autenticado · 404 proyecto no encontrado o sin acceso."""
     resultado = await planificacion_controller.crear_area(str(proyecto_id), payload, current_user)
     return AreaResponse(**resultado)
 
@@ -93,12 +77,8 @@ async def actualizar_area(
     payload: AreaUpdateRequest,
     current_user: dict = Depends(get_current_user),
 ) -> AreaResponse:
-    """
-    Actualiza datos de contacto y disponibilidad de un área.
-
-    Raises:
-        401: No autenticado · 404: Proyecto o área no encontrada / sin acceso
-    """
+    """Actualiza datos de contacto y disponibilidad de un área.
+    Raises: 401 no autenticado · 404 proyecto o área no encontrada / sin acceso."""
     resultado = await planificacion_controller.actualizar_area(
         str(proyecto_id), str(area_id), payload.model_dump(exclude_none=True), current_user
     )
@@ -112,14 +92,24 @@ async def marcar_tarea(
     payload: MarcarTareaRequest,
     current_user: dict = Depends(get_current_user),
 ) -> TareaResponse:
-    """
-    Marca o desmarca una tarea como completada.
-
-    Raises:
-        401: No autenticado · 404: Proyecto o tarea no encontrada / sin acceso
-    """
+    """Marca o desmarca una tarea como completada.
+    Raises: 401 no autenticado · 404 proyecto o tarea no encontrada / sin acceso."""
     return await planificacion_controller.marcar_tarea(
         str(proyecto_id), str(tarea_id), payload.completada, current_user
+    )
+
+
+@router.patch("/{proyecto_id}/tareas/{tarea_id}/progreso", response_model=TareaResponse)
+async def actualizar_progreso(
+    proyecto_id: UUID,
+    tarea_id: UUID,
+    payload: ActualizarProgresoRequest,
+    current_user: dict = Depends(get_current_user),
+) -> TareaResponse:
+    """Actualiza el progreso porcentual de una tarea (0, 25, 50, 75 o 100).
+    Raises: 401 no autenticado · 404 proyecto o tarea no encontrada / sin acceso."""
+    return await planificacion_controller.actualizar_progreso(
+        str(proyecto_id), str(tarea_id), payload.progreso, current_user
     )
 
 
@@ -130,12 +120,8 @@ async def asignar_area_tarea(
     payload: AreaAsignacionRequest,
     current_user: dict = Depends(get_current_user),
 ) -> TareaResponse:
-    """
-    Asigna o desasigna un área a una tarea individual.
-
-    Raises:
-        401: No autenticado · 404: Proyecto o tarea no encontrada / sin acceso
-    """
+    """Asigna o desasigna un área a una tarea individual.
+    Raises: 401 no autenticado · 404 proyecto o tarea no encontrada / sin acceso."""
     resultado = await planificacion_controller.asignar_area_tarea(
         str(proyecto_id), str(tarea_id), payload.area_id, current_user
     )
@@ -147,11 +133,7 @@ async def eliminar_proyecto(
     proyecto_id: UUID,
     current_user: dict = Depends(get_current_user),
 ) -> Response:
-    """
-    Elimina un proyecto de planificación.
-
-    Raises:
-        401: No autenticado · 404: No encontrado o sin acceso
-    """
+    """Elimina un proyecto de planificación.
+    Raises: 401 no autenticado · 404 no encontrado o sin acceso."""
     await planificacion_controller.eliminar_proyecto(str(proyecto_id), current_user)
     return Response(status_code=204)

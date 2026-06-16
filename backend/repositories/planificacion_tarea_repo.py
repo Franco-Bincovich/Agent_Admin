@@ -91,20 +91,18 @@ async def update_area(tarea_id: str, area_id: str | None) -> dict | None:
     return response.data[0] if response.data else None
 
 
-async def marcar_tarea(
+async def actualizar_avance(
     tarea_id: str,
+    progreso: int,
     completada: bool,
     completada_en: str | None,
     completada_por: str | None,
 ) -> dict | None:
-    """
-    Actualiza el estado de completada de una tarea.
-    completada_en y completada_por deben ser None cuando completada=False.
-    Retorna None si la tarea no existe.
-    """
+    """Actualiza progreso y las columnas de completada sincronizadas. Retorna None si la tarea no existe."""
     response = await asyncio.to_thread(
         lambda: _db()
         .update({
+            "progreso": progreso,
             "completada": completada,
             "completada_en": completada_en,
             "completada_por": completada_por,

@@ -1,11 +1,7 @@
-from __future__ import annotations
-
-from datetime import datetime, timezone
 from pathlib import Path
 
 from repositories import planificacion_area_repo, planificacion_repo, planificacion_tarea_repo
 from services.planificacion_mpp_adapter import parse_cronograma
-from utils.errors import AppError
 from utils.logger import log
 
 _ORIGEN_MAP = {".xml": "excel", ".mpp": "mpp"}
@@ -129,45 +125,4 @@ async def crear_area(
         responsable_email=responsable_email,
         disponibilidad_horas=disponibilidad_horas,
         cantidad_empleados=cantidad_empleados,
-    )
-
-
-async def marcar_tarea(
-    tarea_id: str,
-    proyecto_id: str,
-    completada: bool,
-    usuario_id: str,
-) -> dict | None:
-    """
-    Marca o desmarca una tarea como completada, verificando pertenencia al proyecto.
-
-    Confirma que tarea_id existe dentro de proyecto_id antes de escribir. Si no
-    existe o pertenece a otro proyecto, lanza 404. Si completada=True, registra
-    el timestamp UTC y el UUID del usuario; si False, limpia ambos campos.
-
-    Args:
-        tarea_id: UUID de la tarea a actualizar.
-        proyecto_id: UUID del proyecto al que debe pertenecer la tarea.
-        completada: Nuevo estado de completitud.
-        usuario_id: UUID del usuario autenticado que realiza la acción.
-
-    Returns:
-        El dict de la fila actualizada, o None si el repo no devuelve datos.
-
-    Raises:
-        AppError(NOT_FOUND, 404): Si la tarea no existe o no pertenece al proyecto.
-    """
-    tarea = await planificacion_tarea_repo.find_by_id_and_proyecto(tarea_id, proyecto_id)
-    if tarea is None:
-        raise AppError("Tarea no encontrada", "NOT_FOUND", 404)
-    completada_en: str | None = None
-    completada_por: str | None = None
-    if completada:
-        completada_en = datetime.now(timezone.utc).isoformat()
-        completada_por = usuario_id
-    return await planificacion_tarea_repo.marcar_tarea(
-        tarea_id=tarea_id,
-        completada=completada,
-        completada_en=completada_en,
-        completada_por=completada_por,
     )
