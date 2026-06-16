@@ -175,6 +175,11 @@ class ActualizarProgresoRequest(BaseModel):
     progreso: Literal[0, 25, 50, 75, 100]
 
 
+class ReprogramarTareaRequest(BaseModel):
+    fecha_inicio: str
+    fecha_fin: str
+
+
 class AreaAsignacionRequest(BaseModel):
     area_id: str | None = None
 

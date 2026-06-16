@@ -111,3 +111,26 @@ async def actualizar_avance(
         .execute()
     )
     return response.data[0] if response.data else None
+
+
+async def reprogramar_tarea(
+    tarea_id: str,
+    fecha_inicio: str,
+    fecha_fin: str,
+    fecha_inicio_original: str | None,
+    fecha_fin_original: str | None,
+) -> dict | None:
+    """Actualiza las fechas de una tarea y la marca como reprogramada. Las fechas originales solo se pasan con valor en la primera reprogramación. Retorna None si la tarea no existe."""
+    response = await asyncio.to_thread(
+        lambda: _db()
+        .update({
+            "fecha_inicio": fecha_inicio,
+            "fecha_fin": fecha_fin,
+            "fecha_inicio_original": fecha_inicio_original,
+            "fecha_fin_original": fecha_fin_original,
+            "reprogramada": True,
+        })
+        .eq("id", str(tarea_id))
+        .execute()
+    )
+    return response.data[0] if response.data else None

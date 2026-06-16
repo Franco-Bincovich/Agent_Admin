@@ -5,7 +5,7 @@ from fastapi import BackgroundTasks, UploadFile
 from repositories import planificacion_area_repo, planificacion_repo, planificacion_tarea_repo
 from schemas.planificacion import AreaCreateRequest, ProyectoDetalleResponse, ProyectoResponse, TareaResponse
 from services.planificacion_service import crear_area as service_crear_area, run_importacion
-from services.planificacion_tarea_service import actualizar_progreso as service_actualizar_progreso, marcar_tarea as service_marcar_tarea
+from services.planificacion_tarea_service import actualizar_progreso as service_actualizar_progreso, marcar_tarea as service_marcar_tarea, reprogramar_tarea as service_reprogramar_tarea
 from services.planificacion_storage import upload_cronograma
 from utils.errors import AppError
 
@@ -96,6 +96,23 @@ async def actualizar_progreso(
     if proyecto["usuario_id"] != current_user["sub"]:
         raise AppError("No encontrado", "NOT_FOUND", 404)
     resultado = await service_actualizar_progreso(tarea_id, proyecto_id, progreso, current_user["sub"])
+    return TareaResponse(**resultado)
+
+
+async def reprogramar_tarea(
+    proyecto_id: str,
+    tarea_id: str,
+    fecha_inicio: str,
+    fecha_fin: str,
+    current_user: dict,
+) -> TareaResponse:
+    """Reprograma las fechas de una tarea verificando ownership del proyecto. Verifica ownership (404 si no existe o no es del usuario)."""
+    proyecto = await planificacion_repo.find_by_id(proyecto_id)
+    if proyecto is None:
+        raise AppError("No encontrado", "NOT_FOUND", 404)
+    if proyecto["usuario_id"] != current_user["sub"]:
+        raise AppError("No encontrado", "NOT_FOUND", 404)
+    resultado = await service_reprogramar_tarea(tarea_id, proyecto_id, fecha_inicio, fecha_fin)
     return TareaResponse(**resultado)
 
 

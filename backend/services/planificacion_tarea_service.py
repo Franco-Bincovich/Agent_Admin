@@ -51,3 +51,28 @@ async def actualizar_progreso(
         completada_en=completada_en,
         completada_por=completada_por,
     )
+
+
+async def reprogramar_tarea(
+    tarea_id: str,
+    proyecto_id: str,
+    fecha_inicio: str,
+    fecha_fin: str,
+) -> dict:
+    """Actualiza las fechas de una tarea preservando el plan base si ya fue reprogramada. Lanza 404 si no existe o no pertenece al proyecto."""
+    tarea = await planificacion_tarea_repo.find_by_id_and_proyecto(tarea_id, proyecto_id)
+    if tarea is None:
+        raise AppError("Tarea no encontrada", "NOT_FOUND", 404)
+    if not tarea["reprogramada"]:
+        fecha_inicio_original = tarea["fecha_inicio"]
+        fecha_fin_original = tarea["fecha_fin"]
+    else:
+        fecha_inicio_original = tarea["fecha_inicio_original"]
+        fecha_fin_original = tarea["fecha_fin_original"]
+    return await planificacion_tarea_repo.reprogramar_tarea(
+        tarea_id=tarea_id,
+        fecha_inicio=fecha_inicio,
+        fecha_fin=fecha_fin,
+        fecha_inicio_original=fecha_inicio_original,
+        fecha_fin_original=fecha_fin_original,
+    )

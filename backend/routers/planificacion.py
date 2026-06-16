@@ -4,7 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Request, Re
 
 from controllers import planificacion_controller
 from middleware.auth import get_current_user
-from schemas.planificacion import ActualizarProgresoRequest, AreaAsignacionRequest, AreaCreateRequest, AreaResponse, AreaUpdateRequest, MarcarTareaRequest, ProyectoDetalleResponse, ProyectoResponse, TareaResponse
+from schemas.planificacion import ActualizarProgresoRequest, AreaAsignacionRequest, AreaCreateRequest, AreaResponse, AreaUpdateRequest, MarcarTareaRequest, ProyectoDetalleResponse, ProyectoResponse, ReprogramarTareaRequest, TareaResponse
 from utils.limiter import limiter
 
 router = APIRouter()
@@ -110,6 +110,20 @@ async def actualizar_progreso(
     Raises: 401 no autenticado · 404 proyecto o tarea no encontrada / sin acceso."""
     return await planificacion_controller.actualizar_progreso(
         str(proyecto_id), str(tarea_id), payload.progreso, current_user
+    )
+
+
+@router.patch("/{proyecto_id}/tareas/{tarea_id}/reprogramar", response_model=TareaResponse)
+async def reprogramar_tarea(
+    proyecto_id: UUID,
+    tarea_id: UUID,
+    payload: ReprogramarTareaRequest,
+    current_user: dict = Depends(get_current_user),
+) -> TareaResponse:
+    """Actualiza las fechas de una tarea; registra las originales en la primera reprogramación.
+    Raises: 401 no autenticado · 404 proyecto o tarea no encontrada / sin acceso."""
+    return await planificacion_controller.reprogramar_tarea(
+        str(proyecto_id), str(tarea_id), payload.fecha_inicio, payload.fecha_fin, current_user
     )
 
 
