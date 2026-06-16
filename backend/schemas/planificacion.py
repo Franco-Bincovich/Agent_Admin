@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -153,17 +154,25 @@ class TareaResponse(BaseModel):
     es_resumen: bool
     fecha_inicio: str | None = None
     fecha_fin: str | None = None
+    fecha_inicio_original: str | None = None
+    fecha_fin_original: str | None = None
     fecha_estimada: bool
     confianza: str
     predecesoras: str | None = None
     completada: bool
     completada_en: str | None = None
     completada_por: str | None = None
+    progreso: int
+    reprogramada: bool
     creado_en: str
 
 
 class MarcarTareaRequest(BaseModel):
     completada: bool
+
+
+class ActualizarProgresoRequest(BaseModel):
+    progreso: Literal[0, 25, 50, 75, 100]
 
 
 class AreaAsignacionRequest(BaseModel):
