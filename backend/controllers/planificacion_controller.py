@@ -1,12 +1,10 @@
-from __future__ import annotations
-
 import asyncio
 
 from fastapi import BackgroundTasks, UploadFile
 
 from repositories import planificacion_area_repo, planificacion_repo, planificacion_tarea_repo
-from schemas.planificacion import ProyectoDetalleResponse, ProyectoResponse, TareaResponse
-from services.planificacion_service import marcar_tarea as service_marcar_tarea, run_importacion
+from schemas.planificacion import AreaCreateRequest, ProyectoDetalleResponse, ProyectoResponse, TareaResponse
+from services.planificacion_service import crear_area as service_crear_area, marcar_tarea as service_marcar_tarea, run_importacion
 from services.planificacion_storage import upload_cronograma
 from utils.errors import AppError
 
@@ -19,15 +17,7 @@ async def crear_proyecto(
     prioridad: str,
     current_user: dict,
 ) -> ProyectoResponse:
-    """
-    Orquesta la creación de un proyecto de planificación.
-
-    Lee el archivo, crea el registro en DB con estado='procesando', sube el
-    archivo al bucket 'cronogramas' y lanza run_importacion como BackgroundTask.
-
-    Returns:
-        ProyectoResponse con estado='procesando'.
-    """
+    """Crea un proyecto de planificación en background; retorna estado='procesando'."""
     file_bytes = await archivo.read()
     proyecto = await planificacion_repo.create(
         current_user["sub"], nombre, expediente, prioridad
@@ -46,10 +36,9 @@ async def obtener_detalle(
     current_user: dict,
 ) -> ProyectoDetalleResponse:
     """
-    Retorna el detalle completo de un proyecto (proyecto + áreas + tareas).
+    Retorna proyecto + áreas + tareas completos.
 
-    Verifica ownership: si el proyecto no existe o el usuario no es propietario,
-    retorna 404 — nunca 403 (SEGURIDAD: no confirmar existencia).
+    Verifica ownership (404 si no existe o no es del usuario).
     """
     proyecto = await planificacion_repo.find_by_id(proyecto_id)
     if proyecto is None:
@@ -70,23 +59,9 @@ async def actualizar_area(
     current_user: dict,
 ) -> dict:
     """
-    Verifica ownership del proyecto y actualiza los campos del área.
+    Actualiza los campos del área verificando ownership del proyecto.
 
-    Verifica que el proyecto existe y pertenece al usuario autenticado antes de
-    proceder. Nunca retorna 403 — usa 404 en ambos casos para no confirmar
-    existencia de recursos ajenos.
-
-    Args:
-        proyecto_id: UUID del proyecto.
-        area_id: UUID del área a actualizar.
-        campos: Dict con los campos a actualizar (parcial, excluye nulos).
-        current_user: Dict del usuario autenticado con clave 'sub'.
-
-    Returns:
-        Dict con los datos del área actualizada.
-
-    Raises:
-        AppError(NOT_FOUND, 404): Proyecto no existe, no es del usuario, o área no encontrada.
+    Verifica ownership (404 si no existe o no es del usuario).
     """
     proyecto = await planificacion_repo.find_by_id(proyecto_id)
     if proyecto is None:
@@ -106,23 +81,9 @@ async def marcar_tarea(
     current_user: dict,
 ) -> TareaResponse:
     """
-    Verifica ownership del proyecto y delega el marcado al service.
+    Delega el marcado de tarea al service verificando ownership del proyecto.
 
-    Verifica que el proyecto existe y pertenece al usuario autenticado antes de
-    proceder. Nunca retorna 403 — usa 404 en ambos casos para no confirmar
-    existencia de recursos ajenos.
-
-    Args:
-        proyecto_id: UUID del proyecto.
-        tarea_id: UUID de la tarea a marcar.
-        completada: Nuevo estado de completitud.
-        current_user: Dict del usuario autenticado con clave 'sub'.
-
-    Returns:
-        TareaResponse con los datos actualizados.
-
-    Raises:
-        AppError(NOT_FOUND, 404): Proyecto no existe, no es del usuario, o tarea no encontrada.
+    Verifica ownership (404 si no existe o no es del usuario).
     """
     proyecto = await planificacion_repo.find_by_id(proyecto_id)
     if proyecto is None:
@@ -134,20 +95,71 @@ async def marcar_tarea(
 
 
 async def eliminar_proyecto(proyecto_id: str, current_user: dict) -> None:
-    """
-    Elimina un proyecto de planificación y sus datos asociados en cascada.
-    Ownership: find_by_id → 404 si no existe → 404 si usuario_id no coincide.
-
-    Args:
-        proyecto_id: UUID del proyecto a eliminar.
-        current_user: Dict del usuario autenticado con clave 'sub'.
-
-    Raises:
-        AppError(NOT_FOUND, 404): Proyecto no existe o no pertenece al usuario.
-    """
+    """Elimina un proyecto y sus datos en cascada; verifica ownership (404 si no existe o no es del usuario)."""
     proyecto = await planificacion_repo.find_by_id(proyecto_id)
     if proyecto is None:
         raise AppError("No encontrado", "NOT_FOUND", 404)
     if proyecto["usuario_id"] != current_user["sub"]:
         raise AppError("No encontrado", "NOT_FOUND", 404)
     await planificacion_repo.delete_by_id(proyecto_id)
+
+
+async def listar_proyectos(current_user: dict) -> list[dict]:
+    """Retorna los proyectos de planificación del usuario autenticado."""
+    return await planificacion_repo.find_by_user(current_user["sub"])
+
+
+async def obtener_proyecto(proyecto_id: str, current_user: dict) -> dict:
+    """Retorna un proyecto verificando ownership (404 si no existe o no es del usuario)."""
+    proyecto = await planificacion_repo.find_by_id(proyecto_id)
+    if proyecto is None or proyecto["usuario_id"] != current_user["sub"]:
+        raise AppError("No encontrado", "NOT_FOUND", 404)
+    return proyecto
+
+
+async def crear_area(
+    proyecto_id: str,
+    payload: AreaCreateRequest,
+    current_user: dict,
+) -> dict:
+    """
+    Crea un área nueva en el proyecto.
+
+    Verifica ownership (404 si no existe o no es del usuario).
+    """
+    proyecto = await planificacion_repo.find_by_id(proyecto_id)
+    if proyecto is None or proyecto["usuario_id"] != current_user["sub"]:
+        raise AppError("No encontrado", "NOT_FOUND", 404)
+    return await service_crear_area(
+        proyecto_id=proyecto_id,
+        nombre=payload.nombre,
+        cap_wbs=payload.cap_wbs,
+        responsable_nombre=payload.responsable_nombre,
+        responsable_telefono=payload.responsable_telefono,
+        responsable_email=payload.responsable_email,
+        disponibilidad_horas=payload.disponibilidad_horas,
+        cantidad_empleados=payload.cantidad_empleados,
+    )
+
+
+async def asignar_area_tarea(
+    proyecto_id: str,
+    tarea_id: str,
+    area_id: str | None,
+    current_user: dict,
+) -> dict:
+    """
+    Asigna o desasigna un área a una tarea.
+
+    Verifica ownership del proyecto y que la tarea pertenece al proyecto (404 en ambos casos).
+    """
+    proyecto = await planificacion_repo.find_by_id(proyecto_id)
+    if proyecto is None or proyecto["usuario_id"] != current_user["sub"]:
+        raise AppError("No encontrado", "NOT_FOUND", 404)
+    tarea = await planificacion_tarea_repo.find_by_id_and_proyecto(tarea_id, proyecto_id)
+    if tarea is None:
+        raise AppError("Tarea no encontrada", "NOT_FOUND", 404)
+    resultado = await planificacion_tarea_repo.update_area(tarea_id, area_id)
+    if resultado is None:
+        raise AppError("Tarea no encontrada", "NOT_FOUND", 404)
+    return resultado

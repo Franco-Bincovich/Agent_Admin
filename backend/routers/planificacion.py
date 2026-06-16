@@ -4,10 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Request, Re
 
 from controllers import planificacion_controller
 from middleware.auth import get_current_user
-from repositories import planificacion_repo, planificacion_tarea_repo
 from schemas.planificacion import AreaAsignacionRequest, AreaCreateRequest, AreaResponse, AreaUpdateRequest, MarcarTareaRequest, ProyectoDetalleResponse, ProyectoResponse, TareaResponse
-from services import planificacion_service
-from utils.errors import AppError
 from utils.limiter import limiter
 
 router = APIRouter()
@@ -40,7 +37,7 @@ async def listar_proyectos(
     current_user: dict = Depends(get_current_user),
 ) -> list[ProyectoResponse]:
     """Retorna los proyectos de planificación del usuario autenticado."""
-    registros = await planificacion_repo.find_by_user(current_user["sub"])
+    registros = await planificacion_controller.listar_proyectos(current_user)
     return [ProyectoResponse(**r) for r in registros]
 
 
@@ -55,9 +52,7 @@ async def get_proyecto(
     Raises:
         401: No autenticado · 404: No encontrado o sin acceso
     """
-    proyecto = await planificacion_repo.find_by_id(str(proyecto_id))
-    if proyecto is None or proyecto["usuario_id"] != current_user["sub"]:
-        raise AppError("No encontrado", "NOT_FOUND", 404)
+    proyecto = await planificacion_controller.obtener_proyecto(str(proyecto_id), current_user)
     return ProyectoResponse(**proyecto)
 
 
@@ -87,19 +82,7 @@ async def crear_area(
     Raises:
         401: No autenticado · 404: Proyecto no encontrado o sin acceso
     """
-    proyecto = await planificacion_repo.find_by_id(str(proyecto_id))
-    if proyecto is None or proyecto["usuario_id"] != current_user["sub"]:
-        raise AppError("No encontrado", "NOT_FOUND", 404)
-    resultado = await planificacion_service.crear_area(
-        proyecto_id=str(proyecto_id),
-        nombre=payload.nombre,
-        cap_wbs=payload.cap_wbs,
-        responsable_nombre=payload.responsable_nombre,
-        responsable_telefono=payload.responsable_telefono,
-        responsable_email=payload.responsable_email,
-        disponibilidad_horas=payload.disponibilidad_horas,
-        cantidad_empleados=payload.cantidad_empleados,
-    )
+    resultado = await planificacion_controller.crear_area(str(proyecto_id), payload, current_user)
     return AreaResponse(**resultado)
 
 
@@ -153,17 +136,9 @@ async def asignar_area_tarea(
     Raises:
         401: No autenticado · 404: Proyecto o tarea no encontrada / sin acceso
     """
-    proyecto = await planificacion_repo.find_by_id(str(proyecto_id))
-    if proyecto is None or proyecto["usuario_id"] != current_user["sub"]:
-        raise AppError("No encontrado", "NOT_FOUND", 404)
-    tarea = await planificacion_tarea_repo.find_by_id_and_proyecto(
-        str(tarea_id), str(proyecto_id)
+    resultado = await planificacion_controller.asignar_area_tarea(
+        str(proyecto_id), str(tarea_id), payload.area_id, current_user
     )
-    if tarea is None:
-        raise AppError("Tarea no encontrada", "NOT_FOUND", 404)
-    resultado = await planificacion_tarea_repo.update_area(str(tarea_id), payload.area_id)
-    if resultado is None:
-        raise AppError("Tarea no encontrada", "NOT_FOUND", 404)
     return TareaResponse(**resultado)
 
 
