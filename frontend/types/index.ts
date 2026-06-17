@@ -206,12 +206,16 @@ export interface TareaResponse {
   es_resumen: boolean;
   fecha_inicio: string | null;
   fecha_fin: string | null;
+  fecha_inicio_original: string | null;
+  fecha_fin_original: string | null;
   fecha_estimada: boolean;
   confianza: 'alta' | 'media' | 'baja';
   predecesoras: string | null;
   completada: boolean;
   completada_en: string | null;
   completada_por: string | null;
+  progreso: number;
+  reprogramada: boolean;
   area_id: string | null;
 }
 

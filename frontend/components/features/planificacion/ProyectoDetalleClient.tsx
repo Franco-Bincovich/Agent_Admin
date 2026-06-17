@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProyectoDetalle } from '@/hooks/useProyectoDetalle';
-import { marcarTarea } from '@/services/planificacionService';
 import type { Proyecto } from '@/types';
 import ProyectoProgressTracker from './ProyectoProgressTracker';
 import ProyectoRevisionView from './ProyectoRevisionView';
@@ -39,11 +38,6 @@ export default function ProyectoDetalleClient({ proyectoId, proyectos }: Props) 
 
   if (!proyecto) return null;
 
-  const handleMarcar = async (tareaId: string, completada: boolean): Promise<void> => {
-    await marcarTarea(proyecto.id, tareaId, completada);
-    refresh();
-  };
-
   if (proyecto.estado === 'procesando') {
     return <ProyectoProgressTracker proyectoId={proyectoId} />;
   }
@@ -54,7 +48,7 @@ export default function ProyectoDetalleClient({ proyectoId, proyectos }: Props) 
         <ProyectoTabs activeTab={activeTab} onChange={setActiveTab} />
         {activeTab === 'revision'
           ? <ProyectoRevisionView detalle={proyecto} onVerVisuales={() => setActiveTab('gantt')} onAreaCreada={refresh} onTareaActualizada={refresh} />
-          : <VisualesContainer detalle={proyecto} activeTab={activeTab} onMarcar={handleMarcar} proyectos={proyectos} />
+          : <VisualesContainer detalle={proyecto} activeTab={activeTab} onActualizada={refresh} proyectos={proyectos} />
         }
       </div>
     );

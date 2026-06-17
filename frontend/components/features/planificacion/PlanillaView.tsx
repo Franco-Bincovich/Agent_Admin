@@ -1,12 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { toast } from 'sonner';
 import type { ProyectoDetalleResponse } from '@/types';
 
 interface Props {
   detalle: ProyectoDetalleResponse;
-  onMarcar: (tareaId: string, completada: boolean) => Promise<void>;
 }
 
 function duracionDias(inicio: string | null, fin: string | null): string {
@@ -15,9 +12,7 @@ function duracionDias(inicio: string | null, fin: string | null): string {
   return `${Math.round(diff / 86_400_000)} d`;
 }
 
-export default function PlanillaView({ detalle, onMarcar }: Props) {
-  const [marcandoId, setMarcandoId] = useState<string | null>(null);
-
+export default function PlanillaView({ detalle }: Props) {
   return (
     <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--color-border)' }}>
       <div className="overflow-x-auto">
@@ -34,7 +29,6 @@ export default function PlanillaView({ detalle, onMarcar }: Props) {
           <tbody>
             {detalle.tareas.map(tarea => {
               const isResumen  = tarea.es_resumen;
-              const loading    = marcandoId === tarea.id;
               const textColor  = tarea.completada
                 ? 'var(--color-text-disabled)'
                 : isResumen
@@ -45,18 +39,7 @@ export default function PlanillaView({ detalle, onMarcar }: Props) {
               return (
                 <tr
                   key={tarea.id}
-                  onClick={!isResumen ? async () => {
-                    setMarcandoId(tarea.id);
-                    try { await onMarcar(tarea.id, !tarea.completada); }
-                    catch { toast.error('Error al actualizar la tarea'); }
-                    finally { setMarcandoId(null); }
-                  } : undefined}
-                  title={!isResumen ? (tarea.completada ? 'Marcar como pendiente' : 'Marcar como completada') : undefined}
-                  style={{
-                    borderBottom: '1px solid var(--color-border)',
-                    cursor: isResumen ? 'default' : loading ? 'wait' : 'pointer',
-                    opacity: loading ? 0.6 : 1,
-                  }}
+                  style={{ borderBottom: '1px solid var(--color-border)' }}
                 >
                   <td className="px-3 py-2" style={{ color: 'var(--color-text-secondary)', textDecoration: decoration }}>
                     {tarea.wbs}

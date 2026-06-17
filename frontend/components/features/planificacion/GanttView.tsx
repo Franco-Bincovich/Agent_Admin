@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
-import type { ProyectoDetalleResponse } from '@/types';
-import { getQuarters, getQuarterWindow, getBorderColor, isHiddenByCollapsed } from '@/utils/ganttUtils';
+import type { ProyectoDetalleResponse, TareaResponse } from '@/types';
+import { getQuarters, getQuarterWindow, isHiddenByCollapsed } from '@/utils/ganttUtils';
+import GanttFilaTarea from './GanttFilaTarea';
+import TareaAccionesPanel from './TareaAccionesPanel';
+import ReprogramarTareaModal from './ReprogramarTareaModal';
 
 interface Props {
   detalle: ProyectoDetalleResponse;
-  onMarcar: (tareaId: string, completada: boolean) => Promise<void>;
+  onActualizada: () => void;
   zoom: 'anual' | 'cuatrimestral';
   offset: number;
 }
@@ -24,8 +26,9 @@ function axisYears(startMs: number, endMs: number): number[] {
   return out;
 }
 
-export default function GanttView({ detalle, onMarcar, zoom, offset }: Props) {
-  const [marcandoId, setMarcandoId] = useState<string | null>(null);
+export default function GanttView({ detalle, onActualizada, zoom, offset }: Props) {
+  const [tareaSel, setTareaSel] = useState<TareaResponse | null>(null);
+  const [reprogramando, setReprogramando] = useState<TareaResponse | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   const areaColor: Record<string, string> = {};
@@ -103,80 +106,49 @@ export default function GanttView({ detalle, onMarcar, zoom, offset }: Props) {
           const endMs     = parseDate(tarea.fecha_fin);
           const hasBar    = startMs > 0 && endMs > 0;
           const isResumen = tarea.es_resumen;
-          const loading   = marcandoId === tarea.id;
+          const startPct  = Math.max(0, pct(startMs));
+          const widthPct  = Math.max(0, Math.min(100, pct(endMs)) - startPct);
 
           return (
-            <div
+            <GanttFilaTarea
               key={tarea.id}
-              className="flex border-b"
-              onClick={!isResumen ? async () => {
-                setMarcandoId(tarea.id);
-                try { await onMarcar(tarea.id, !tarea.completada); }
-                catch { toast.error('Error al actualizar la tarea'); }
-                finally { setMarcandoId(null); }
-              } : undefined}
-              title={!isResumen ? (tarea.completada ? 'Marcar como pendiente' : 'Marcar como completada') : undefined}
-              style={{
-                borderColor: 'var(--color-border)',
-                opacity: loading ? 0.6 : tarea.completada ? 0.4 : 1,
-                cursor: isResumen ? 'default' : loading ? 'wait' : 'pointer',
-              }}
-            >
-              <div
-                className="w-64 flex-shrink-0 flex items-center gap-1.5 py-1.5 border-r text-xs"
-                onClick={isResumen ? () => setCollapsed(prev => {
-                  const next = new Set(prev);
-                  next.has(tarea.wbs) ? next.delete(tarea.wbs) : next.add(tarea.wbs);
-                  return next;
-                }) : undefined}
-                style={{
-                  paddingLeft:  `${8 + tarea.nivel * 12}px`,
-                  paddingRight: '8px',
-                  borderColor:  'var(--color-border)',
-                  color: tarea.completada ? 'var(--color-text-disabled)' : 'var(--color-text-primary)',
-                  cursor: isResumen ? 'pointer' : undefined,
-                }}
-              >
-                {isResumen && (
-                  <span style={{ marginRight: 4, fontSize: 10, color: 'var(--color-text-secondary)' }}>
-                    {collapsed.has(tarea.wbs) ? '▶' : '▼'}
-                  </span>
-                )}
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                <span className={`truncate${isResumen ? ' font-medium' : ''}`}>{tarea.nombre}</span>
-              </div>
-
-              <div className="flex-1 relative min-w-96 h-8 overflow-hidden">
-                {todayPct >= 0 && todayPct <= 100 && (
-                  <div style={{
-                    position: 'absolute',
-                    left: `${todayPct}%`,
-                    top: 0,
-                    width: 2,
-                    height: '100%',
-                    backgroundColor: '#EF4444',
-                    zIndex: 10,
-                    pointerEvents: 'none',
-                  }} />
-                )}
-                {hasBar && (
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 rounded"
-                    style={{
-                      left:            `${Math.max(0, pct(startMs))}%`,
-                      width:           `${Math.max(0, Math.min(100, pct(endMs)) - Math.max(0, pct(startMs)))}%`,
-                      height:          isResumen ? '5px' : '12px',
-                      backgroundColor: isResumen ? 'var(--color-border)' : color,
-                      minWidth:        '2px',
-                      border:          isResumen ? 'none' : `2px solid ${getBorderColor(tarea.completada, tarea.completada_en, tarea.fecha_fin)}`,
-                    }}
-                  />
-                )}
-              </div>
-            </div>
+              tarea={tarea}
+              color={color}
+              hasBar={hasBar}
+              isResumen={isResumen}
+              startPct={startPct}
+              widthPct={widthPct}
+              todayPct={todayPct}
+              collapsed={collapsed.has(tarea.wbs)}
+              onSelect={() => setTareaSel(tarea)}
+              onToggleCollapse={() => setCollapsed(prev => {
+                const next = new Set(prev);
+                next.has(tarea.wbs) ? next.delete(tarea.wbs) : next.add(tarea.wbs);
+                return next;
+              })}
+            />
           );
         })}
       </div>
+      {tareaSel && (
+        <TareaAccionesPanel
+          open={!!tareaSel}
+          onClose={() => setTareaSel(null)}
+          proyectoId={detalle.id}
+          tarea={tareaSel}
+          onActualizada={onActualizada}
+          onReprogramar={() => { setReprogramando(tareaSel); setTareaSel(null); }}
+        />
+      )}
+      {reprogramando && (
+        <ReprogramarTareaModal
+          open={!!reprogramando}
+          onClose={() => setReprogramando(null)}
+          proyectoId={detalle.id}
+          tarea={reprogramando}
+          onReprogramada={onActualizada}
+        />
+      )}
     </div>
   );
 }

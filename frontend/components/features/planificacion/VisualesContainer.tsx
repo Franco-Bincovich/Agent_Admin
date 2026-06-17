@@ -14,11 +14,11 @@ type Zoom = 'anual' | 'cuatrimestral';
 interface Props {
   detalle: ProyectoDetalleResponse;
   activeTab: ActiveTab;
-  onMarcar: (tareaId: string, completada: boolean) => Promise<void>;
+  onActualizada: () => void;
   proyectos: Proyecto[];
 }
 
-export default function VisualesContainer({ detalle, activeTab, onMarcar, proyectos }: Props) {
+export default function VisualesContainer({ detalle, activeTab, onActualizada, proyectos }: Props) {
   const [zoom, setZoom] = useState<Zoom>('anual');
   const [offset, setOffset] = useState(0);
 
@@ -53,8 +53,8 @@ export default function VisualesContainer({ detalle, activeTab, onMarcar, proyec
           </button>
         ))}
       </div>
-      {activeTab === 'gantt'     && <GanttView    detalle={detalle} onMarcar={onMarcar} zoom={zoom} offset={offset} />}
-      {activeTab === 'planilla'  && <PlanillaView  detalle={detalle} onMarcar={onMarcar} />}
+      {activeTab === 'gantt'     && <GanttView    detalle={detalle} onActualizada={onActualizada} zoom={zoom} offset={offset} />}
+      {activeTab === 'planilla'  && <PlanillaView  detalle={detalle} />}
       {activeTab === 'portfolio' && <PortfolioView proyectos={proyectos} zoom={zoom} offset={offset} />}
       {activeTab === 'unificado' && <UnificadoView proyectos={proyectos} zoom={zoom} offset={offset} />}
     </div>

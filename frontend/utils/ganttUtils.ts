@@ -33,7 +33,9 @@ export function getBorderColor(
   completada: boolean,
   completada_en: string | null,
   fecha_fin: string | null,
+  reprogramada: boolean,
 ): string {
+  if (reprogramada) return '#B45309';
   if (!fecha_fin) return '#00FF00';
   const fin = new Date(fecha_fin).getTime();
   const hoy = Date.now();

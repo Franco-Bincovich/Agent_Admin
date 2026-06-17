@@ -70,6 +70,29 @@ export async function createArea(
   );
 }
 
+export async function actualizarProgreso(
+  proyectoId: string,
+  tareaId: string,
+  progreso: number,
+): Promise<TareaResponse> {
+  return patch<TareaResponse>(
+    `/api/v1/planificacion/${proyectoId}/tareas/${tareaId}/progreso`,
+    { progreso },
+  );
+}
+
+export async function reprogramarTarea(
+  proyectoId: string,
+  tareaId: string,
+  fechaInicio: string,
+  fechaFin: string,
+): Promise<TareaResponse> {
+  return patch<TareaResponse>(
+    `/api/v1/planificacion/${proyectoId}/tareas/${tareaId}/reprogramar`,
+    { fecha_inicio: fechaInicio, fecha_fin: fechaFin },
+  );
+}
+
 export async function asignarArea(
   proyectoId: string,
   tareaId: string,
