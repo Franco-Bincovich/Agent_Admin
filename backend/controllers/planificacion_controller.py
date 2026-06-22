@@ -71,13 +71,8 @@ async def marcar_tarea(
     completada: bool,
     current_user: dict,
 ) -> TareaResponse:
-    """Delega el marcado de tarea al service verificando ownership del proyecto. Verifica ownership (404 si no existe o no es del usuario)."""
-    proyecto = await planificacion_repo.find_by_id(proyecto_id)
-    if proyecto is None:
-        raise AppError("No encontrado", "NOT_FOUND", 404)
-    if proyecto["usuario_id"] != current_user["sub"]:
-        raise AppError("No encontrado", "NOT_FOUND", 404)
-    resultado = await service_marcar_tarea(tarea_id, proyecto_id, completada, current_user["sub"])
+    """Delega el marcado de tarea al service. El permiso de escritura (Modelo A) lo resuelve el service."""
+    resultado = await service_marcar_tarea(tarea_id, proyecto_id, completada, current_user)
     return TareaResponse(**resultado)
 
 
@@ -87,13 +82,8 @@ async def actualizar_progreso(
     progreso: int,
     current_user: dict,
 ) -> TareaResponse:
-    """Delega la actualización de progreso al service verificando ownership del proyecto. Verifica ownership (404 si no existe o no es del usuario)."""
-    proyecto = await planificacion_repo.find_by_id(proyecto_id)
-    if proyecto is None:
-        raise AppError("No encontrado", "NOT_FOUND", 404)
-    if proyecto["usuario_id"] != current_user["sub"]:
-        raise AppError("No encontrado", "NOT_FOUND", 404)
-    resultado = await service_actualizar_progreso(tarea_id, proyecto_id, progreso, current_user["sub"])
+    """Delega la actualización de progreso al service. El permiso de escritura (Modelo A) lo resuelve el service."""
+    resultado = await service_actualizar_progreso(tarea_id, proyecto_id, progreso, current_user)
     return TareaResponse(**resultado)
 
 
@@ -104,13 +94,8 @@ async def reprogramar_tarea(
     fecha_fin: str,
     current_user: dict,
 ) -> TareaResponse:
-    """Reprograma las fechas de una tarea verificando ownership del proyecto. Verifica ownership (404 si no existe o no es del usuario)."""
-    proyecto = await planificacion_repo.find_by_id(proyecto_id)
-    if proyecto is None:
-        raise AppError("No encontrado", "NOT_FOUND", 404)
-    if proyecto["usuario_id"] != current_user["sub"]:
-        raise AppError("No encontrado", "NOT_FOUND", 404)
-    resultado = await service_reprogramar_tarea(tarea_id, proyecto_id, fecha_inicio, fecha_fin)
+    """Reprograma las fechas de una tarea. El permiso de escritura (Modelo A) lo resuelve el service."""
+    resultado = await service_reprogramar_tarea(tarea_id, proyecto_id, fecha_inicio, fecha_fin, current_user)
     return TareaResponse(**resultado)
 
 
@@ -173,10 +158,7 @@ async def asignar_area_tarea(
     area_id: str | None,
     current_user: dict,
 ) -> dict:
-    """Asigna o desasigna un área a una tarea. Verifica ownership del proyecto y tarea (404 en ambos casos)."""
-    proyecto = await planificacion_repo.find_by_id(proyecto_id)
-    if proyecto is None or proyecto["usuario_id"] != current_user["sub"]:
-        raise AppError("No encontrado", "NOT_FOUND", 404)
+    """Asigna o desasigna un área a una tarea (admin-only, verificado en el router). Verifica pertenencia tarea↔proyecto (404)."""
     tarea = await planificacion_tarea_repo.find_by_id_and_proyecto(tarea_id, proyecto_id)
     if tarea is None:
         raise AppError("Tarea no encontrada", "NOT_FOUND", 404)

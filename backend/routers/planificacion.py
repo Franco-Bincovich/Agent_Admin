@@ -150,8 +150,9 @@ async def asignar_area_tarea(
     payload: AreaAsignacionRequest,
     current_user: dict = Depends(get_current_user),
 ) -> TareaResponse:
-    """Asigna o desasigna un área a una tarea individual.
-    Raises: 401 no autenticado · 404 proyecto o tarea no encontrada / sin acceso."""
+    """Asigna o desasigna un área a una tarea individual (admin-only).
+    Raises: 401 no autenticado · 403 no admin · 404 proyecto o tarea no encontrada."""
+    require_admin(current_user)
     resultado = await planificacion_controller.asignar_area_tarea(
         str(proyecto_id), str(tarea_id), payload.area_id, current_user
     )
