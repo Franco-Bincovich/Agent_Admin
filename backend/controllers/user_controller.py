@@ -23,6 +23,11 @@ async def update_user_active(user_id: str, activo: bool, requester: dict) -> Use
     return await user_service.update_user_active(user_id, activo, requester["sub"])
 
 
+async def update_user_role(user_id: str, rol: str, requester: dict) -> UserResponse:
+    """Cambia el rol de un usuario. Un admin no puede cambiarse el rol a sí mismo."""
+    return await user_service.update_user_role(user_id, rol, requester["sub"])
+
+
 async def delete_user(user_id: str, current_user: dict) -> None:
     """Elimina un usuario permanentemente. Un admin no puede eliminarse a sí mismo."""
     await user_service.delete_user(user_id, current_user["sub"])

@@ -1,32 +1,11 @@
-from schemas.auth import LoginRequest, RegisterRequest, TokenResponse
+from schemas.auth import LoginRequest, TokenResponse
 from schemas.user import UserResponse
 from services.auth_service import (
     authenticate_user,
     create_access_token,
     get_user_profile,
-    register_user,
 )
 from services.token_service import create_refresh_token
-
-
-async def register(payload: RegisterRequest) -> TokenResponse:
-    """
-    Registra un usuario nuevo y devuelve sus tokens de acceso.
-
-    Delega la validación de unicidad y creación a auth_service.register_user().
-    Construye los tokens a partir del usuario creado.
-
-    Args:
-        payload: Datos de registro validados por Pydantic.
-
-    Returns:
-        TokenResponse con access_token y refresh_token.
-    """
-    user = await register_user(payload)
-    return TokenResponse(
-        access_token=create_access_token(user["id"], user["rol"]),
-        refresh_token=await create_refresh_token(user["id"]),
-    )
 
 
 async def login(payload: LoginRequest) -> TokenResponse:

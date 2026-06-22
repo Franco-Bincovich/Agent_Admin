@@ -20,7 +20,7 @@ _USER = {
     "nombre": "Test User",
     "email": _EMAIL,
     "password_hash": hash_password(_PASSWORD),
-    "rol": "editor",
+    "rol": "gerente",
     "activo": True,
     "creado_en": datetime.utcnow().isoformat(),
 }
@@ -42,43 +42,7 @@ async def test_health(client):
     assert resp.json()["status"] == "ok"
 
 
-# ── 2. Registro exitoso ──────────────────────────────────────────────────────
-
-
-async def test_register_success(client):
-    with patch("services.auth_service.find_by_email", return_value=None), \
-         patch("services.auth_service.create_user_record", return_value=_USER), \
-         patch("repositories.token_repo.save", return_value={"id": "tok-1", "user_id": _USER_ID}):
-        resp = await client.post("/api/v1/auth/register", json={
-            "username": "testuser",
-            "email": _EMAIL,
-            "password": _PASSWORD,
-            "nombre": "Test User",
-        })
-    assert resp.status_code == 201
-    assert resp.json() == {"ok": True}
-    assert "access_token" in resp.cookies
-    assert "refresh_token" in resp.cookies
-
-
-# ── 3. Registro con email duplicado ─────────────────────────────────────────
-
-
-async def test_register_duplicate_email(client):
-    with patch("services.auth_service.find_by_email", return_value=_USER):
-        resp = await client.post("/api/v1/auth/register", json={
-            "username": "testuser2",
-            "email": _EMAIL,
-            "password": _PASSWORD,
-            "nombre": "Otro User",
-        })
-    assert resp.status_code == 409
-    body = resp.json()
-    assert body["error"] is True
-    assert body["code"] == "USER_ALREADY_EXISTS"
-
-
-# ── 4. Login con credenciales correctas ─────────────────────────────────────
+# ── 2. Login con credenciales correctas ─────────────────────────────────────
 
 
 async def test_login_success(client):
@@ -122,7 +86,7 @@ async def test_protected_endpoint_without_token(client):
 
 
 async def test_protected_endpoint_with_token(client):
-    token = create_access_token(_USER_ID, "editor")
+    token = create_access_token(_USER_ID, "gerente")
     with patch("services.auth_service.find_by_id", return_value=_USER):
         resp = await client.get(
             "/api/v1/auth/me",
@@ -131,4 +95,4 @@ async def test_protected_endpoint_with_token(client):
     assert resp.status_code == 200
     body = resp.json()
     assert body["email"] == _EMAIL
-    assert body["rol"] == "editor"
+    assert body["rol"] == "gerente"

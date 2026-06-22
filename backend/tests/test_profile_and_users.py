@@ -23,7 +23,7 @@ _USER = {
     "email": _EMAIL,
     "username": "testuser",
     "password_hash": hash_password(_PASSWORD),
-    "rol": "editor",
+    "rol": "gerente",
     "activo": True,
     "creado_en": datetime.utcnow().isoformat(),
 }
@@ -34,7 +34,7 @@ _OTHER_USER = {
     "email": "otro@example.com",
     "username": "otrouser",
     "password_hash": hash_password(_PASSWORD),
-    "rol": "editor",
+    "rol": "gerente",
     "activo": True,
     "creado_en": datetime.utcnow().isoformat(),
 }
@@ -63,7 +63,7 @@ async def client():
 
 async def test_get_profile_authenticated(client):
     """GET /profile devuelve el perfil del usuario autenticado."""
-    token = create_access_token(_USER_ID, "editor")
+    token = create_access_token(_USER_ID, "gerente")
     with patch("controllers.profile_controller.user_repo.find_by_id", return_value=_USER):
         resp = await client.get(
             "/api/v1/profile",
@@ -84,7 +84,7 @@ async def test_get_profile_without_token(client):
 
 async def test_update_profile_name_success(client):
     """PUT /profile con nombre nuevo devuelve perfil actualizado."""
-    token = create_access_token(_USER_ID, "editor")
+    token = create_access_token(_USER_ID, "gerente")
     updated = {**_USER, "nombre": "Nombre Actualizado"}
     with patch("controllers.profile_controller.user_repo.find_by_id", return_value=_USER), \
          patch("controllers.profile_controller.user_mutations_repo.update_profile",
@@ -100,7 +100,7 @@ async def test_update_profile_name_success(client):
 
 async def test_update_profile_empty_name(client):
     """PUT /profile con nombre vacío debe rechazarse con 422 (min_length=2)."""
-    token = create_access_token(_USER_ID, "editor")
+    token = create_access_token(_USER_ID, "gerente")
     resp = await client.put(
         "/api/v1/profile",
         headers={"Authorization": f"Bearer {token}"},
@@ -111,7 +111,7 @@ async def test_update_profile_empty_name(client):
 
 async def test_update_profile_invalid_email(client):
     """PUT /profile con email inválido debe rechazarse con 422."""
-    token = create_access_token(_USER_ID, "editor")
+    token = create_access_token(_USER_ID, "gerente")
     resp = await client.put(
         "/api/v1/profile",
         headers={"Authorization": f"Bearer {token}"},
@@ -123,9 +123,9 @@ async def test_update_profile_invalid_email(client):
 # ── Administración de usuarios ──────────────────────────────────────────────
 
 
-async def test_list_users_as_editor_forbidden(client):
-    """GET /users con rol editor devuelve 403."""
-    token = create_access_token(_USER_ID, "editor")
+async def test_list_users_as_non_admin_forbidden(client):
+    """GET /users con un rol no-admin (gerente) devuelve 403."""
+    token = create_access_token(_USER_ID, "gerente")
     resp = await client.get(
         "/api/v1/users",
         headers={"Authorization": f"Bearer {token}"},
@@ -153,9 +153,9 @@ async def test_list_users_as_admin_success(client):
     assert body[0]["total_generaciones"] == 0
 
 
-async def test_create_user_as_editor_forbidden(client):
-    """POST /users con rol editor devuelve 403."""
-    token = create_access_token(_USER_ID, "editor")
+async def test_create_user_as_non_admin_forbidden(client):
+    """POST /users con un rol no-admin (gerente) devuelve 403 en require_admin."""
+    token = create_access_token(_USER_ID, "gerente")
     resp = await client.post(
         "/api/v1/users",
         headers={"Authorization": f"Bearer {token}"},
@@ -164,7 +164,7 @@ async def test_create_user_as_editor_forbidden(client):
             "email": "nuevo@example.com",
             "username": "nuevouser",
             "password": "Password123!",
-            "rol": "usuario",
+            "rol": "gerente",
         },
     )
     assert resp.status_code == 403
@@ -179,7 +179,7 @@ async def test_create_user_as_admin_success(client):
         "nombre": "Nuevo",
         "email": "nuevo@example.com",
         "username": "nuevouser",
-        "rol": "usuario",
+        "rol": "gerente",
         "activo": True,
         "creado_en": datetime.utcnow().isoformat(),
     }
@@ -194,7 +194,7 @@ async def test_create_user_as_admin_success(client):
                 "email": "nuevo@example.com",
                 "username": "nuevouser",
                 "password": "Password123!",
-                "rol": "usuario",
+                "rol": "gerente",
             },
         )
     assert resp.status_code == 201
@@ -216,9 +216,9 @@ async def test_patch_active_as_admin_can_modify_any_user(client):
     assert resp.json()["activo"] is False
 
 
-async def test_patch_active_as_editor_forbidden(client):
-    """PATCH /users/{id}/active con rol editor devuelve 403 (DELETE-equivalente)."""
-    token = create_access_token(_USER_ID, "editor")
+async def test_patch_active_as_non_admin_forbidden(client):
+    """PATCH /users/{id}/active con un rol no-admin (gerente) devuelve 403 (DELETE-equivalente)."""
+    token = create_access_token(_USER_ID, "gerente")
     resp = await client.patch(
         f"/api/v1/users/{_OTHER_USER_ID}/active",
         headers={"Authorization": f"Bearer {token}"},
@@ -242,9 +242,9 @@ async def test_patch_active_as_admin_success(client):
     assert resp.status_code == 200
 
 
-async def test_editor_cannot_view_other_user_profile(client):
-    """GET /users/{id} de otro usuario con rol editor devuelve 404 (ownership)."""
-    token = create_access_token(_USER_ID, "editor")
+async def test_non_admin_cannot_view_other_user_profile(client):
+    """GET /users/{id} de otro usuario con un rol no-admin (gerente) devuelve 404 (ownership)."""
+    token = create_access_token(_USER_ID, "gerente")
     with patch("services.user_service.user_repo.find_by_id", return_value=_OTHER_USER):
         resp = await client.get(
             f"/api/v1/users/{_OTHER_USER_ID}",
@@ -256,9 +256,9 @@ async def test_editor_cannot_view_other_user_profile(client):
     assert body["code"] == "NOT_FOUND"
 
 
-async def test_delete_user_as_editor_forbidden(client):
-    """DELETE /users/{id} con rol editor → 403."""
-    token = create_access_token(_USER_ID, "editor")
+async def test_delete_user_as_non_admin_forbidden(client):
+    """DELETE /users/{id} con un rol no-admin (gerente) → 403."""
+    token = create_access_token(_USER_ID, "gerente")
     resp = await client.delete(
         f"/api/v1/users/{_OTHER_USER_ID}",
         headers={"Authorization": f"Bearer {token}"},

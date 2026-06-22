@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from controllers import user_controller
 from middleware.auth import get_current_user, require_admin
-from schemas.user import CreateUserRequest, UserResponse
+from schemas.user import CreateUserRequest, UpdateRoleRequest, UserResponse
 
 router = APIRouter()
 
@@ -47,6 +47,16 @@ async def update_active(
 ) -> UserResponse:
     require_admin(current_user)
     return await user_controller.update_user_active(str(user_id), payload.activo, current_user)
+
+
+@router.patch("/{user_id}/rol", response_model=UserResponse)
+async def update_role(
+    user_id: UUID,
+    payload: UpdateRoleRequest,
+    current_user: dict = Depends(get_current_user),
+) -> UserResponse:
+    require_admin(current_user)
+    return await user_controller.update_user_role(str(user_id), payload.rol, current_user)
 
 
 @router.delete("/{user_id}", status_code=204)

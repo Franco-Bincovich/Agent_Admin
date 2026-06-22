@@ -108,6 +108,27 @@ async def update_user_active(user_id: str, activo: bool, requester_id: str) -> U
     return UserResponse(**updated)
 
 
+async def update_user_role(user_id: str, rol: str, requester_id: str) -> UserResponse:
+    """
+    Cambia el rol de un usuario. Solo debe invocarse para administradores.
+    Un admin no puede cambiarse el rol a sí mismo (evita auto-degradarse y perder
+    el acceso admin); sí puede cambiar el rol de otros administradores. El rol llega
+    ya validado contra los 3 valores por el schema.
+
+    Raises:
+        AppError FORBIDDEN 403 si el admin intenta cambiarse su propio rol.
+        AppError NOT_FOUND 404 si el usuario no existe.
+    """
+    if user_id == requester_id:
+        raise AppError(
+            "Un administrador no puede cambiar su propio rol.",
+            ErrorCode.FORBIDDEN,
+            403,
+        )
+    updated = await user_mutations_repo.update_rol(user_id, rol)
+    return UserResponse(**updated)
+
+
 async def delete_user(user_id: str, requester_id: str) -> None:
     """
     Elimina un usuario permanentemente (hard delete).

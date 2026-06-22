@@ -4,9 +4,7 @@ import bcrypt
 from jose import JWTError, jwt
 
 from config.settings import get_settings
-from repositories.user_mutations_repo import create_full as create_user_record
-from repositories.user_repo import find_by_email, find_by_id, find_by_username
-from schemas.auth import RegisterRequest
+from repositories.user_repo import find_by_id, find_by_username
 from utils.errors import AppError, ErrorCode
 from utils.logger import log
 
@@ -55,38 +53,6 @@ def verify_token(token: str) -> dict:
     except JWTError:
         # Mensaje genérico — no informar si expiró, si la firma es incorrecta, etc.
         raise AppError("No autorizado", ErrorCode.UNAUTHORIZED, 401)
-
-
-async def register_user(payload: RegisterRequest) -> dict:
-    """
-    Registra un usuario nuevo verificando unicidad de email.
-
-    Verifica que el email no esté en uso antes de crear. Nunca almacena
-    la contraseña en texto plano — delega el hash a hash_password.
-
-    Args:
-        payload: Datos de registro validados por Pydantic.
-
-    Returns:
-        Dict con los datos del usuario creado.
-
-    Raises:
-        AppError: code 'USER_ALREADY_EXISTS', status 409 si el email ya existe.
-    """
-    if await find_by_email(payload.email):
-        raise AppError("El email ya está registrado.", ErrorCode.USER_ALREADY_EXISTS, 409)
-    # SEGURIDAD: el rol NUNCA debe venir del cliente en el registro público.
-    # Se fuerza a "editor"; la creación de usuarios con otro rol es exclusiva
-    # del endpoint admin POST /users (require_admin).
-    user = await create_user_record(
-        username=payload.username.lower().strip(),
-        email=payload.email,
-        nombre=payload.nombre,
-        password_hash=hash_password(payload.password),
-        rol="editor",
-    )
-    log.info("Usuario registrado", extra={"user_id": str(user["id"])})
-    return user
 
 
 async def authenticate_user(username: str, password: str) -> dict:

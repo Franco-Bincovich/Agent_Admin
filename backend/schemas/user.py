@@ -9,9 +9,8 @@ _EMAIL_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
 
 class UserRole(str, Enum):
     administrador = "administrador"
-    editor = "editor"
-    viewer = "viewer"
-    usuario = "usuario"
+    gerente = "gerente"
+    lider = "lider"
 
 
 class UserResponse(BaseModel):
@@ -78,12 +77,29 @@ class ChangePasswordRequest(BaseModel):
         return self
 
 
+_VALID_ROLES = ("administrador", "gerente", "lider")
+
+
+class UpdateRoleRequest(BaseModel):
+    rol: str
+
+    @field_validator("rol")
+    @classmethod
+    def validate_rol(cls, v: str) -> str:
+        v = v.strip().lower()
+        if v not in _VALID_ROLES:
+            raise ValueError(
+                "Rol inválido. Debe ser uno de: administrador, gerente, lider."
+            )
+        return v
+
+
 class CreateUserRequest(BaseModel):
     nombre: str = Field(min_length=2, max_length=100)
     email: str = Field(max_length=200)
     username: str = Field(min_length=3, max_length=50)
     password: str = Field(min_length=8, max_length=128)
-    rol: Literal["administrador", "usuario"]
+    rol: Literal["administrador", "gerente", "lider"]
 
     @field_validator("nombre")
     @classmethod

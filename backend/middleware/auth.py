@@ -7,7 +7,6 @@ from utils.errors import AppError, ErrorCode
 # Rutas que no requieren autenticación — la lista es explícita e intencionalmente corta
 PUBLIC_ROUTES = [
     "/health",
-    "/api/v1/auth/register",
     "/api/v1/auth/login",
     "/api/v1/auth/refresh",
     "/docs",

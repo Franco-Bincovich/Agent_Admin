@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Request, Response
 
-from controllers.auth_controller import get_me, login, register
+from controllers.auth_controller import get_me, login
 from controllers.token_controller import logout, refresh_tokens
 from middleware.auth import get_current_user
-from schemas.auth import LoginRequest, RegisterRequest
+from schemas.auth import LoginRequest
 from utils.errors import AppError
 from utils.limiter import limiter
 from schemas.auth import TokenResponse as _TokenResponse
@@ -24,17 +24,6 @@ def _set_auth_cookies(response: Response, tokens: _TokenResponse) -> None:
         key="refresh_token", value=tokens.refresh_token,
         httponly=True, secure=True, samesite="none", max_age=_REFRESH_MAX_AGE,
     )
-
-
-@router.post("/register", status_code=201)
-@limiter.limit("10/minute")
-async def register_endpoint(
-    request: Request,
-    payload: RegisterRequest,
-    response: Response,
-):
-    _set_auth_cookies(response, await register(payload))
-    return {"ok": True}
 
 
 @router.post("/login")

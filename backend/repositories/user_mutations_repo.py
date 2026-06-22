@@ -57,18 +57,28 @@ async def update_profile(user_id: str, fields: dict) -> dict:
     return response.data[0]
 
 
-async def update_active(user_id: str, activo: bool) -> dict:
-    """Activa o desactiva un usuario por su ID."""
+async def _update_fields(user_id: str, fields: dict) -> dict:
+    """Actualiza campos de un usuario por ID y devuelve la fila; 404 si no existe."""
     response = await asyncio.to_thread(
         lambda: get_supabase()
         .table(_TABLE)
-        .update({"activo": activo})
+        .update(fields)
         .eq("id", user_id)
         .execute()
     )
     if not response.data:
         raise AppError("Usuario no encontrado.", ErrorCode.NOT_FOUND, 404)
     return response.data[0]
+
+
+async def update_active(user_id: str, activo: bool) -> dict:
+    """Activa o desactiva un usuario por su ID."""
+    return await _update_fields(user_id, {"activo": activo})
+
+
+async def update_rol(user_id: str, rol: str) -> dict:
+    """Cambia el rol de un usuario por su ID. El rol ya viene validado por el schema."""
+    return await _update_fields(user_id, {"rol": rol})
 
 
 async def update_gamma_folder_id(user_id: str, folder_id: str) -> None:
