@@ -4,7 +4,6 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 
 from integrations.supabase_client import get_supabase
-from utils.logger import log
 
 _TABLE = "planificacion_proyectos"
 
@@ -75,13 +74,11 @@ async def find_by_id(proyecto_id: str) -> dict | None:
     return response.data[0] if response.data else None
 
 
-async def find_by_user(usuario_id: str, limit: int = 50) -> list[dict]:
-    """Retorna los proyectos del usuario ordenados por creado_en DESC."""
-    log.info("planificacion.find_by_user", extra={"usuario_id": str(usuario_id)})
+async def find_all(limit: int = 50) -> list[dict]:
+    """Retorna todos los proyectos ordenados por creado_en DESC (lectura compartida)."""
     response = await asyncio.to_thread(
         lambda: _db()
         .select("*")
-        .eq("usuario_id", str(usuario_id))
         .order("creado_en", desc=True)
         .limit(limit)
         .execute()

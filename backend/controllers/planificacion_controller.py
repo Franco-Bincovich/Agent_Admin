@@ -36,11 +36,9 @@ async def obtener_detalle(
     proyecto_id: str,
     current_user: dict,
 ) -> ProyectoDetalleResponse:
-    """Retorna proyecto + áreas + tareas completos. Verifica ownership (404 si no existe o no es del usuario)."""
+    """Retorna proyecto + áreas + tareas completos (lectura compartida). 404 solo si no existe."""
     proyecto = await planificacion_repo.find_by_id(proyecto_id)
     if proyecto is None:
-        raise AppError("No encontrado", "NOT_FOUND", 404)
-    if proyecto["usuario_id"] != current_user["sub"]:
         raise AppError("No encontrado", "NOT_FOUND", 404)
     areas, tareas = await asyncio.gather(
         planificacion_area_repo.find_by_proyecto(proyecto_id),
@@ -127,14 +125,14 @@ async def eliminar_proyecto(proyecto_id: str, current_user: dict) -> None:
 
 
 async def listar_proyectos(current_user: dict) -> list[dict]:
-    """Retorna los proyectos de planificación del usuario autenticado."""
-    return await planificacion_repo.find_by_user(current_user["sub"])
+    """Retorna todos los proyectos de planificación (lectura compartida entre usuarios autenticados)."""
+    return await planificacion_repo.find_all()
 
 
 async def obtener_proyecto(proyecto_id: str, current_user: dict) -> dict:
-    """Retorna un proyecto verificando ownership (404 si no existe o no es del usuario)."""
+    """Retorna un proyecto por ID (lectura compartida). 404 solo si no existe."""
     proyecto = await planificacion_repo.find_by_id(proyecto_id)
-    if proyecto is None or proyecto["usuario_id"] != current_user["sub"]:
+    if proyecto is None:
         raise AppError("No encontrado", "NOT_FOUND", 404)
     return proyecto
 
