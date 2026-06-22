@@ -3,8 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Request, Response, UploadFile
 
 from controllers import planificacion_controller
-from middleware.auth import get_current_user
-from schemas.planificacion import ActualizarProgresoRequest, AreaAsignacionRequest, AreaCreateRequest, AreaResponse, AreaUpdateRequest, MarcarTareaRequest, ProyectoDetalleResponse, ProyectoResponse, ReprogramarTareaRequest, TareaResponse
+from middleware.auth import get_current_user, require_admin
+from schemas.planificacion import ActualizarProgresoRequest, AreaAsignacionRequest, AreaCreateRequest, AreaResponse, AreaUpdateRequest, AsignarDuenoAreaRequest, MarcarTareaRequest, ProyectoDetalleResponse, ProyectoResponse, ReprogramarTareaRequest, TareaResponse
 from utils.limiter import limiter
 
 router = APIRouter()
@@ -81,6 +81,22 @@ async def actualizar_area(
     Raises: 401 no autenticado · 404 proyecto o área no encontrada / sin acceso."""
     resultado = await planificacion_controller.actualizar_area(
         str(proyecto_id), str(area_id), payload.model_dump(exclude_none=True), current_user
+    )
+    return AreaResponse(**resultado)
+
+
+@router.patch("/{proyecto_id}/areas/{area_id}/dueno", response_model=AreaResponse)
+async def asignar_dueno_area(
+    proyecto_id: UUID,
+    area_id: UUID,
+    payload: AsignarDuenoAreaRequest,
+    current_user: dict = Depends(get_current_user),
+) -> AreaResponse:
+    """Asigna, cambia o desasigna el gerente dueño de un área (admin-only).
+    Raises: 403 no admin · 404 área de otro proyecto/inexistente o gerente inexistente · 409 no es gerente."""
+    require_admin(current_user)
+    resultado = await planificacion_controller.asignar_dueno_area(
+        str(proyecto_id), str(area_id), payload.gerente_id
     )
     return AreaResponse(**resultado)
 

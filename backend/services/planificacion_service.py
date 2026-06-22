@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from repositories import planificacion_area_repo, planificacion_repo, planificacion_tarea_repo
+from repositories import planificacion_area_repo, planificacion_repo, planificacion_tarea_repo, user_repo
 from services.planificacion_mpp_adapter import parse_cronograma
+from utils.errors import AppError, ErrorCode
 from utils.logger import log
 
 _ORIGEN_MAP = {".xml": "excel", ".mpp": "mpp"}
@@ -126,3 +127,22 @@ async def crear_area(
         disponibilidad_horas=disponibilidad_horas,
         cantidad_empleados=cantidad_empleados,
     )
+
+
+async def asignar_dueno_area(proyecto_id: str, area_id: str, gerente_id: str | None) -> dict:
+    """
+    Asigna, cambia o desasigna el gerente dueño de un área (admin-only). El dueño debe
+    existir y tener rol 'gerente' (leído de DB); gerente_id None desasigna (NULL) sin
+    validar rol. Raises AppError 404 (área de otro proyecto/inexistente o gerente
+    inexistente) y 409 (el usuario indicado no es gerente).
+    """
+    area = await planificacion_area_repo.find_by_id(area_id)
+    if area is None or area["proyecto_id"] != proyecto_id:
+        raise AppError("Área no encontrada", ErrorCode.NOT_FOUND, 404)
+    if gerente_id is not None:
+        gerente = await user_repo.find_by_id(gerente_id)
+        if not gerente:
+            raise AppError("Gerente no encontrado", ErrorCode.NOT_FOUND, 404)
+        if gerente["rol"] != "gerente":
+            raise AppError("El dueño del área debe tener rol gerente.", ErrorCode.VALIDATION_ERROR, 409)
+    return await planificacion_area_repo.update(area_id, {"gerente_id": gerente_id})

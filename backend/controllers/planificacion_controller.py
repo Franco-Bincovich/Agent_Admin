@@ -4,7 +4,7 @@ from fastapi import BackgroundTasks, UploadFile
 
 from repositories import planificacion_area_repo, planificacion_repo, planificacion_tarea_repo
 from schemas.planificacion import AreaCreateRequest, ProyectoDetalleResponse, ProyectoResponse, TareaResponse
-from services.planificacion_service import crear_area as service_crear_area, run_importacion
+from services.planificacion_service import asignar_dueno_area as service_asignar_dueno_area, crear_area as service_crear_area, run_importacion
 from services.planificacion_tarea_service import actualizar_progreso as service_actualizar_progreso, marcar_tarea as service_marcar_tarea, reprogramar_tarea as service_reprogramar_tarea
 from services.planificacion_storage import upload_cronograma
 from utils.errors import AppError
@@ -156,6 +156,15 @@ async def crear_area(
         disponibilidad_horas=payload.disponibilidad_horas,
         cantidad_empleados=payload.cantidad_empleados,
     )
+
+
+async def asignar_dueno_area(
+    proyecto_id: str,
+    area_id: str,
+    gerente_id: str | None,
+) -> dict:
+    """Delega al service la asignación del gerente dueño de un área (admin-only)."""
+    return await service_asignar_dueno_area(proyecto_id, area_id, gerente_id)
 
 
 async def asignar_area_tarea(

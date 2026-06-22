@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from enum import Enum
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -141,6 +142,7 @@ class AreaResponse(BaseModel):
     responsable_email: str | None = None
     disponibilidad_horas: int | None = None
     cantidad_empleados: int | None = None
+    gerente_id: str | None = None
     creado_en: str
 
 
@@ -182,6 +184,20 @@ class ReprogramarTareaRequest(BaseModel):
 
 class AreaAsignacionRequest(BaseModel):
     area_id: str | None = None
+
+
+class AsignarDuenoAreaRequest(BaseModel):
+    gerente_id: str | None = None
+
+    @field_validator("gerente_id")
+    @classmethod
+    def validate_gerente_id(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        try:
+            return str(UUID(v))
+        except (ValueError, AttributeError, TypeError):
+            raise ValueError("gerente_id debe ser un UUID valido o null.")
 
 
 class ProyectoDetalleResponse(ProyectoResponse):

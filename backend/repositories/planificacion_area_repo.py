@@ -41,6 +41,14 @@ async def create(
     return response.data[0]
 
 
+async def find_by_id(area_id: str) -> dict | None:
+    """Busca un área por su ID. Retorna None si no existe."""
+    response = await asyncio.to_thread(
+        lambda: _db().select("*").eq("id", str(area_id)).execute()
+    )
+    return response.data[0] if response.data else None
+
+
 async def find_by_proyecto(proyecto_id: str) -> list[dict]:
     """Retorna todas las áreas de un proyecto ordenadas por creado_en ASC."""
     response = await asyncio.to_thread(
