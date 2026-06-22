@@ -205,7 +205,7 @@ async def test_patch_active_as_admin_can_modify_any_user(client):
     """PATCH /users/{id}/active con rol admin puede editar cualquier usuario."""
     token = create_access_token(_ADMIN_ID, "administrador")
     updated = {**_USER, "activo": False}
-    with patch("services.user_service.user_mutations_repo.update_active",
+    with patch("services.user_admin_service.user_mutations_repo.update_active",
                return_value=updated):
         resp = await client.patch(
             f"/api/v1/users/{_USER_ID}/active",
@@ -232,7 +232,7 @@ async def test_patch_active_as_admin_success(client):
     """PATCH /users/{id}/active con rol admin permite desactivar a otro usuario."""
     token = create_access_token(_ADMIN_ID, "administrador")
     updated = {**_USER, "activo": False}
-    with patch("services.user_service.user_mutations_repo.update_active",
+    with patch("services.user_admin_service.user_mutations_repo.update_active",
                return_value=updated):
         resp = await client.patch(
             f"/api/v1/users/{_USER_ID}/active",
@@ -270,10 +270,101 @@ async def test_delete_user_as_non_admin_forbidden(client):
 async def test_delete_user_as_admin_success(client):
     """DELETE /users/{id} con rol admin → 204."""
     token = create_access_token(_ADMIN_ID, "administrador")
-    with patch("services.user_service.user_repo.find_by_id", return_value=_USER), \
-         patch("services.user_service.user_mutations_repo.delete", return_value=None):
+    with patch("services.user_admin_service.user_repo.find_by_id", return_value=_USER), \
+         patch("services.user_admin_service.user_mutations_repo.delete", return_value=None):
         resp = await client.delete(
             f"/api/v1/users/{_USER_ID}",
             headers={"Authorization": f"Bearer {token}"},
         )
     assert resp.status_code == 204
+
+
+# ── Asignación de manager (jerarquía líder → gerente) ─────────────────────────
+
+_LIDER_ID = str(uuid.uuid4())
+_GERENTE_ID = str(uuid.uuid4())
+_LIDER = {**_USER, "id": _LIDER_ID, "email": "lider@example.com", "rol": "lider"}
+_GERENTE = {**_USER, "id": _GERENTE_ID, "email": "gerente@example.com", "rol": "gerente"}
+
+
+async def test_assign_manager_to_lider_success(client):
+    """PATCH /users/{id}/manager: asignar un gerente a un líder → 200."""
+    token = create_access_token(_ADMIN_ID, "administrador")
+    updated = {**_LIDER, "manager_id": _GERENTE_ID}
+    with patch("services.user_admin_service.user_repo.find_by_id",
+               side_effect=[_LIDER, _GERENTE]), \
+         patch("services.user_admin_service.user_mutations_repo.update_manager",
+               return_value=updated):
+        resp = await client.patch(
+            f"/api/v1/users/{_LIDER_ID}/manager",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"manager_id": _GERENTE_ID},
+        )
+    assert resp.status_code == 200
+
+
+async def test_assign_manager_target_not_lider_conflict(client):
+    """PATCH /users/{id}/manager sobre un no-líder → 409."""
+    token = create_access_token(_ADMIN_ID, "administrador")
+    with patch("services.user_admin_service.user_repo.find_by_id", return_value=_GERENTE):
+        resp = await client.patch(
+            f"/api/v1/users/{_GERENTE_ID}/manager",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"manager_id": _LIDER_ID},
+        )
+    assert resp.status_code == 409
+    assert resp.json()["code"] == "VALIDATION_ERROR"
+
+
+async def test_assign_manager_not_gerente_conflict(client):
+    """PATCH /users/{id}/manager con un manager que no es gerente → 409."""
+    token = create_access_token(_ADMIN_ID, "administrador")
+    otro_lider = {**_LIDER, "id": _OTHER_USER_ID, "email": "lider2@example.com"}
+    with patch("services.user_admin_service.user_repo.find_by_id",
+               side_effect=[_LIDER, otro_lider]):
+        resp = await client.patch(
+            f"/api/v1/users/{_LIDER_ID}/manager",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"manager_id": _OTHER_USER_ID},
+        )
+    assert resp.status_code == 409
+    assert resp.json()["code"] == "VALIDATION_ERROR"
+
+
+async def test_assign_manager_self_reference_bad_request(client):
+    """PATCH /users/{id}/manager con manager_id == user_id → 400."""
+    token = create_access_token(_ADMIN_ID, "administrador")
+    resp = await client.patch(
+        f"/api/v1/users/{_LIDER_ID}/manager",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"manager_id": _LIDER_ID},
+    )
+    assert resp.status_code == 400
+    assert resp.json()["code"] == "VALIDATION_ERROR"
+
+
+async def test_unassign_manager_null_success(client):
+    """PATCH /users/{id}/manager con manager_id null desasigna → 200."""
+    token = create_access_token(_ADMIN_ID, "administrador")
+    updated = {**_LIDER, "manager_id": None}
+    with patch("services.user_admin_service.user_repo.find_by_id", return_value=_LIDER), \
+         patch("services.user_admin_service.user_mutations_repo.update_manager",
+               return_value=updated):
+        resp = await client.patch(
+            f"/api/v1/users/{_LIDER_ID}/manager",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"manager_id": None},
+        )
+    assert resp.status_code == 200
+
+
+async def test_assign_manager_as_non_admin_forbidden(client):
+    """PATCH /users/{id}/manager con un rol no-admin → 403."""
+    token = create_access_token(_GERENTE_ID, "gerente")
+    resp = await client.patch(
+        f"/api/v1/users/{_LIDER_ID}/manager",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"manager_id": _GERENTE_ID},
+    )
+    assert resp.status_code == 403
+    assert resp.json()["code"] == "FORBIDDEN"

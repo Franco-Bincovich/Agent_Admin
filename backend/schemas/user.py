@@ -1,6 +1,7 @@
 import re
 from enum import Enum
 from typing import Literal, Optional
+from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -92,6 +93,20 @@ class UpdateRoleRequest(BaseModel):
                 "Rol inválido. Debe ser uno de: administrador, gerente, lider."
             )
         return v
+
+
+class UpdateManagerRequest(BaseModel):
+    manager_id: Optional[str] = None
+
+    @field_validator("manager_id")
+    @classmethod
+    def validate_manager_id(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        try:
+            return str(UUID(v))
+        except (ValueError, AttributeError, TypeError):
+            raise ValueError("manager_id debe ser un UUID válido o null.")
 
 
 class CreateUserRequest(BaseModel):

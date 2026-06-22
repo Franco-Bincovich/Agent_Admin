@@ -8,23 +8,6 @@ from utils.errors import AppError, ErrorCode
 _TABLE = "usuarios"
 
 
-async def create(email: str, nombre: str, password_hash: str, rol: str) -> dict:
-    """Inserta un usuario nuevo. Nunca almacenar password en texto plano."""
-    data = {
-        "email": email,
-        "nombre": nombre,
-        "password_hash": password_hash,
-        "rol": rol,
-        "activo": True,
-    }
-    response = await asyncio.to_thread(
-        lambda: get_supabase().table(_TABLE).insert(data).execute()
-    )
-    if not response.data:
-        raise AppError("No se pudo crear el usuario.", ErrorCode.INTERNAL_ERROR, 500)
-    return response.data[0]
-
-
 async def create_full(email: str, nombre: str, username: str, password_hash: str, rol: str) -> dict:
     """Inserta un usuario con username. Usar en lugar de create() cuando se provee username."""
     data = {
@@ -79,6 +62,11 @@ async def update_active(user_id: str, activo: bool) -> dict:
 async def update_rol(user_id: str, rol: str) -> dict:
     """Cambia el rol de un usuario por su ID. El rol ya viene validado por el schema."""
     return await _update_fields(user_id, {"rol": rol})
+
+
+async def update_manager(user_id: str, manager_id: str | None) -> dict:
+    """Asigna (gerente) o desasigna (None → NULL) el manager de un usuario por su ID."""
+    return await _update_fields(user_id, {"manager_id": manager_id})
 
 
 async def update_gamma_folder_id(user_id: str, folder_id: str) -> None:
